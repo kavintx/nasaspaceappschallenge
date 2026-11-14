@@ -31,6 +31,13 @@
     <p class="mt-8 text-[12px] leading-5 text-dim">Photos are sent for identification and not stored. This is NASA spacecraft research, not a home safety rating.</p>
   </section>
 
+  <section id="step-camera" hidden>
+    <p id="cam-title" class="text-[18px] font-semibold">Point the camera at the item</p>
+    <video id="cam-video" playsinline muted class="mt-3 w-full max-h-[60vh] rounded-2xl bg-black object-contain" aria-label="Live camera view"></video>
+    <button id="cam-shoot" type="button" class="btn-big w-full mt-4">Take the photo</button>
+    <button id="cam-cancel" type="button" class="btn-big-ghost w-full mt-3">Cancel</button>
+  </section>
+
   <section id="step-busy" hidden aria-live="polite">
     <div class="flex items-center gap-4">
       <img id="busy-thumb" alt="" class="w-20 h-20 rounded-xl object-cover bg-ink-800">

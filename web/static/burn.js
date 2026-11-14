@@ -243,7 +243,7 @@
   // ---------- the scan page ----------
 
   function scanPage(root) {
-    var steps = { scan: root.querySelector("#step-scan"), busy: root.querySelector("#step-busy"), edit: root.querySelector("#step-edit"), result: root.querySelector("#step-result") };
+    var steps = { scan: root.querySelector("#step-scan"), camera: root.querySelector("#step-camera"), busy: root.querySelector("#step-busy"), edit: root.querySelector("#step-edit"), result: root.querySelector("#step-result") };
     var errorLine = root.querySelector("#scan-error");
     var state = { item: "", rows: [], thumb: null, notice: null, model: null };
 
@@ -258,11 +258,75 @@
       show("scan");
     }
 
-    function onPick(input, mode) {
+    // ----- live camera (laptops and desktops) -----
+    // Phones open their own camera from the file input's `capture` attribute. A computer
+    // ignores `capture` and shows a file picker, so there the webcam is opened in the page.
+    var cam = { stream: null, mode: "item", fallback: null };
+    var video = root.querySelector("#cam-video");
+    var useLiveCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+      && !(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+
+    function stopCamera() {
+      if (cam.stream) cam.stream.getTracks().forEach(function (t) { t.stop(); });
+      cam.stream = null;
+      video.srcObject = null;
+    }
+
+    function openCamera(mode, fallbackInput) {
+      cam.mode = mode;
+      cam.fallback = fallbackInput;
+      errorLine.hidden = true;
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }).then(function (stream) {
+        cam.stream = stream;
+        video.srcObject = stream;
+        root.querySelector("#cam-title").textContent = mode === "label" ? "Point the camera at the label" : "Point the camera at the item";
+        show("camera");
+        return video.play();
+      }).catch(function () {
+        // No camera, or permission refused: fall back to choosing a photo.
+        stopCamera();
+        useLiveCamera = false;
+        errorLine.textContent = "Couldn’t open the camera. Allow camera access, or choose a photo instead.";
+        errorLine.hidden = false;
+        show("scan");
+      });
+    }
+
+    root.querySelector("#cam-shoot").addEventListener("click", function () {
+      if (!video.videoWidth) return;
+      var canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      var mode = cam.mode;
+      stopCamera();
+      canvas.toBlob(function (blob) {
+        if (blob) handle(blob, mode);
+        else fail("Couldn’t take the photo. Try again.");
+      }, "image/jpeg", 0.92);
+    });
+    root.querySelector("#cam-cancel").addEventListener("click", function () {
+      stopCamera();
+      show("scan");
+    });
+    window.addEventListener("pagehide", stopCamera);
+
+    function onPick(input, mode, opensCamera) {
+      if (opensCamera) {
+        input.addEventListener("click", function (event) {
+          if (!useLiveCamera) return; // phone, or no webcam: the normal picker opens
+          event.preventDefault();
+          openCamera(mode, input);
+        });
+      }
       input.addEventListener("change", function () {
         var file = input.files && input.files[0];
         input.value = "";
-        if (!file) return;
+        if (file) handle(file, mode);
+      });
+    }
+
+    function handle(file, mode) {
         errorLine.hidden = true;
         root.querySelector("#busy-text").textContent = mode === "label" ? "Reading the label…" : "Looking…";
         root.querySelector("#busy-thumb").removeAttribute("src");
@@ -300,7 +364,6 @@
         }).catch(function () {
           fail("That photo couldn’t be read or sent. Try again.");
         });
-      });
     }
 
     function openEdit() {
@@ -434,9 +497,9 @@
       show("result");
     }
 
-    onPick(root.querySelector("#pick-camera"), "item");
-    onPick(root.querySelector("#pick-upload"), "item");
-    onPick(root.querySelector("#pick-label"), "label");
+    onPick(root.querySelector("#pick-camera"), "item", true);
+    onPick(root.querySelector("#pick-upload"), "item", false);
+    onPick(root.querySelector("#pick-label"), "label", true);
     root.querySelector("#pick-manual").addEventListener("click", function () {
       state = { item: "", rows: [{ part: "", material: "", share: null, confidence: null }], thumb: null, notice: null, model: null };
       errorLine.hidden = true;
