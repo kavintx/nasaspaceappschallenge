@@ -1,0 +1,16 @@
+[package]
+name = "pipeline"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+shared.workspace = true
+db.workspace = true
+ai-engine.workspace = true
+ntrs.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+lopdf.workspace = true
+tracing.workspace = true

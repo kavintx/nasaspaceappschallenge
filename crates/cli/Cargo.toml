@@ -1,0 +1,25 @@
+[package]
+name = "cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "fire-intel"
+path = "src/main.rs"
+
+[dependencies]
+shared.workspace = true
+db.workspace = true
+ai-engine.workspace = true
+ntrs.workspace = true
+pipeline.workspace = true
+rag.workspace = true
+api.workspace = true
+tokio.workspace = true
+axum.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true

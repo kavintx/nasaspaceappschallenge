@@ -1,0 +1,14 @@
+[package]
+name = "ntrs"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+shared.workspace = true
+db.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+csv.workspace = true
+tracing.workspace = true

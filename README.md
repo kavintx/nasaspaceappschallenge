@@ -6,10 +6,30 @@ A dashboard that summarizes, ranks and compares NASA microgravity combustion exp
 
 ## Layout
 
-- `web/` — the app: a Rust server (Axum + Askama templates, Tailwind CSS). All data and AI come
-  from the `fire-intel` research backend (`/api/v1/*`).
+- `crates/`, `migrations/`, `Cargo.toml` — the `fire-intel` backend by MonsterLXW (copied from
+  https://github.com/MonsterLXW/Fireset at commit `f4622a8`): a Rust API over Postgres that
+  ingests NASA NTRS papers, extracts test conditions and findings with a self-hosted model,
+  and answers questions with citations. It serves `/api/v1/*` on port 8080.
+- `web/` — the dashboard: a Rust server (Axum + Askama templates, Tailwind CSS). All of its data
+  and AI come from the backend. It keeps its own `Cargo.lock` and is built separately.
 
-## Run it
+## Run the backend
+
+It needs a Postgres database with the `vector` and `pg_trgm` extensions, and these settings
+(environment variables or a `.env` file in this folder):
+
+```
+DATABASE_URL=postgres://fire:fire@localhost:5435/fire
+API_AUTH_TOKEN=<at least 24 characters>
+VLLM_BASE_URL=<address of the model server>
+```
+
+```sh
+cargo run -p cli -- init-db     # create tables and seed the 13 experiments
+cargo run -p api                # http://localhost:8080
+```
+
+## Run the dashboard
 
 1. Copy `web/.env.example` to `web/.env` and fill it in:
 
