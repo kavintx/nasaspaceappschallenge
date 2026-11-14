@@ -25,6 +25,7 @@ Response:
   "confidence": 0.82,
   "unclear": false,
   "message": null,
+  "summary": "A grey hooded sweatshirt that looks like a cotton blend, with a metal zipper.",
   "model": "anthropic:claude-haiku-5-5",
   "parts": [
     { "name": "body", "materials": [
@@ -39,6 +40,7 @@ Response:
 - `confidence` is 0–1 (0–100 is also accepted). Below 0.6 the site flags the guess and asks for another photo.
 - `unclear: true`, or no parts, means the photo could not be read. `message` may say why.
 - `share` is a rough percentage of that part, or null.
+- `summary` is one or two sentences on what the photo shows. It describes the photo only and says nothing about fire or tests.
 
 ## POST /api/v1/materials/match
 

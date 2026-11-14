@@ -283,9 +283,14 @@ fn prompt(mode: &str) -> String {
          - If the photo is too blurry, too dark or too far away to tell what anything is made of, set unclear \
          to true, say why in message in one short sentence, and return an empty parts list. A close-up that \
          shows only part of an item is fine: name what you can see and report its material.\n\
+         - summary is one or two plain sentences, at most 40 words, saying what the photo shows and what it \
+         appears to be made of, with your uncertainty in plain words (\"looks like\", \"probably\"). Describe \
+         only what is visible. Say nothing about fire, burning, safety or NASA: you have no test data. \
+         null when unclear is true.\n\
          - Do not describe or identify any person in the photo.\n\n\
          Reply with one JSON object and nothing else, in exactly this shape:\n\
          {{\"item\": string or null, \"confidence\": number, \"unclear\": boolean, \"message\": string or null, \
+         \"summary\": string or null, \
          \"parts\": [{{\"name\": string or null, \"materials\": [{{\"material\": string, \"share\": number or null, \
          \"confidence\": number}}]}}]}}"
     )
@@ -297,12 +302,13 @@ fn schema() -> Value {
     json!({
         "type": "object",
         "additionalProperties": false,
-        "required": ["item", "confidence", "unclear", "message", "parts"],
+        "required": ["item", "confidence", "unclear", "message", "summary", "parts"],
         "properties": {
             "item": nullable("string"),
             "confidence": { "type": "number", "description": "0 to 1" },
             "unclear": { "type": "boolean" },
             "message": nullable("string"),
+            "summary": nullable("string"),
             "parts": {
                 "type": "array",
                 "items": {
@@ -341,6 +347,7 @@ fn parse(text: &str) -> Option<Value> {
     let ok = v.is_object()
         && text_or_null(v.get("item"))
         && text_or_null(v.get("message"))
+        && text_or_null(v.get("summary"))
         && v.get("unclear").is_some_and(|u| u.is_boolean())
         && v.get("confidence").is_some_and(unit)
         && v.get("parts")?.as_array()?.iter().all(|p| {

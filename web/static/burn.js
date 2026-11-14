@@ -229,6 +229,15 @@
     return box;
   }
 
+  // What the vision model said it saw. It describes the photo only; it knows nothing about the tests.
+  function summaryBlock(text) {
+    if (!text) return document.createTextNode(""); // nothing to show, but safe to append
+    return el("div", { class: "mt-4 rounded-xl bg-ink-800 border border-line p-4" }, [
+      el("p", { class: "text-[12px] font-medium text-sky", text: "AI summary of the photo" }),
+      el("p", { class: "mt-1 text-[15px] leading-6", text: text }),
+    ]);
+  }
+
   function fetchResult(names) {
     return fetch("/scan/result", {
       method: "POST",
@@ -245,7 +254,7 @@
   function scanPage(root) {
     var steps = { scan: root.querySelector("#step-scan"), camera: root.querySelector("#step-camera"), busy: root.querySelector("#step-busy"), edit: root.querySelector("#step-edit"), result: root.querySelector("#step-result") };
     var errorLine = root.querySelector("#scan-error");
-    var state = { item: "", rows: [], thumb: null, notice: null, model: null };
+    var state = { item: "", rows: [], thumb: null, notice: null, model: null, summary: null };
 
     function show(name) {
       Object.keys(steps).forEach(function (k) { steps[k].hidden = k !== name; });
@@ -345,11 +354,13 @@
             state.item = "";
             state.rows = [];
             state.model = null;
+            state.summary = null;
             state.notice = reply.reason === "error" ? reply.message + " You can type the materials in instead." : reply.message;
             return openEdit();
           }
           state.item = reply.item || "";
           state.model = reply.model || null;
+          state.summary = reply.unclear ? null : (reply.summary || null);
           state.rows = [];
           (reply.parts || []).forEach(function (part) {
             part.materials.forEach(function (m) {
@@ -377,6 +388,7 @@
         el("div", { class: "min-w-0 flex-1" }, [el("p", { class: "text-[15px] text-muted", text: state.rows.length ? "Looks like…" : "What is it?" }), nameInput]),
       ]));
       if (state.notice) box.appendChild(el("p", { class: "notice mt-4", role: "status", text: state.notice }));
+      box.appendChild(summaryBlock(state.summary));
 
       box.appendChild(el("h3", { class: "mt-6 text-[15px] font-semibold", text: "Made of" }));
       box.appendChild(el("p", { class: "text-[12px] text-dim", text: state.rows.length ? "A best guess from the photo. Tap to change, remove or add." : "Add each material, for example cotton or PVC." }));
@@ -460,6 +472,7 @@
         state.thumb ? el("img", { src: state.thumb, alt: "", class: "w-16 h-16 rounded-xl object-cover bg-ink-800 shrink-0" }) : null,
         el("h2", { class: "text-[26px] leading-8 font-semibold break-words min-w-0", text: title }),
       ]));
+      box.appendChild(summaryBlock(state.summary));
       box.appendChild(resultBody(result));
 
       var space = el("select", { class: "field h-11 text-[16px]", "aria-label": "Space" }, SPACES.map(function (name) { return el("option", { value: name, text: name }); }));
@@ -474,6 +487,7 @@
           when: new Date().toISOString(),
           thumb: state.thumb,
           shares: state.rows.filter(function (r) { return (r.material || "").trim(); }).map(function (r) { return { material: r.material.trim(), share: r.share || null }; }),
+          summary: state.summary || null,
           result: result,
         });
         clear(saved);
@@ -501,7 +515,7 @@
     onPick(root.querySelector("#pick-upload"), "item", false);
     onPick(root.querySelector("#pick-label"), "label", true);
     root.querySelector("#pick-manual").addEventListener("click", function () {
-      state = { item: "", rows: [{ part: "", material: "", share: null, confidence: null }], thumb: null, notice: null, model: null };
+      state = { item: "", rows: [{ part: "", material: "", share: null, confidence: null }], thumb: null, notice: null, model: null, summary: null };
       errorLine.hidden = true;
       openEdit();
     });
@@ -550,7 +564,10 @@
             ? el("span", { class: "text-amber", text: "Has an untested material" })
             : null;
         var details = el("div", { hidden: !open[item.id] });
-        if (open[item.id] && item.result) details.appendChild(resultBody(item.result));
+        if (open[item.id] && item.result) {
+          details.appendChild(summaryBlock(item.summary));
+          details.appendChild(resultBody(item.result));
+        }
 
         var move = el("select", { class: "field h-10 w-auto text-[14px]", "aria-label": "Move " + item.name + " to a space" }, SPACES.map(function (name) {
           return el("option", { value: name, text: name, selected: name === item.space });
