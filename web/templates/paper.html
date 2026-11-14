@@ -2,12 +2,15 @@
 {% block content %}
 <section class="wrap pt-12 pb-12">
   <a href="/papers" class="text-[13px] text-sky hover:underline">← Literature</a>
+  {% if let Some(m) = msg %}<p class="mt-5 px-4 py-3 rounded-md bg-ink-800 text-[14px] text-cyan">{{ m }}</p>{% endif %}
+  {% if let Some(m) = err %}<p class="mt-5 px-4 py-3 rounded-md bg-ink-800 text-[14px] text-amber">{{ m }}</p>{% endif %}
   <h2 class="mt-5 text-[30px] md:text-[40px] leading-tight font-semibold tracking-tight max-w-5xl">{{ title }}</h2>
   {% if !authors.is_empty() %}<p class="mt-4 text-[15px] text-muted">{{ authors }}</p>{% endif %}
   {% if !experiments.is_empty() %}<p class="mt-3 text-[13px] text-muted">Experiments: {% for e in experiments %}<a class="text-sky hover:underline" href="/experiments/{{ e.0 }}">{{ e.1 }}</a>{% if !loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
   <div class="mt-6 flex gap-3">
     {% if let Some(u) = ntrs_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-primary">Open on NASA NTRS ↗</a>{% endif %}
     {% if let Some(u) = pdf_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-ghost">PDF ↗</a>{% endif %}
+    {% if can_edit %}<form method="post" action="/papers/{{ paper_key|urlencode }}/extract" data-slow><button class="btn-ghost">{% if conditions.is_empty() && findings.is_empty() %}Run AI extraction{% else %}Re-run AI extraction{% endif %}</button></form>{% endif %}
   </div>
   {% if let Some(a) = abstract_text %}<p class="mt-8 text-[16px] leading-relaxed text-muted max-w-4xl">{{ a }}</p>{% endif %}
 </section>
@@ -28,6 +31,31 @@
             <td class="py-3.5 pr-4 text-muted">{{ c.o2 }}</td><td class="py-3.5 pr-4 text-muted">{{ c.pressure }}</td><td class="py-3.5 pr-4 text-muted">{{ c.airflow }}</td><td class="py-3.5 pr-4 text-muted">{{ c.sensors }}</td><td class="py-3.5 pr-4 text-muted whitespace-nowrap">{{ c.source }}</td><td class="py-3.5 pr-4 text-muted">{{ c.confidence }}</td>
             <td class="py-3.5 pr-3 whitespace-nowrap">{% if c.verified %}<span class="text-cyan">✓ {{ c.status }}</span>{% else %}<span class="text-dim">{{ c.status }}</span>{% endif %}</td>
           </tr>
+          {% if can_edit && !c.id.is_empty() %}
+          <tr class="border-b border-line"><td colspan="8" class="pb-4 pl-3 pr-3">
+            <div class="flex flex-wrap items-center gap-3">
+              <form method="post" action="/conditions/{{ c.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="verified"><button class="chip text-cyan">✓ Verify</button></form>
+              <form method="post" action="/conditions/{{ c.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="rejected"><button class="chip text-amber">Reject</button></form>
+              <details class="basis-full">
+                <summary class="chip inline-block cursor-pointer text-sky">Edit</summary>
+                <form method="post" action="/conditions/{{ c.id|urlencode }}" class="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl">
+                  <input type="hidden" name="paper" value="{{ paper_key }}">
+                  <label class="block"><span class="eyebrow">Fuel</span><input name="fuel_type" value="{{ c.e_fuel }}" class="field mt-1"></label>
+                  <label class="block"><span class="eyebrow">Sample geometry</span><input name="fuel_geometry" value="{{ c.e_geometry }}" class="field mt-1"></label>
+                  <label class="block"><span class="eyebrow">Oxygen</span><input name="oxygen_concentration" value="{{ c.e_o2 }}" class="field mt-1"></label>
+                  <label class="block"><span class="eyebrow">Pressure</span><input name="pressure" value="{{ c.e_pressure }}" class="field mt-1"></label>
+                  <label class="block"><span class="eyebrow">Airflow</span><input name="airflow" value="{{ c.e_airflow }}" class="field mt-1"></label>
+                  <label class="block"><span class="eyebrow">Sensors (comma-separated)</span><input name="sensors" value="{{ c.e_sensors }}" class="field mt-1"></label>
+                  <label class="block"><span class="eyebrow">Source page</span><input name="source_page" type="number" min="1" value="{{ c.e_page }}" class="field mt-1"></label>
+                  <label class="block"><span class="eyebrow">Status</span><select name="verification_status" class="field mt-1">{% for st in statuses %}<option value="{{ st }}" {% if c.e_status == *st %}selected{% endif %}>{{ st }}</option>{% endfor %}</select></label>
+                  <label class="block sm:col-span-2"><span class="eyebrow">Objective</span><input name="objective" value="{{ c.e_objective }}" class="field mt-1"></label>
+                  <label class="block sm:col-span-2"><span class="eyebrow">Correction note</span><input name="correction_note" value="{{ c.e_note }}" class="field mt-1"></label>
+                  <div><button class="btn-primary">Save</button></div>
+                </form>
+              </details>
+            </div>
+          </td></tr>
+          {% endif %}
           {% endfor %}
         </tbody>
       </table>
@@ -47,6 +75,24 @@
         <p class="text-[17px] leading-relaxed">{{ x.text }}</p>
         <p class="mt-2 text-[12px] text-muted">{% if let Some(c) = x.cat %}<span class="{{ c.class }}">{{ c.label }}</span> · {% endif %}{% if !x.meta.is_empty() %}{{ x.meta }} · {% endif %}{% if x.verified %}<span class="text-cyan">✓ {{ x.status }}</span>{% else %}{{ x.status }}{% endif %}</p>
         {% if let Some(q) = x.quote %}<p class="mt-3 pl-4 border-l border-line text-[14px] leading-relaxed text-dim">“{{ q }}”</p>{% endif %}
+        {% if can_edit && !x.id.is_empty() %}
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <form method="post" action="/findings/{{ x.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="verified"><button class="chip text-cyan">✓ Verify</button></form>
+          <form method="post" action="/findings/{{ x.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="rejected"><button class="chip text-amber">Reject</button></form>
+          <details class="basis-full">
+            <summary class="chip inline-block cursor-pointer text-sky">Edit</summary>
+            <form method="post" action="/findings/{{ x.id|urlencode }}" class="mt-4 grid sm:grid-cols-3 gap-4">
+              <input type="hidden" name="paper" value="{{ paper_key }}">
+              <label class="block sm:col-span-3"><span class="eyebrow">Finding</span><textarea name="text" rows="3" class="field h-auto py-2 mt-1">{{ x.text }}</textarea></label>
+              <label class="block"><span class="eyebrow">Category</span><select name="category" class="field mt-1"><option value="">(unchanged)</option>{% for ct in categories %}<option value="{{ ct }}" {% if x.e_category == *ct %}selected{% endif %}>{{ ct }}</option>{% endfor %}</select></label>
+              <label class="block"><span class="eyebrow">Source page</span><input name="source_page" type="number" min="1" value="{{ x.e_page }}" class="field mt-1"></label>
+              <label class="block"><span class="eyebrow">Status</span><select name="verification_status" class="field mt-1">{% for st in statuses %}<option value="{{ st }}" {% if x.e_status == *st %}selected{% endif %}>{{ st }}</option>{% endfor %}</select></label>
+              <label class="block sm:col-span-3"><span class="eyebrow">Correction note</span><input name="correction_note" value="{{ x.e_note }}" class="field mt-1"></label>
+              <div><button class="btn-primary">Save</button></div>
+            </form>
+          </details>
+        </div>
+        {% endif %}
       </div>
     </li>
     {% endfor %}

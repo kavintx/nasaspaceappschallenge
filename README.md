@@ -34,7 +34,6 @@ Pages: `/` Habitat Risk · `/explorer` · `/experiments/<id>` · `/compare` · `
 | Page | Backend calls |
 |---|---|
 | Explorer, experiment pages, Compare table, Habitat evidence | `GET /experiments`, `GET /papers`, then `GET /papers/{id}/extractions` per paper (4 at a time), rolled up per experiment and cached for 5 minutes. "Refresh" on the Explorer rebuilds it |
-| Ask the Data | `POST /ai/query` |
 | Habitat Risk → AI risk assessment | `POST /ai/habitat/analyze` |
 | Compare → AI comparison | `POST /ai/compare` |
 | Experiment → AI synthesis | `POST /ai/summarize/{acronym}` |
@@ -44,10 +43,22 @@ Category, fuel phase and hardware per experiment are not in the database; they a
 table in `web/src/catalog.rs`, taken from the NASA challenge brief. Rejected conditions and
 findings are left out of the roll-ups.
 
-Not built into this app: ingestion, the Google Sheets import, running extraction, editing or
-verifying conditions and findings, and streaming chat. Those stay as direct API calls.
+| Ask the Data (streaming chat) | `POST /ai/chat` with `stream: true`, relayed through `/ask/stream` so the token never reaches the browser |
+| Pipeline | `GET /ai/health`, `GET /pipeline/status`, `POST /ai/test`, `POST /pipeline/ingest`, `POST /pipeline/sheet/import`, `POST /ai/extract/batch` |
+| Paper page actions | `POST /ai/extract/{id}`, `PATCH /conditions/{id}`, `PATCH /findings/{id}` (verify, reject, edit) |
 
-Optional settings (env var or `.env`): `PORT` (default 3100), `STATIC_DIR`.
+## Before putting it on the public internet
+
+The Pipeline page and the verify/reject/edit buttons change the database, and this app has no
+login. Anyone who can open the site can use them. For a public deployment set:
+
+```
+READ_ONLY=true
+```
+
+That turns off ingestion, imports, extraction and editing. Browsing, AI answers and chat still work.
+
+Optional settings (env var or `.env`): `PORT` (default 3100), `STATIC_DIR`, `READ_ONLY`.
 
 ## Changing the styling
 

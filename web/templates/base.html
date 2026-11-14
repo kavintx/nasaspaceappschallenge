@@ -17,15 +17,16 @@
       <a href="/" class="flex items-center gap-2.5 text-[14px] font-medium shrink-0">
         <img src="/static/flame.svg" alt="" class="w-5 h-5">Flame in Freefall
       </a>
-      <div class="hidden md:flex flex-1 justify-center gap-8 text-[12px]">
+      <div class="hidden md:flex flex-1 justify-center gap-7 text-[12px]">
         <a href="/" class="{% if active == "habitat" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Habitat Risk</a>
         <a href="/explorer" class="{% if active == "explorer" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Explorer</a>
         <a href="/compare" class="{% if active == "compare" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Compare</a>
         <a href="/papers" class="{% if active == "papers" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Literature</a>
         <a href="/ask" class="{% if active == "ask" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Ask the Data</a>
+        <a href="/pipeline" class="{% if active == "pipeline" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Pipeline</a>
       </div>
       <form action="/explorer" method="get" class="ml-auto md:ml-0">
-        <label class="flex items-center gap-2 bg-ink-800 rounded-md px-3 h-9 w-56 text-[13px] text-muted focus-within:ring-1 focus-within:ring-sky/60">
+        <label class="flex items-center gap-2 bg-ink-800 rounded-md px-3 h-9 w-48 text-[13px] text-muted focus-within:ring-1 focus-within:ring-sky/60">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input name="q" placeholder="Search research" class="bg-transparent outline-none w-full text-fg placeholder:text-muted">
         </label>

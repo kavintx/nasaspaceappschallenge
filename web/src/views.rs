@@ -20,20 +20,20 @@ type AppRef = State<Arc<AppState>>;
 /// How long the experiment catalog is reused before it is rebuilt.
 const CATALOG_TTL: Duration = Duration::from_secs(300);
 
-fn render<T: Template>(t: T) -> Response {
+pub(crate) fn render<T: Template>(t: T) -> Response {
     match t.render() {
         Ok(html) => Html(html).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("template error: {e}")).into_response(),
     }
 }
 
-fn message_page(active: &'static str, title: &str, message: String) -> Response {
+pub(crate) fn message_page(active: &'static str, title: &str, message: String) -> Response {
     render(ErrorPage { active, page_title: title.into(), context_line: String::new(), message })
 }
 
 const NOT_CONNECTED: &str = "The research backend isn't connected. Copy web/.env.example to web/.env, paste the API token after API_AUTH_TOKEN=, and restart the app.";
 
-fn backend(app: &AppState) -> Result<&Backend, Response> {
+pub(crate) fn backend(app: &AppState) -> Result<&Backend, Response> {
     app.backend
         .as_ref()
         .ok_or_else(|| message_page("", "Backend not connected", NOT_CONNECTED.into()))
@@ -719,7 +719,7 @@ pub async fn compare(State(app): AppRef, Query(q): Query<CompareQuery>) -> Respo
     })
 }
 
-// ---------- ask the data ----------
+// ---------- ask the data (streaming chat) ----------
 
 #[derive(Template)]
 #[template(path = "ask.html")]
@@ -728,7 +728,7 @@ pub struct AskPage {
     pub page_title: String,
     pub context_line: String,
     pub question: String,
-    pub ai: Option<AiResult>,
+    pub experiments: Vec<String>,
     pub suggestions: Vec<&'static str>,
 }
 
@@ -742,14 +742,17 @@ pub async fn ask(State(app): AppRef, Query(q): Query<AskQuery>) -> Response {
         Ok(b) => b,
         Err(page) => return page,
     };
-    let question = q.q.unwrap_or_default().trim().to_string();
-    let ai = if question.is_empty() { None } else { Some(ai::from_reply(b.query(&question).await)) };
+    let experiments = b
+        .experiments()
+        .await
+        .map(|list| list.iter().filter_map(|e| js(e, "acronym")).collect())
+        .unwrap_or_default();
     render(AskPage {
         active: "ask",
         page_title: "Ask the Data".into(),
         context_line: "Answers cite NASA NTRS papers".into(),
-        question,
-        ai,
+        question: q.q.unwrap_or_default().trim().to_string(),
+        experiments,
         suggestions: vec![
             "How does low cabin pressure with elevated oxygen affect flame spread?",
             "How does airflow change flame spread in microgravity?",
@@ -831,6 +834,17 @@ pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Respons
 }
 
 pub struct ConditionRow {
+    pub id: String,
+    pub e_fuel: String,
+    pub e_geometry: String,
+    pub e_o2: String,
+    pub e_pressure: String,
+    pub e_airflow: String,
+    pub e_sensors: String,
+    pub e_objective: String,
+    pub e_page: String,
+    pub e_status: String,
+    pub e_note: String,
     pub fuel: String,
     pub geometry: Option<String>,
     pub o2: String,
@@ -844,6 +858,11 @@ pub struct ConditionRow {
 }
 
 pub struct PaperFinding {
+    pub id: String,
+    pub e_category: String,
+    pub e_page: String,
+    pub e_status: String,
+    pub e_note: String,
     pub text: String,
     pub cat: Option<Cat>,
     pub meta: String,
@@ -866,9 +885,21 @@ pub struct PaperPage {
     pub experiments: Vec<(String, String)>,
     pub conditions: Vec<ConditionRow>,
     pub findings: Vec<PaperFinding>,
+    pub paper_key: String,
+    pub statuses: [&'static str; 4],
+    pub categories: [&'static str; 4],
+    pub can_edit: bool,
+    pub msg: Option<String>,
+    pub err: Option<String>,
 }
 
-pub async fn paper(State(app): AppRef, Path(id): Path<String>) -> Response {
+#[derive(Deserialize, Default)]
+pub struct PaperQuery {
+    msg: Option<String>,
+    err: Option<String>,
+}
+
+pub async fn paper(State(app): AppRef, Path(id): Path<String>, Query(pq): Query<PaperQuery>) -> Response {
     let b = match backend(&app) {
         Ok(b) => b,
         Err(page) => return page,
@@ -898,6 +929,21 @@ pub async fn paper(State(app): AppRef, Path(id): Path<String>) -> Response {
     let conditions = rows("conditions")
         .iter()
         .map(|c| ConditionRow {
+            id: js(c, "id").unwrap_or_default(),
+            e_fuel: js(c, "fuel_type").unwrap_or_default(),
+            e_geometry: js(c, "fuel_geometry").unwrap_or_default(),
+            e_o2: js(c, "oxygen_concentration").unwrap_or_default(),
+            e_pressure: js(c, "pressure").unwrap_or_default(),
+            e_airflow: js(c, "airflow").unwrap_or_default(),
+            e_sensors: c
+                .get("sensors")
+                .and_then(|v| v.as_array())
+                .map(|a| a.iter().filter_map(|x| x.as_str()).collect::<Vec<_>>().join(", "))
+                .unwrap_or_default(),
+            e_objective: js(c, "objective").unwrap_or_default(),
+            e_page: js(c, "source_page").unwrap_or_default(),
+            e_status: js(c, "verification_status").unwrap_or_else(|| "pending".into()),
+            e_note: js(c, "correction_note").unwrap_or_default(),
             fuel: or_na(js(c, "fuel_type")),
             geometry: js(c, "fuel_geometry"),
             o2: or_na(js(c, "oxygen_concentration")),
@@ -918,6 +964,11 @@ pub async fn paper(State(app): AppRef, Path(id): Path<String>) -> Response {
     let findings = rows("findings")
         .iter()
         .map(|x| PaperFinding {
+            id: js(x, "id").unwrap_or_default(),
+            e_category: js(x, "category").unwrap_or_default().to_lowercase(),
+            e_page: js(x, "source_page").unwrap_or_default(),
+            e_status: js(x, "verification_status").unwrap_or_else(|| "pending".into()),
+            e_note: js(x, "correction_note").unwrap_or_default(),
             text: or_na(js(x, "text")),
             cat: js(x, "category").map(|c| category(&c.to_lowercase())),
             meta: [page_no(x), pct(x).map(|c| format!("AI confidence {c}")), js(x, "provenance_kind").map(|k| capitalize(&k))]
@@ -947,6 +998,12 @@ pub async fn paper(State(app): AppRef, Path(id): Path<String>) -> Response {
         experiments,
         conditions,
         findings,
+        paper_key: id,
+        statuses: ["pending", "verified", "corrected", "rejected"],
+        categories: ["prevention", "detection", "suppression", "other"],
+        can_edit: !app.read_only,
+        msg: pq.msg.filter(|m| !m.is_empty()),
+        err: pq.err.filter(|m| !m.is_empty()),
     })
 }
 

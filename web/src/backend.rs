@@ -128,6 +128,75 @@ impl Backend {
     pub async fn habitat(&self, scenario: Value) -> ApiResult<Value> {
         self.post("/ai/habitat/analyze", scenario).await
     }
+
+    // ----- diagnostics and pipeline control -----
+
+    pub async fn health(&self) -> ApiResult<Value> {
+        self.get("/ai/health", &[]).await
+    }
+
+    pub async fn test_model(&self, prompt: &str) -> ApiResult<Value> {
+        let body = if prompt.trim().is_empty() { json!({}) } else { json!({ "prompt": prompt.trim() }) };
+        self.post("/ai/test", body).await
+    }
+
+    pub async fn ingest(&self, program: &str, limit_per_program: Option<u32>, process_jobs: Option<u32>) -> ApiResult<Value> {
+        let mut body = json!({});
+        if !program.trim().is_empty() {
+            body["program"] = json!(program.trim());
+        }
+        if let Some(n) = limit_per_program {
+            body["limit_per_program"] = json!(n);
+        }
+        if let Some(n) = process_jobs {
+            body["process_jobs"] = json!(n);
+        }
+        self.post("/pipeline/ingest", body).await
+    }
+
+    pub async fn sheet_import(&self, url: &str) -> ApiResult<Value> {
+        self.post("/pipeline/sheet/import", json!({ "url": url })).await
+    }
+
+    pub async fn extract(&self, paper_id: &str) -> ApiResult<Value> {
+        self.post(&format!("/ai/extract/{}", urlencoding::encode(paper_id)), json!({})).await
+    }
+
+    pub async fn extract_batch(&self, limit: u32) -> ApiResult<Value> {
+        self.post("/ai/extract/batch", json!({ "limit": limit })).await
+    }
+
+    /// Edit or verify one extracted row. `kind` is "conditions" or "findings".
+    pub async fn patch_row(&self, kind: &str, id: &str, body: Value) -> ApiResult<Value> {
+        let path = format!("/{kind}/{}", urlencoding::encode(id));
+        let res = self
+            .http
+            .patch(format!("{}/api/v1{path}", self.base))
+            .bearer_auth(&self.token)
+            .json(&body)
+            .timeout(READ_TIMEOUT)
+            .send()
+            .await;
+        self.finish(&path, res).await
+    }
+
+    /// Opens the streaming chat. The caller relays the event stream to the browser.
+    pub async fn chat_stream(&self, body: Value) -> ApiResult<reqwest::Response> {
+        let resp = self
+            .http
+            .post(format!("{}/api/v1/ai/chat", self.base))
+            .bearer_auth(&self.token)
+            .json(&body)
+            .timeout(AI_TIMEOUT)
+            .send()
+            .await
+            .map_err(|_| format!("Couldn't reach the research backend at {}.", self.base))?;
+        match resp.status().as_u16() {
+            200..=299 => Ok(resp),
+            401 => Err("The research backend rejected the access token. Check API_AUTH_TOKEN.".into()),
+            code => Err(format!("The research backend returned {code} for the chat.")),
+        }
+    }
 }
 
 // ---------- lenient JSON helpers ----------
