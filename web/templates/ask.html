@@ -3,8 +3,7 @@
 {% if question.is_empty() %}
 <section class="wrap pt-16 pb-24">
   <h2 class="text-[40px] md:text-[52px] leading-[1.08] font-semibold tracking-tight">Ask the research.</h2>
-  <p class="mt-5 text-[20px] text-muted">Answers drawn from indexed NASA NTRS papers, with citations.</p>
-  {% if !backend_on %}<p class="mt-5 text-[14px] text-amber">The research backend isn't connected yet, so questions return catalog matches instead of AI answers.</p>{% endif %}
+  <p class="mt-5 text-[20px] text-muted">Answers drawn from indexed NASA NTRS papers, with page-level citations.</p>
   <form method="get" action="/ask" data-slow class="mt-10 flex gap-4 items-start max-w-3xl">
     <textarea name="q" rows="3" required placeholder="Ask about materials, conditions or findings…" class="field h-auto py-3 text-[16px] placeholder:text-dim"></textarea>
     <button class="btn-primary shrink-0">Ask ↑</button>
@@ -13,6 +12,7 @@
   <ul class="mt-3 space-y-2">
     {% for s in suggestions %}<li><a class="text-[16px] text-sky hover:underline" href="/ask?q={{ s|urlencode }}">{{ s }}</a></li>{% endfor %}
   </ul>
+  <p class="mt-8 eyebrow">Answers take 5–30 seconds.</p>
 </section>
 {% else %}
 <section class="wrap pt-10 pb-12">
@@ -21,21 +21,10 @@
 </section>
 
 <section class="bg-ink-850">
-  <div class="wrap py-12 max-w-none">
+  <div class="wrap py-12">
     <div class="max-w-4xl">
-      {% if let Some(ai) = ai %}
-        <div class="eyebrow">Source-grounded answer</div>
-        {% include "_ai.html" %}
-      {% else %}
-        <div class="eyebrow">Catalog matches</div>
-        <p class="mt-4 text-[14px] text-amber">The research backend isn't connected, so this is a keyword match against the experiment catalog, not an AI answer.</p>
-        {% if matched.is_empty() %}<p class="mt-6 text-[16px] text-dim">No experiments matched those keywords. Try naming an experiment or a hazard.</p>{% endif %}
-        <ol class="mt-2">
-          {% for m in matched %}
-          <li class="border-b border-line py-5"><a class="text-[19px] text-sky hover:underline" href="/experiments/{{ m.0 }}">{{ m.1 }}</a><div class="mt-1 text-[14px] text-muted">{{ m.2 }}</div></li>
-          {% endfor %}
-        </ol>
-      {% endif %}
+      <div class="eyebrow">Source-grounded answer</div>
+      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% endif %}
     </div>
   </div>
 </section>

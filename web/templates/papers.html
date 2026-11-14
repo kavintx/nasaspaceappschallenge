@@ -7,9 +7,6 @@
 </section>
 
 <section class="wrap pb-16">
-  {% if !backend_on %}
-  <p class="text-[16px] text-amber">The research backend isn't connected yet. Set API_AUTH_TOKEN (see the README) and restart the app.</p>
-  {% else %}
   <form method="get" action="/papers" class="grid sm:grid-cols-[220px_1fr_auto] gap-6 items-end">
     <label class="block"><span class="eyebrow">Status</span>
       <select name="status" onchange="this.form.submit()" class="field mt-2">
@@ -38,6 +35,5 @@
       </tbody>
     </table>
   </div>
-  {% endif %}
 </section>
 {% endblock %}

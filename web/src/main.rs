@@ -1,10 +1,10 @@
 //! Flame in Freefall — fire safety insights from NASA microgravity combustion data.
-//! A Rust (Axum) web server that renders the dashboard and reads from Supabase.
+//! A Rust (Axum) web server that renders the dashboard from the fire-intel research backend.
 
 mod ai;
 mod backend;
+mod catalog;
 mod config;
-mod data;
 mod views;
 
 use axum::{routing::get, Router};
@@ -12,9 +12,10 @@ use std::sync::Arc;
 use tower_http::services::ServeDir;
 
 pub struct AppState {
-    pub data: data::Source,
     /// The fire-intel research backend (papers, findings, AI). None until API_AUTH_TOKEN is set.
     pub backend: Option<backend::Backend>,
+    /// Cached experiment catalog and when it was built.
+    pub catalog: tokio::sync::Mutex<Option<Arc<catalog::Catalog>>>,
 }
 
 #[tokio::main]
@@ -23,11 +24,11 @@ async fn main() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     let cfg = config::Config::load();
     let state = Arc::new(AppState {
-        data: data::Source::from_cfg(&cfg),
         backend: backend::Backend::from_cfg(&cfg),
+        catalog: tokio::sync::Mutex::new(None),
     });
     if state.backend.is_none() {
-        println!("research backend: not connected (set API_AUTH_TOKEN to enable AI and papers)");
+        println!("research backend: not connected (set API_AUTH_TOKEN in web/.env)");
     }
 
     let static_dir = cfg.get("STATIC_DIR").unwrap_or_else(|| "static".into());

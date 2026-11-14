@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="wrap pt-12 pb-14 text-center">
-  <h2 class="text-[48px] md:text-[60px] leading-none font-semibold tracking-tight">{{ e.acronym }}</h2>
-  <p class="mt-5 text-[22px] text-muted">{{ e.name }}</p>
-  <p class="mt-3 text-[12px]"><span class="{{ cat.class }}">{{ cat.label }}</span>{% if let Some(h) = e.hardware %} <span class="text-muted">· {{ h }}</span>{% endif %}{% if let Some(p) = e.platform %} <span class="text-muted">· {{ p }}</span>{% endif %}</p>
+  <h2 class="text-[48px] md:text-[60px] leading-none font-semibold tracking-tight">{{ acronym }}</h2>
+  <p class="mt-5 text-[22px] text-muted">{{ name }}</p>
+  <p class="mt-3 text-[12px]"><span class="{{ cat.class }}">{{ cat.label }}</span> <span class="text-muted">· {{ hardware }}</span></p>
   <div class="mt-6 flex justify-center gap-3">
-    <a href="/compare?a={{ e.id }}" class="btn-primary">Add to compare</a>
-    {% if let Some(u) = e.psi_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-ghost">Open NASA source</a>{% endif %}
+    <a href="/compare?a={{ id }}" class="btn-primary">Add to compare</a>
+    <a href="#papers" class="btn-ghost">{{ papers.len() }} NASA papers</a>
   </div>
 </section>
 
@@ -15,7 +15,7 @@
     {% for t in tiles %}
     <div>
       <div class="eyebrow">{{ t.label }}</div>
-      <div class="mt-4 text-[36px] md:text-[44px] leading-none font-semibold tracking-tight">{{ t.value }}</div>
+      <div class="mt-4 text-[32px] md:text-[40px] leading-none font-semibold tracking-tight">{{ t.value }}</div>
       <div class="mt-4 eyebrow">{{ t.caption }}</div>
     </div>
     {% endfor %}
@@ -25,72 +25,65 @@
 <section class="wrap py-14 grid md:grid-cols-12 gap-8">
   <div class="md:col-span-3">
     <h3 class="text-[28px] font-semibold tracking-tight">Research brief.</h3>
-    <p class="mt-3 eyebrow">{% if e.ai_summary.is_some() %}AI summary of NASA sources{% else %}From NASA sources{% endif %}</p>
+    <p class="mt-3 eyebrow">From the research database</p>
   </div>
   <div class="md:col-span-9">
     {% if let Some(b) = brief %}<p class="text-[20px] leading-relaxed text-muted">{{ b }}</p>
-    {% else %}<p class="text-[18px] text-dim">The summary for this experiment hasn't been generated yet.</p>{% endif %}
+    {% else %}<p class="text-[18px] text-dim">No description stored for this experiment yet.</p>{% endif %}
+    {% if !objectives.is_empty() %}
+    <div class="mt-8 eyebrow">Objectives stated in the papers</div>
+    {% for o in objectives %}<p class="mt-3 text-[15px] leading-relaxed text-muted">{{ o }}</p>{% endfor %}
+    {% endif %}
   </div>
 </section>
 
-{% if backend_on %}
 <section class="border-t border-line/60" id="summary">
   <div class="wrap py-14 grid md:grid-cols-12 gap-8">
     <div class="md:col-span-3">
       <h3 class="text-[28px] font-semibold tracking-tight">AI synthesis.</h3>
-      <p class="mt-3 eyebrow">Across every indexed paper for {{ e.acronym }}</p>
+      <p class="mt-3 eyebrow">Across every indexed paper for {{ acronym }}</p>
       <form method="get" action="#summary" data-slow class="mt-5"><input type="hidden" name="summarize" value="1"><button class="btn-ghost">{% if ai.is_some() %}Regenerate{% else %}Generate summary{% endif %}</button></form>
     </div>
     <div class="md:col-span-9">
-      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else %}<p class="text-[15px] text-dim">Not generated yet.</p>{% endif %}
+      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else %}<p class="text-[15px] text-dim">Not generated yet. Takes 5–30 seconds.</p>{% endif %}
     </div>
   </div>
 </section>
-{% endif %}
 
 <section class="bg-ink-850">
   <div class="wrap py-14 grid lg:grid-cols-12 gap-12">
     <div class="lg:col-span-8">
       <h3 class="text-[28px] font-semibold tracking-tight">What the experiments revealed.</h3>
-      {% if findings.is_empty() %}<p class="mt-6 text-[16px] text-dim">Key findings haven't been loaded yet.</p>{% endif %}
+      {% if findings.is_empty() %}<p class="mt-6 text-[16px] text-dim">No findings have been extracted for this experiment yet.</p>
+      {% else %}<p class="mt-3 eyebrow">{{ findings.len() }} of {{ findings_total }} extracted findings · verified first, then by AI confidence</p>{% endif %}
       <ol class="mt-4">
-        {% for f in findings %}
-        <li class="border-b border-line py-5 grid grid-cols-[2rem_1fr] items-baseline"><span class="text-[12px] text-dim">{{ "{:02}"|format(loop.index) }}</span><span class="text-[16px] leading-relaxed">{{ f }}</span></li>
+        {% for x in findings %}
+        <li class="border-b border-line py-5 grid grid-cols-[2rem_1fr] items-baseline">
+          <span class="text-[12px] text-dim">{{ "{:02}"|format(loop.index) }}</span>
+          <div>
+            <p class="text-[16px] leading-relaxed">{{ x.text }}</p>
+            <p class="mt-2 text-[12px] text-muted">{% if let Some(c) = x.cat %}<span class="{{ c.class }}">{{ c.label }}</span> · {% endif %}<a class="text-sky hover:underline" href="{{ x.paper_href }}">{{ x.source }}</a>{% if let Some(c) = x.confidence %} · AI confidence {{ c }}{% endif %} · {% if x.verified %}<span class="text-cyan">✓ Verified</span>{% else %}Unverified{% endif %}</p>
+          </div>
+        </li>
         {% endfor %}
       </ol>
     </div>
     <aside class="lg:col-span-4">
       <h3 class="text-[19px] font-semibold">Sensors &amp; diagnostics</h3>
-      {% if sensor_list.is_empty() %}<p class="mt-5 text-[14px] text-dim">Not loaded yet.</p>{% endif %}
-      {% for s in sensor_list %}<div class="mt-5 text-[16px]">{{ s }}</div>{% endfor %}
+      {% if sensor_list.is_empty() %}<p class="mt-5 text-[14px] text-dim">None extracted yet.</p>{% endif %}
+      {% for s in sensor_list %}<div class="mt-4 text-[15px]">{{ s }}</div>{% endfor %}
     </aside>
   </div>
 </section>
 
-<section class="wrap py-14 grid lg:grid-cols-12 gap-12">
-  <div class="lg:col-span-8">
-    <h3 class="text-[28px] font-semibold tracking-tight">Read the original research.</h3>
-    {% if papers.is_empty() && related.is_empty() %}<p class="mt-6 text-[16px] text-dim">No NASA papers are linked to this experiment yet.</p>{% endif %}
-    {% if !related.is_empty() %}<p class="mt-4 eyebrow">Indexed papers that mention {{ e.acronym }} by name</p>{% endif %}
-    {% for p in related %}
-    <div class="mt-6">
-      <a href="{{ p.href }}" class="text-[18px] text-sky hover:underline">{{ p.title }}</a>
-      <div class="mt-2 eyebrow">{{ p.year }} · {{ p.kind }} · {{ p.status }}</div>
-    </div>
-    {% endfor %}
-    {% for p in papers %}
-    <div class="mt-7">
-      {% if let Some(u) = p.url %}<a href="{{ u }}" target="_blank" rel="noopener" class="text-[18px] text-sky hover:underline">{{ p.title }}</a>
-      {% else %}<span class="text-[18px]">{{ p.title }}</span>{% endif %}
-      <div class="mt-2 eyebrow">{% if let Some(n) = p.ntrs_id %}NTRS {{ n }}{% endif %}{% if let Some(y) = p.year %} · {{ y }}{% endif %}{% if let Some(a) = p.authors %} · {{ a }}{% endif %}</div>
-    </div>
-    {% endfor %}
+<section class="wrap py-14" id="papers">
+  <h3 class="text-[28px] font-semibold tracking-tight">Read the original research.</h3>
+  {% if papers.is_empty() %}<p class="mt-6 text-[16px] text-dim">No NASA papers are linked to this experiment yet.</p>{% endif %}
+  {% for p in papers %}
+  <div class="mt-6 max-w-4xl">
+    <a href="{{ p.href }}" class="text-[18px] text-sky hover:underline">{{ p.title }}</a>
+    <div class="mt-2 eyebrow">{{ p.year }} · {{ p.kind }} · {{ p.status }}</div>
   </div>
-  {% if let Some(app) = e.earth_application %}
-  <aside class="lg:col-span-4">
-    <div class="text-[12px] text-sky">Earth application</div>
-    <p class="mt-3 text-[16px] leading-relaxed text-muted">{{ app }}</p>
-  </aside>
-  {% endif %}
+  {% endfor %}
 </section>
 {% endblock %}

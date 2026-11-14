@@ -48,7 +48,7 @@
     <table class="w-full text-left text-[13px] min-w-[860px]">
       <thead class="text-muted">
         <tr class="border-b border-line">
-          <th class="py-3 pl-3 font-normal">Experiment ↑</th><th class="font-normal">Category</th><th class="font-normal">Fuel</th><th class="font-normal">O₂ range</th><th class="font-normal">Airflow</th><th class="font-normal">Sensors</th><th class="font-normal pr-3">Papers</th>
+          <th class="py-3 pl-3 font-normal">Experiment ↑</th><th class="font-normal">Category</th><th class="font-normal">Fuel</th><th class="font-normal">O₂ tested</th><th class="font-normal">Airflow</th><th class="font-normal">Sensors</th><th class="font-normal pr-3">Papers</th>
         </tr>
       </thead>
       <tbody>
@@ -67,6 +67,6 @@
       </tbody>
     </table>
   </div>
-  <p class="mt-5 eyebrow">“—” means that value hasn't been loaded from NASA sources yet.</p>
+  <p class="mt-5 eyebrow">{{ status_line }} · <a class="text-sky hover:underline" href="/explorer?refresh=1">Refresh</a> · “—” means nothing has been extracted for that value yet.</p>
 </section>
 {% endblock %}

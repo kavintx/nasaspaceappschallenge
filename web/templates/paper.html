@@ -4,6 +4,7 @@
   <a href="/papers" class="text-[13px] text-sky hover:underline">← Literature</a>
   <h2 class="mt-5 text-[30px] md:text-[40px] leading-tight font-semibold tracking-tight max-w-5xl">{{ title }}</h2>
   {% if !authors.is_empty() %}<p class="mt-4 text-[15px] text-muted">{{ authors }}</p>{% endif %}
+  {% if !experiments.is_empty() %}<p class="mt-3 text-[13px] text-muted">Experiments: {% for e in experiments %}<a class="text-sky hover:underline" href="/experiments/{{ e.0 }}">{{ e.1 }}</a>{% if !loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
   <div class="mt-6 flex gap-3">
     {% if let Some(u) = ntrs_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-primary">Open on NASA NTRS ↗</a>{% endif %}
     {% if let Some(u) = pdf_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-ghost">PDF ↗</a>{% endif %}
@@ -18,14 +19,14 @@
     {% if conditions.is_empty() %}<p class="mt-6 text-[15px] text-dim">Nothing extracted from this paper yet.</p>
     {% else %}
     <div class="mt-5 overflow-x-auto">
-      <table class="w-full text-left text-[13px] min-w-[900px]">
-        <thead class="text-muted"><tr class="border-b border-line"><th class="py-3 pl-3 font-normal">Fuel</th><th class="font-normal">Oxidizer</th><th class="font-normal">O₂</th><th class="font-normal">Pressure</th><th class="font-normal">Flow</th><th class="font-normal">Gravity</th><th class="font-normal">Sample</th><th class="font-normal pr-3"></th></tr></thead>
+      <table class="w-full text-left text-[13px] min-w-[960px]">
+        <thead class="text-muted"><tr class="border-b border-line"><th class="py-3 pl-3 font-normal">Fuel</th><th class="font-normal">O₂</th><th class="font-normal">Pressure</th><th class="font-normal">Airflow</th><th class="font-normal">Sensors</th><th class="font-normal">Source</th><th class="font-normal">AI conf.</th><th class="font-normal pr-3">Status</th></tr></thead>
         <tbody>
           {% for c in conditions %}
           <tr class="border-b border-line align-top">
-            <td class="py-3.5 pl-3 pr-4 font-medium">{{ c.fuel }}{% if let Some(n) = c.notes %}<div class="mt-1 font-normal text-dim">{{ n }}</div>{% endif %}</td>
-            <td class="py-3.5 pr-4 text-muted">{{ c.oxidizer }}</td><td class="py-3.5 pr-4 text-muted whitespace-nowrap">{{ c.o2 }}</td><td class="py-3.5 pr-4 text-muted whitespace-nowrap">{{ c.pressure }}</td><td class="py-3.5 pr-4 text-muted whitespace-nowrap">{{ c.flow }}</td><td class="py-3.5 pr-4 text-muted">{{ c.gravity }}</td><td class="py-3.5 pr-4 text-muted">{{ c.geometry }}</td>
-            <td class="py-3.5 pr-3 whitespace-nowrap">{% if c.verified %}<span class="text-cyan">✓ Verified</span>{% else %}<span class="text-dim">Unverified</span>{% endif %}</td>
+            <td class="py-3.5 pl-3 pr-4 font-medium">{{ c.fuel }}{% if let Some(g) = c.geometry %}<div class="mt-1 font-normal text-dim">{{ g }}</div>{% endif %}</td>
+            <td class="py-3.5 pr-4 text-muted">{{ c.o2 }}</td><td class="py-3.5 pr-4 text-muted">{{ c.pressure }}</td><td class="py-3.5 pr-4 text-muted">{{ c.airflow }}</td><td class="py-3.5 pr-4 text-muted">{{ c.sensors }}</td><td class="py-3.5 pr-4 text-muted whitespace-nowrap">{{ c.source }}</td><td class="py-3.5 pr-4 text-muted">{{ c.confidence }}</td>
+            <td class="py-3.5 pr-3 whitespace-nowrap">{% if c.verified %}<span class="text-cyan">✓ {{ c.status }}</span>{% else %}<span class="text-dim">{{ c.status }}</span>{% endif %}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -43,8 +44,8 @@
     <li class="border-b border-line py-6 grid grid-cols-[2rem_1fr] items-baseline">
       <span class="text-[12px] text-dim">{{ "{:02}"|format(loop.index) }}</span>
       <div>
-        <p class="text-[17px] leading-relaxed">{{ x.claim }}</p>
-        <p class="mt-2 text-[12px] text-muted">{% if !x.category.is_empty() %}<span class="text-amber">{{ x.category }}</span> · {% endif %}{% if let Some(m) = x.metric %}{{ m }} · {% endif %}{% if let Some(c) = x.confidence %}AI confidence {{ c }} · {% endif %}{% if x.verified %}<span class="text-cyan">✓ Verified</span>{% else %}Unverified{% endif %}</p>
+        <p class="text-[17px] leading-relaxed">{{ x.text }}</p>
+        <p class="mt-2 text-[12px] text-muted">{% if let Some(c) = x.cat %}<span class="{{ c.class }}">{{ c.label }}</span> · {% endif %}{% if !x.meta.is_empty() %}{{ x.meta }} · {% endif %}{% if x.verified %}<span class="text-cyan">✓ {{ x.status }}</span>{% else %}{{ x.status }}{% endif %}</p>
         {% if let Some(q) = x.quote %}<p class="mt-3 pl-4 border-l border-line text-[14px] leading-relaxed text-dim">“{{ q }}”</p>{% endif %}
       </div>
     </li>

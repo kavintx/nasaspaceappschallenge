@@ -1,8 +1,8 @@
 //! Page handlers and the view models each template renders.
 
 use crate::ai::{self, AiResult};
-use crate::backend::{self, f, flag, https, s as js};
-use crate::data::{Experiment, Paper};
+use crate::backend::{f, https, s as js, Backend};
+use crate::catalog::{self, paper_ref, Catalog, Exp, Finding, PaperRef, NA};
 use crate::AppState;
 use askama::Template;
 use axum::{
@@ -12,10 +12,13 @@ use axum::{
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
-use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 
 type AppRef = State<Arc<AppState>>;
+
+/// How long the experiment catalog is reused before it is rebuilt.
+const CATALOG_TTL: Duration = Duration::from_secs(300);
 
 fn render<T: Template>(t: T) -> Response {
     match t.render() {
@@ -24,13 +27,36 @@ fn render<T: Template>(t: T) -> Response {
     }
 }
 
-fn data_error(msg: String) -> Response {
-    eprintln!("data error: {msg}");
-    render(ErrorPage {
-        active: "",
-        page_title: "Data unavailable".into(),
-        context_line: String::new(),
-        message: msg,
+fn message_page(active: &'static str, title: &str, message: String) -> Response {
+    render(ErrorPage { active, page_title: title.into(), context_line: String::new(), message })
+}
+
+const NOT_CONNECTED: &str = "The research backend isn't connected. Copy web/.env.example to web/.env, paste the API token after API_AUTH_TOKEN=, and restart the app.";
+
+fn backend(app: &AppState) -> Result<&Backend, Response> {
+    app.backend
+        .as_ref()
+        .ok_or_else(|| message_page("", "Backend not connected", NOT_CONNECTED.into()))
+}
+
+/// The cached catalog, rebuilt when stale or when `refresh` is set.
+async fn load_catalog(app: &AppState, refresh: bool) -> Result<Arc<Catalog>, String> {
+    let b = app.backend.as_ref().ok_or_else(|| NOT_CONNECTED.to_string())?;
+    let mut slot = app.catalog.lock().await;
+    if let Some(c) = slot.as_ref() {
+        if !refresh && c.built.elapsed() < CATALOG_TTL {
+            return Ok(c.clone());
+        }
+    }
+    let fresh = Arc::new(catalog::build(b).await?);
+    *slot = Some(fresh.clone());
+    Ok(fresh)
+}
+
+async fn catalog_or_page(app: &AppState, refresh: bool) -> Result<Arc<Catalog>, Response> {
+    load_catalog(app, refresh).await.map_err(|e| {
+        eprintln!("catalog error: {e}");
+        message_page("", "Data unavailable", e)
     })
 }
 
@@ -41,8 +67,8 @@ pub struct Cat {
     pub class: &'static str,
 }
 
-pub fn category(raw: Option<&str>) -> Cat {
-    match raw.unwrap_or("other") {
+pub fn category(raw: &str) -> Cat {
+    match raw {
         "prevention" => Cat { label: "Prevention".into(), class: "text-amber" },
         "detection" => Cat { label: "Detection".into(), class: "text-cyan" },
         "suppression" => Cat { label: "Suppression".into(), class: "text-sky" },
@@ -58,54 +84,49 @@ fn num(v: f64) -> String {
     }
 }
 
-fn range(min: Option<f64>, max: Option<f64>, unit: &str) -> Option<String> {
-    match (min, max) {
-        (Some(a), Some(b)) if (a - b).abs() < 1e-9 => Some(format!("{}{unit}", num(a))),
-        (Some(a), Some(b)) => Some(format!("{}–{}{unit}", num(a), num(b))),
-        (None, Some(b)) => Some(format!("≤{}{unit}", num(b))),
-        (Some(a), None) => Some(format!("≥{}{unit}", num(a))),
-        (None, None) => None,
-    }
-}
-
-const NA: &str = "—";
-
-fn o2(e: &Experiment) -> String {
-    range(e.oxygen_min_pct, e.oxygen_max_pct, "%").unwrap_or_else(|| NA.into())
-}
-fn airflow(e: &Experiment) -> String {
-    range(e.airflow_min_cms, e.airflow_max_cms, " cm/s").unwrap_or_else(|| NA.into())
-}
-fn pressure(e: &Experiment) -> String {
-    range(e.pressure_min_kpa, e.pressure_max_kpa, " kPa").unwrap_or_else(|| NA.into())
-}
-fn fuel_label(e: &Experiment) -> String {
-    match e.fuel_type.as_deref() {
-        Some("none") => "No fuel".into(),
-        Some(f) => capitalize(f),
-        None => NA.into(),
-    }
-}
-fn sensors(e: &Experiment) -> String {
-    e.sensors
-        .as_ref()
-        .filter(|s| !s.is_empty())
-        .map(|s| s.join(" / "))
-        .unwrap_or_else(|| NA.into())
-}
-fn capitalize(s: &str) -> String {
-    let mut c = s.chars();
+fn capitalize(text: &str) -> String {
+    let mut c = text.chars();
     match c.next() {
-        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+        Some(first) => first.to_uppercase().collect::<String>() + c.as_str(),
         None => String::new(),
     }
 }
-fn lines(s: Option<&str>) -> Vec<String> {
-    s.unwrap_or("")
-        .lines()
-        .map(|l| l.trim().trim_start_matches(['-', '•', '*']).trim().to_string())
-        .filter(|l| !l.is_empty())
-        .collect()
+
+/// "a / b / c +2 more"
+fn some_of(list: &[String], max: usize) -> String {
+    if list.is_empty() {
+        return NA.into();
+    }
+    let mut out = list.iter().take(max).cloned().collect::<Vec<_>>().join(" / ");
+    if list.len() > max {
+        out.push_str(&format!(" +{} more", list.len() - max));
+    }
+    out
+}
+
+/// One value as-is, several as a count.
+fn one_or_count(list: &[String], noun: &str) -> String {
+    match list.len() {
+        0 => NA.into(),
+        1 => list[0].clone(),
+        n => format!("{n} {noun}"),
+    }
+}
+
+fn o2_text(e: &Exp) -> String {
+    match (e.o2_min(), e.o2_max()) {
+        (Some(a), Some(b)) if (a - b).abs() < 1e-9 => format!("{}%", num(a)),
+        (Some(a), Some(b)) => format!("{}–{}%", num(a), num(b)),
+        _ => some_of(&e.o2_raw, 2),
+    }
+}
+
+fn fuel_phase(e: &Exp) -> String {
+    if e.fuel_phase.is_empty() { NA.into() } else { capitalize(e.fuel_phase) }
+}
+
+fn hardware(e: &Exp) -> String {
+    if e.hardware.is_empty() { NA.into() } else { e.hardware.to_string() }
 }
 
 // ---------- habitats ----------
@@ -145,7 +166,8 @@ pub struct EvidenceRow {
     pub acronym: String,
     pub cat: Cat,
     pub line: String,
-    pub score: Option<String>,
+    pub badge: String,
+    pub badge_class: &'static str,
 }
 
 pub struct Insight {
@@ -174,7 +196,7 @@ pub struct HabitatPage {
     pub earth_pos: f64,
     pub hab_pos: Option<f64>,
     pub evidence: Vec<EvidenceRow>,
-    pub ranked: bool,
+    pub evidence_note: Option<String>,
     pub total: usize,
     pub insights: Vec<Insight>,
     pub backend_on: bool,
@@ -201,53 +223,53 @@ pub fn context_for(key: &str) -> String {
 }
 
 pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Response {
-    let key = q.h.unwrap_or_else(|| "moon_base".into());
+    let key = q.h.clone().unwrap_or_else(|| "moon_base".into());
     let sel = HABITATS.iter().find(|h| h.key == key).unwrap_or(&HABITATS[1]);
 
-    let experiments = match app.data.experiments().await {
-        Ok(e) => e,
-        Err(e) => return data_error(e),
-    };
-    let scores = match app.data.habitat_scores(sel.key).await {
-        Ok(s) => s,
-        Err(e) => return data_error(e),
-    };
-    let by_id: HashMap<&str, &Experiment> = experiments.iter().map(|e| (e.id.as_str(), e)).collect();
-
-    let ranked = !scores.is_empty();
-    let evidence: Vec<EvidenceRow> = if ranked {
-        scores
-            .iter()
-            .filter_map(|s| by_id.get(s.experiment_id.as_str()).map(|e| (s, *e)))
-            .take(6)
-            .enumerate()
-            .map(|(i, (s, e))| EvidenceRow {
-                rank: format!("{:02}", i + 1),
-                id: e.id.clone(),
-                acronym: e.acronym.clone(),
-                cat: category(e.category.as_deref()),
-                line: s.reason.clone().or_else(|| e.objective.clone()).unwrap_or_else(|| e.name.clone()),
-                score: Some(format!("{}", s.score.round() as i64)),
-            })
-            .collect()
-    } else {
-        experiments
-            .iter()
-            .take(6)
-            .enumerate()
-            .map(|(i, e)| EvidenceRow {
-                rank: format!("{:02}", i + 1),
-                id: e.id.clone(),
-                acronym: e.acronym.clone(),
-                cat: category(e.category.as_deref()),
-                line: e.objective.clone().unwrap_or_else(|| e.name.clone()),
-                score: None,
-            })
-            .collect()
+    // Evidence: which experiments tested oxygen levels as high as this habitat's.
+    let (evidence, evidence_note, total) = match load_catalog(&app, false).await {
+        Err(e) => (vec![], Some(e), 0),
+        Ok(cat) => {
+            let mut ranked: Vec<&Exp> = cat.exps.iter().collect();
+            let covers = |e: &Exp| matches!((e.o2_max(), sel.o2_pct), (Some(m), Some(h)) if m >= h);
+            ranked.sort_by(|a, b| {
+                covers(b)
+                    .cmp(&covers(a))
+                    .then(b.o2_max().partial_cmp(&a.o2_max()).unwrap_or(std::cmp::Ordering::Equal))
+                    .then(b.findings.len().cmp(&a.findings.len()))
+            });
+            let rows = ranked
+                .iter()
+                .take(6)
+                .enumerate()
+                .map(|(i, e)| {
+                    let tested = if e.o2_values.is_empty() {
+                        "No oxygen levels extracted yet".to_string()
+                    } else {
+                        format!("Tested at {} O₂", o2_text(e))
+                    };
+                    let (badge, badge_class) = match (e.o2_max(), sel.o2_pct) {
+                        (Some(m), Some(h)) if m >= h => (format!("Reaches {}% O₂", num(h)), "text-cyan"),
+                        (Some(_), Some(h)) => (format!("Below {}% O₂", num(h)), "text-dim"),
+                        _ => (String::new(), "text-dim"),
+                    };
+                    EvidenceRow {
+                        rank: format!("{:02}", i + 1),
+                        id: e.id.clone(),
+                        acronym: e.acronym.clone(),
+                        cat: category(e.category),
+                        line: format!("{tested} · {} papers · {} findings", e.papers.len(), e.findings.len()),
+                        badge,
+                        badge_class,
+                    }
+                })
+                .collect();
+            (rows, None, cat.exps.len())
+        }
     };
 
     let scale_max = 40.0;
-    let (big_figure, big_caption, verdict, explanation, pp_habitat, hab_pos) = match (sel.o2_pct, sel.psi) {
+    let (big_figure, verdict, explanation, pp_habitat, hab_pos) = match (sel.o2_pct, sel.psi) {
         (Some(o), Some(p)) => {
             let delta = (o / EARTH_O2 - 1.0) * 100.0;
             let big = if delta.abs() < 0.5 { "±0%".to_string() } else { format!("+{}%", delta.round() as i64) };
@@ -266,18 +288,10 @@ pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Respo
                     ),
                 )
             };
-            (
-                big,
-                "Oxygen concentration vs. Earth air".to_string(),
-                verdict,
-                expl,
-                format!("{:.2} psi", o / 100.0 * p),
-                Some((o / scale_max * 100.0).min(100.0)),
-            )
+            (big, verdict, expl, format!("{:.2} psi", o / 100.0 * p), Some((o / scale_max * 100.0).min(100.0)))
         }
         _ => (
             NA.to_string(),
-            "Oxygen concentration vs. Earth air".to_string(),
             "Atmosphere not yet specified.".to_string(),
             "No Mars habitat atmosphere is given in the challenge data. Microgravity and Earth-gravity results can bound what happens at partial gravity.".to_string(),
             NA.to_string(),
@@ -303,7 +317,7 @@ pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Respo
             class: "text-amber",
             title: "Pick materials for the habitat's air.",
             body: "Flammability rises with oxygen concentration, and in microgravity airflow matters too. BASS, BASS-II and Saffire burned fabrics and plastics to map how solids ignite and spread.",
-            links: vec![("BASS-II", "bass-ii"), ("Saffire-III", "saffire-iii")],
+            links: vec![("BASS-II", "bass-ii"), ("SAFFIRE III", "saffire-iii")],
         },
         Insight {
             kind: "Detection",
@@ -326,31 +340,25 @@ pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Respo
     let ai = match (&app.backend, sel.o2_pct, sel.psi, q.analyze.is_some()) {
         (Some(b), Some(o), Some(p), true) => {
             let materials: Vec<&str> = f_materials.split(',').map(str::trim).filter(|m| !m.is_empty()).collect();
-            let gravity = match sel.key {
-                "iss" => "microgravity",
-                "mars" => "Mars gravity (3/8 g)",
-                _ => "lunar gravity (1/6 g)",
-            };
-            let scenario = json!({
-                "habitat_name": sel.name,
-                "oxygen_percent": o,
-                "pressure_kpa": (p * 6.89476 * 10.0).round() / 10.0,
-                "ventilation_velocity_cm_s": f_vent.trim().parse::<f64>().unwrap_or(10.0),
-                "gravity_level": gravity,
-                "materials": materials,
-                "notes": "Atmosphere from the NASA Space Apps challenge brief",
-            });
-            Some(ai::from_reply(b.habitat(scenario).await))
+            if materials.is_empty() {
+                Some(ai::from_reply(Err("List at least one material to assess.".into())))
+            } else {
+                let mut scenario = json!({
+                    "materials": materials,
+                    "habitat_name": sel.name,
+                    "oxygen_percent": o,
+                    "pressure_kpa": (p * 6.89476 * 10.0).round() / 10.0,
+                });
+                if let Ok(v) = f_vent.trim().parse::<f64>() {
+                    scenario["airflow_cm_s"] = json!(v);
+                }
+                Some(ai::from_reply(b.habitat(scenario).await))
+            }
         }
         _ => None,
     };
 
     render(HabitatPage {
-        backend_on: app.backend.is_some(),
-        can_analyze: sel.o2_pct.is_some(),
-        f_materials,
-        f_vent,
-        ai,
         active: "habitat",
         page_title: "Habitat Risk".into(),
         context_line: context_for(sel.key),
@@ -358,7 +366,7 @@ pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Respo
         sel_name: sel.name,
         sel_key: sel.key,
         big_figure,
-        big_caption,
+        big_caption: "Oxygen concentration vs. Earth air".into(),
         verdict,
         explanation,
         pp_habitat,
@@ -366,9 +374,14 @@ pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Respo
         earth_pos: EARTH_O2 / scale_max * 100.0,
         hab_pos,
         evidence,
-        ranked,
-        total: experiments.len(),
+        evidence_note,
+        total,
         insights,
+        backend_on: app.backend.is_some(),
+        can_analyze: sel.o2_pct.is_some(),
+        f_materials,
+        f_vent,
+        ai,
     })
 }
 
@@ -398,6 +411,7 @@ pub struct ExplorerPage {
     pub f_hardware: String,
     pub f_q: String,
     pub hardware_options: Vec<String>,
+    pub status_line: String,
 }
 
 #[derive(Deserialize, Default)]
@@ -406,65 +420,77 @@ pub struct ExplorerQuery {
     fuel: Option<String>,
     hardware: Option<String>,
     q: Option<String>,
+    refresh: Option<String>,
 }
 
-pub async fn explorer(State(app): AppRef, Query(f): Query<ExplorerQuery>) -> Response {
-    let experiments = match app.data.experiments().await {
-        Ok(e) => e,
-        Err(e) => return data_error(e),
+pub async fn explorer(State(app): AppRef, Query(q): Query<ExplorerQuery>) -> Response {
+    let cat = match catalog_or_page(&app, q.refresh.is_some()).await {
+        Ok(c) => c,
+        Err(page) => return page,
     };
-    let total = experiments.len();
-    let mut hardware_options: Vec<String> = experiments.iter().filter_map(|e| e.hardware.clone()).collect();
+    let mut hardware_options: Vec<String> = cat.exps.iter().map(|e| e.hardware.to_string()).filter(|h| !h.is_empty()).collect();
     hardware_options.sort();
     hardware_options.dedup();
 
-    let fc = f.category.clone().unwrap_or_default();
-    let ff = f.fuel.clone().unwrap_or_default();
-    let fh = f.hardware.clone().unwrap_or_default();
-    let fq = f.q.clone().unwrap_or_default();
+    let fc = q.category.unwrap_or_default();
+    let ff = q.fuel.unwrap_or_default();
+    let fh = q.hardware.unwrap_or_default();
+    let fq = q.q.unwrap_or_default();
     let ql = fq.trim().to_lowercase();
 
-    let rows = experiments
+    let rows = cat
+        .exps
         .iter()
-        .filter(|e| fc.is_empty() || e.category.as_deref() == Some(fc.as_str()))
-        .filter(|e| ff.is_empty() || e.fuel_type.as_deref() == Some(ff.as_str()))
-        .filter(|e| fh.is_empty() || e.hardware.as_deref() == Some(fh.as_str()))
+        .filter(|e| fc.is_empty() || e.category == fc)
+        .filter(|e| ff.is_empty() || e.fuel_phase == ff)
+        .filter(|e| fh.is_empty() || e.hardware == fh)
         .filter(|e| {
             ql.is_empty()
-                || [
-                    Some(e.acronym.as_str()),
-                    Some(e.name.as_str()),
-                    e.objective.as_deref(),
-                    e.fuel_details.as_deref(),
-                    e.key_findings.as_deref(),
-                ]
-                .iter()
-                .flatten()
-                .any(|s| s.to_lowercase().contains(&ql))
+                || format!(
+                    "{} {} {} {} {}",
+                    e.acronym,
+                    e.name,
+                    e.description.clone().unwrap_or_default(),
+                    e.fuels.join(" "),
+                    e.sensors.join(" ")
+                )
+                .to_lowercase()
+                .contains(&ql)
         })
         .map(|e| ExplorerRow {
             id: e.id.clone(),
             acronym: e.acronym.clone(),
-            cat: category(e.category.as_deref()),
-            fuel: fuel_label(e),
-            o2: o2(e),
-            airflow: airflow(e),
-            sensors: sensors(e),
-            papers: format!("{:02}", e.paper_count()),
+            cat: category(e.category),
+            fuel: fuel_phase(e),
+            o2: o2_text(e),
+            airflow: one_or_count(&e.airflows, "settings"),
+            sensors: some_of(&e.sensors, 2),
+            papers: format!("{:02}", e.papers.len()),
         })
         .collect();
+
+    let mins = cat.built.elapsed().as_secs() / 60;
+    let mut status_line = format!(
+        "Rolled up from {} papers · updated {}",
+        cat.paper_count,
+        if mins == 0 { "just now".to_string() } else { format!("{mins} min ago") }
+    );
+    if cat.failed > 0 {
+        status_line.push_str(&format!(" · {} papers could not be read", cat.failed));
+    }
 
     render(ExplorerPage {
         active: "explorer",
         page_title: "Explorer".into(),
         context_line: context_for("moon_base"),
         rows,
-        total,
+        total: cat.exps.len(),
         f_category: fc,
         f_fuel: ff,
         f_hardware: fh,
         f_q: fq,
         hardware_options,
+        status_line,
     })
 }
 
@@ -476,22 +502,44 @@ pub struct Tile {
     pub caption: String,
 }
 
+pub struct FindingView {
+    pub text: String,
+    pub cat: Option<Cat>,
+    pub paper_href: String,
+    pub source: String,
+    pub confidence: Option<String>,
+    pub verified: bool,
+}
+
+fn finding_view(x: &Finding) -> FindingView {
+    FindingView {
+        text: x.text.clone(),
+        cat: (!x.category.is_empty()).then(|| category(&x.category)),
+        paper_href: x.paper_href.clone(),
+        source: x.source.clone(),
+        confidence: x.confidence.map(|c| format!("{}%", (c * 100.0).round() as i64)),
+        verified: x.verified,
+    }
+}
+
 #[derive(Template)]
 #[template(path = "detail.html")]
 pub struct DetailPage {
     pub active: &'static str,
     pub page_title: String,
     pub context_line: String,
-    pub e: Experiment,
+    pub id: String,
+    pub acronym: String,
+    pub name: String,
     pub cat: Cat,
-    pub meta: String,
+    pub hardware: String,
     pub tiles: Vec<Tile>,
     pub brief: Option<String>,
-    pub findings: Vec<String>,
+    pub objectives: Vec<String>,
+    pub findings: Vec<FindingView>,
+    pub findings_total: usize,
     pub sensor_list: Vec<String>,
-    pub papers: Vec<Paper>,
-    pub related: Vec<PaperRow>,
-    pub backend_on: bool,
+    pub papers: Vec<PaperRef>,
     pub ai: Option<AiResult>,
 }
 
@@ -501,91 +549,45 @@ pub struct DetailQuery {
 }
 
 pub async fn detail(State(app): AppRef, Path(id): Path<String>, Query(q): Query<DetailQuery>) -> Response {
-    let e = match app.data.experiment(&id).await {
-        Ok(Some(e)) => e,
-        Ok(None) => {
-            return (
-                StatusCode::NOT_FOUND,
-                render(ErrorPage {
-                    active: "explorer",
-                    page_title: "Not found".into(),
-                    context_line: String::new(),
-                    message: format!("No experiment with id \"{id}\"."),
-                }),
-            )
-                .into_response()
-        }
-        Err(err) => return data_error(err),
+    let cat = match catalog_or_page(&app, false).await {
+        Ok(c) => c,
+        Err(page) => return page,
     };
-    let papers = match app.data.papers_for(&id).await {
-        Ok(p) => p,
-        Err(err) => return data_error(err),
+    let Some(e) = cat.exps.iter().find(|e| e.id == id) else {
+        return (
+            StatusCode::NOT_FOUND,
+            message_page("explorer", "Not found", format!("No experiment with id \"{id}\".")),
+        )
+            .into_response();
     };
-    let cat = category(e.category.as_deref());
-    let meta = [
-        Some(cat.label.clone()),
-        e.hardware.clone(),
-        e.platform.clone(),
-    ]
-    .into_iter()
-    .flatten()
-    .collect::<Vec<_>>()
-    .join(" · ");
+    let ai = match (&app.backend, q.summarize.is_some()) {
+        (Some(b), true) => Some(ai::from_reply(b.summarize(&e.acronym).await)),
+        _ => None,
+    };
     let tiles = vec![
-        Tile { label: "Oxygen range", value: o2(&e), caption: "O₂ concentration tested".into() },
-        Tile { label: "Pressure", value: pressure(&e), caption: "Chamber pressure".into() },
-        Tile { label: "Airflow speed", value: airflow(&e), caption: "Imposed flow".into() },
-        Tile {
-            label: "Fuel samples",
-            value: fuel_label(&e),
-            caption: e.fuel_details.clone().unwrap_or_else(|| "Sample details pending".into()),
-        },
+        Tile { label: "Oxygen tested", value: o2_text(e), caption: format!("Across {} extracted test conditions", e.conditions) },
+        Tile { label: "Pressure", value: one_or_count(&e.pressures, "settings"), caption: if e.pressures.len() > 1 { some_of(&e.pressures, 3) } else { "Chamber pressure".into() } },
+        Tile { label: "Airflow", value: one_or_count(&e.airflows, "settings"), caption: if e.airflows.len() > 1 { some_of(&e.airflows, 3) } else { "Imposed flow".into() } },
+        Tile { label: "Fuel", value: fuel_phase(e), caption: if e.fuels.is_empty() { "No fuels extracted yet".into() } else { some_of(&e.fuels, 4) } },
     ];
-    let brief = e.ai_summary.clone().or_else(|| e.objective.clone());
-    let findings = lines(e.key_findings.as_deref());
-    let sensor_list = e.sensors.clone().unwrap_or_default();
-
-    // From the research backend: papers that mention this experiment, and an AI summary on request.
-    let mut related = vec![];
-    let mut ai = None;
-    if let Some(b) = &app.backend {
-        if let Ok(all) = b.papers(None, 200).await {
-            let name = e.name.to_lowercase();
-            related = all
-                .iter()
-                .filter(|p| {
-                    let text = format!("{} {}", js(p, "title").unwrap_or_default(), js(p, "abstract").unwrap_or_default());
-                    text.contains(&e.acronym) || text.to_lowercase().contains(&name)
-                })
-                .take(8)
-                .map(paper_row)
-                .collect();
-        }
-        if q.summarize.is_some() {
-            ai = Some(match b.experiments().await {
-                Err(err) => ai::from_reply(Err(err)),
-                Ok(list) => match backend::match_experiment(&list, &e.acronym) {
-                    Some(uuid) => ai::from_reply(b.summarize(&uuid).await),
-                    None => ai::from_reply(Err(format!("{} hasn't been indexed by the research backend yet.", e.acronym))),
-                },
-            });
-        }
-    }
+    let hw = hardware(e);
     render(DetailPage {
-        related,
-        backend_on: app.backend.is_some(),
-        ai,
         active: "explorer",
         page_title: e.acronym.clone(),
-        context_line: meta.clone(),
-        cat,
-        meta,
+        context_line: format!("{} · {}", category(e.category).label, hw),
+        id: e.id.clone(),
+        acronym: e.acronym.clone(),
+        name: e.name.clone(),
+        cat: category(e.category),
+        hardware: hw,
         tiles,
-        brief,
-        findings,
-        sensor_list,
-        papers,
-        e,
+        brief: e.description.clone(),
+        objectives: e.objectives.iter().take(4).cloned().collect(),
+        findings: e.findings.iter().take(12).map(finding_view).collect(),
+        findings_total: e.findings.len(),
+        sensor_list: e.sensors.clone(),
+        papers: e.papers.clone(),
+        ai,
     })
 }
 
@@ -596,7 +598,6 @@ pub struct CompareCol {
     pub id: String,
     pub acronym: String,
     pub meta: String,
-    pub cat_class: &'static str,
     pub remove_href: String,
 }
 
@@ -604,7 +605,6 @@ pub struct CompareRow {
     pub label: &'static str,
     pub cells: Vec<String>,
     pub differs: bool,
-    pub links: Vec<Option<String>>,
 }
 
 #[derive(Template)]
@@ -619,7 +619,6 @@ pub struct ComparePage {
     pub selected: Vec<String>,
     pub can_add: bool,
     pub next_slot: &'static str,
-    pub backend_on: bool,
     pub f_focus: String,
     pub ai: Option<AiResult>,
 }
@@ -634,139 +633,89 @@ pub struct CompareQuery {
 }
 
 pub async fn compare(State(app): AppRef, Query(q): Query<CompareQuery>) -> Response {
-    let experiments = match app.data.experiments().await {
-        Ok(e) => e,
-        Err(e) => return data_error(e),
+    let cat = match catalog_or_page(&app, false).await {
+        Ok(c) => c,
+        Err(page) => return page,
     };
     let want_ai = q.ai.is_some();
     let f_focus = q.focus.clone().unwrap_or_default();
     let untouched = q.a.is_none() && q.b.is_none() && q.c.is_none();
-    let picks: [(&'static str, String); 3] = if untouched {
-        [("a", "bass-ii".into()), ("b", "saffire-iii".into()), ("c", "flex-2".into())]
+    let picks: Vec<String> = if untouched {
+        vec!["bass-ii".into(), "saffire-iii".into(), "flex-2".into()]
     } else {
-        [
-            ("a", q.a.unwrap_or_default()),
-            ("b", q.b.unwrap_or_default()),
-            ("c", q.c.unwrap_or_default()),
-        ]
+        vec![q.a.unwrap_or_default(), q.b.unwrap_or_default(), q.c.unwrap_or_default()]
     };
     // Compact the picks so chosen experiments always fill slots a, b, c in order.
     const SLOTS: [&str; 3] = ["a", "b", "c"];
-    let chosen: Vec<(&'static str, &Experiment)> = picks
-        .iter()
-        .filter_map(|(_, id)| experiments.iter().find(|e| &e.id == id))
-        .enumerate()
-        .map(|(i, e)| (SLOTS[i], e))
-        .collect();
-    let selected: Vec<String> = chosen.iter().map(|(_, e)| e.id.clone()).collect();
+    let mut chosen: Vec<&Exp> = vec![];
+    for id in &picks {
+        if let Some(e) = cat.exps.iter().find(|e| &e.id == id) {
+            if !chosen.iter().any(|c| c.id == e.id) {
+                chosen.push(e);
+            }
+        }
+    }
+    let selected: Vec<String> = chosen.iter().map(|e| e.id.clone()).collect();
 
     let cols = chosen
         .iter()
-        .map(|(slot, e)| {
+        .enumerate()
+        .map(|(i, e)| {
             let params: Vec<String> = chosen
                 .iter()
-                .filter(|(s, _)| s != slot)
+                .filter(|o| o.id != e.id)
                 .enumerate()
-                .map(|(i, (_, o))| format!("{}={}", SLOTS[i], o.id))
+                .map(|(j, o)| format!("{}={}", SLOTS[j], o.id))
                 .collect();
-            let cat = category(e.category.as_deref());
             CompareCol {
-                slot,
+                slot: SLOTS[i],
                 id: e.id.clone(),
                 acronym: e.acronym.clone(),
-                meta: [Some(cat.label.clone()), e.platform.clone(), e.hardware.clone()]
-                    .into_iter()
-                    .flatten()
-                    .collect::<Vec<_>>()
-                    .join(" · "),
-                cat_class: cat.class,
+                meta: format!("{} · {}", category(e.category).label, hardware(e)),
                 remove_href: if params.is_empty() { "/compare?a=".into() } else { format!("/compare?{}", params.join("&")) },
             }
         })
         .collect();
 
-    let row = |label: &'static str, f: &dyn Fn(&Experiment) -> String| {
-        let cells: Vec<String> = chosen.iter().map(|(_, e)| f(e)).collect();
+    let row = |label: &'static str, cell: &dyn Fn(&Exp) -> String| {
+        let cells: Vec<String> = chosen.iter().map(|e| cell(e)).collect();
         let differs = cells.len() > 1 && cells.iter().any(|c| c != &cells[0]);
-        CompareRow { label, links: vec![None; cells.len()], cells, differs }
+        CompareRow { label, cells, differs }
     };
-    let mut rows = vec![
-        row("Objective", &|e| e.objective.clone().unwrap_or_else(|| e.name.clone())),
-        row("Fuel", &|e| match &e.fuel_details {
-            Some(d) => format!("{} · {d}", fuel_label(e)),
-            None => fuel_label(e),
-        }),
-        row("O₂ conditions", &|e| o2(e)),
-        row("Pressure", &|e| pressure(e)),
-        row("Airflow", &|e| airflow(e)),
-        row("Sensors", &|e| sensors(e)),
-        row("Hardware", &|e| e.hardware.clone().unwrap_or_else(|| NA.into())),
-        row("Key findings", &|e| {
-            let l = lines(e.key_findings.as_deref());
-            if l.is_empty() { "Pending research pipeline".into() } else { l.join(" ") }
-        }),
+    let rows = vec![
+        row("Full name", &|e| e.name.clone()),
+        row("Objective", &|e| e.objectives.first().cloned().or_else(|| e.description.clone()).unwrap_or_else(|| NA.into())),
+        row("Fuel", &|e| if e.fuels.is_empty() { fuel_phase(e) } else { format!("{} · {}", fuel_phase(e), some_of(&e.fuels, 3)) }),
+        row("O₂ tested", &|e| o2_text(e)),
+        row("Pressure", &|e| some_of(&e.pressures, 3)),
+        row("Airflow", &|e| some_of(&e.airflows, 3)),
+        row("Sensors", &|e| some_of(&e.sensors, 4)),
+        row("Hardware", &|e| hardware(e)),
+        row("Top finding", &|e| e.findings.first().map(|x| x.text.clone()).unwrap_or_else(|| NA.into())),
+        row("Evidence", &|e| format!("{} papers · {} findings", e.papers.len(), e.findings.len())),
     ];
-    rows.push(CompareRow {
-        label: "Source",
-        cells: chosen
-            .iter()
-            .map(|(_, e)| if e.psi_url.is_some() { "NASA PSI ↗".into() } else { "Open experiment →".into() })
-            .collect(),
-        links: chosen
-            .iter()
-            .map(|(_, e)| Some(e.psi_url.clone().unwrap_or_else(|| format!("/experiments/{}", e.id))))
-            .collect(),
-        differs: false,
-    });
 
-    let options = experiments.iter().map(|e| (e.id.clone(), e.acronym.clone())).collect();
-    let can_add = chosen.len() < 3;
     let ai = match (&app.backend, want_ai) {
-        (Some(b), true) => Some(match b.experiments().await {
-            Err(err) => ai::from_reply(Err(err)),
-            Ok(list) => {
-                let mut ids = vec![];
-                let mut missing = vec![];
-                for (_, e) in &chosen {
-                    match backend::match_experiment(&list, &e.acronym) {
-                        Some(id) => {
-                            if !ids.contains(&id) {
-                                ids.push(id)
-                            }
-                        }
-                        None => missing.push(e.acronym.clone()),
-                    }
-                }
-                if ids.len() < 2 {
-                    ai::from_reply(Err(if missing.is_empty() {
-                        "Pick at least two different experiments to compare.".to_string()
-                    } else {
-                        format!("Not indexed by the research backend yet: {}. The AI needs at least two indexed experiments.", missing.join(", "))
-                    }))
-                } else {
-                    let mut out = ai::from_reply(b.compare(&ids, &f_focus).await);
-                    if !missing.is_empty() && out.error.is_none() {
-                        out.error = Some(format!("Left out (not indexed yet): {}.", missing.join(", ")));
-                    }
-                    out
-                }
-            }
+        (Some(b), true) => Some(if chosen.len() < 2 {
+            ai::from_reply(Err("Pick at least two experiments to compare.".into()))
+        } else {
+            let names: Vec<String> = chosen.iter().map(|e| e.acronym.clone()).collect();
+            ai::from_reply(b.compare(&names, &f_focus).await)
         }),
         _ => None,
     };
     render(ComparePage {
-        backend_on: app.backend.is_some(),
-        f_focus,
-        ai,
         active: "compare",
         page_title: "Compare".into(),
         context_line: context_for("moon_base"),
         cols,
         rows,
-        options,
+        options: cat.exps.iter().map(|e| (e.id.clone(), e.acronym.clone())).collect(),
+        can_add: chosen.len() < 3,
         next_slot: SLOTS[chosen.len().min(2)],
         selected,
-        can_add,
+        f_focus,
+        ai,
     })
 }
 
@@ -779,9 +728,7 @@ pub struct AskPage {
     pub page_title: String,
     pub context_line: String,
     pub question: String,
-    pub backend_on: bool,
     pub ai: Option<AiResult>,
-    pub matched: Vec<(String, String, String)>,
     pub suggestions: Vec<&'static str>,
 }
 
@@ -790,96 +737,28 @@ pub struct AskQuery {
     q: Option<String>,
 }
 
-const STOPWORDS: &[&str] = &[
-    "what", "which", "where", "when", "does", "with", "that", "this", "from", "most", "about",
-    "have", "there", "their", "into", "they", "will", "would", "should", "could", "levels", "level",
-];
-
-fn keywords(q: &str) -> Vec<String> {
-    let mut out: Vec<String> = q
-        .to_lowercase()
-        .split(|c: char| !c.is_alphanumeric())
-        .filter(|w| w.len() > 3 && !STOPWORDS.contains(w))
-        .map(|w| w.to_string())
-        .collect();
-    out.dedup();
-    out.truncate(5);
-    out
-}
-
 pub async fn ask(State(app): AppRef, Query(q): Query<AskQuery>) -> Response {
+    let b = match backend(&app) {
+        Ok(b) => b,
+        Err(page) => return page,
+    };
     let question = q.q.unwrap_or_default().trim().to_string();
-    let mut page = AskPage {
+    let ai = if question.is_empty() { None } else { Some(ai::from_reply(b.query(&question).await)) };
+    render(AskPage {
         active: "ask",
         page_title: "Ask the Data".into(),
-        context_line: context_for("moon_base"),
-        question: question.clone(),
-        backend_on: app.backend.is_some(),
-        ai: None,
-        matched: vec![],
+        context_line: "Answers cite NASA NTRS papers".into(),
+        question,
+        ai,
         suggestions: vec![
             "How does low cabin pressure with elevated oxygen affect flame spread?",
             "How does airflow change flame spread in microgravity?",
             "Which experiments studied fire suppression?",
         ],
-    };
-    if question.is_empty() {
-        return render(page);
-    }
-    if let Some(b) = &app.backend {
-        let mut out = ai::from_reply(b.query(&question).await);
-        // The question is already the page headline.
-        out.blocks.retain(|blk| blk.heading.as_deref() != Some("Question"));
-        if out.blocks.len() == 1 {
-            out.blocks[0].heading = None;
-        }
-        page.ai = Some(out);
-        return render(page);
-    }
-    // Not connected: show catalog experiments whose text matches the question.
-    let terms = keywords(&question);
-    if let Ok(exps) = app.data.experiments().await {
-        page.matched = exps
-            .iter()
-            .filter(|e| {
-                let hay = format!(
-                    "{} {} {} {} {}",
-                    e.acronym,
-                    e.name,
-                    e.objective.clone().unwrap_or_default(),
-                    e.key_findings.clone().unwrap_or_default(),
-                    e.category.clone().unwrap_or_default()
-                )
-                .to_lowercase();
-                terms.iter().any(|t| hay.contains(t.as_str()))
-            })
-            .take(6)
-            .map(|e| (e.id.clone(), e.acronym.clone(), e.name.clone()))
-            .collect();
-    }
-    render(page)
+    })
 }
 
-// ---------- literature (research backend) ----------
-
-pub struct PaperRow {
-    pub href: String,
-    pub title: String,
-    pub year: String,
-    pub kind: String,
-    pub status: String,
-}
-
-fn paper_row(p: &Value) -> PaperRow {
-    let id = js(p, "ntrs_id").or_else(|| js(p, "id")).unwrap_or_default();
-    PaperRow {
-        href: format!("/papers/{}", urlencoding::encode(&id)),
-        title: js(p, "title").unwrap_or_else(|| "Untitled".into()),
-        year: js(p, "publication_date").map(|d| d.chars().take(4).collect()).unwrap_or_else(|| NA.into()),
-        kind: js(p, "pub_type").unwrap_or_else(|| NA.into()),
-        status: js(p, "status").map(|x| capitalize(&x)).unwrap_or_else(|| NA.into()),
-    }
-}
+// ---------- literature ----------
 
 #[derive(Template)]
 #[template(path = "papers.html")]
@@ -887,9 +766,8 @@ pub struct PapersPage {
     pub active: &'static str,
     pub page_title: String,
     pub context_line: String,
-    pub backend_on: bool,
     pub error: Option<String>,
-    pub rows: Vec<PaperRow>,
+    pub rows: Vec<PaperRef>,
     pub loaded: usize,
     pub counts: Vec<(String, String)>,
     pub f_status: String,
@@ -903,13 +781,16 @@ pub struct PapersQuery {
 }
 
 pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Response {
+    let b = match backend(&app) {
+        Ok(b) => b,
+        Err(page) => return page,
+    };
     let f_status = q.status.unwrap_or_default();
     let f_q = q.q.unwrap_or_default();
     let mut page = PapersPage {
         active: "papers",
         page_title: "Literature".into(),
         context_line: "NASA NTRS papers · AI-extracted".into(),
-        backend_on: app.backend.is_some(),
         error: None,
         rows: vec![],
         loaded: 0,
@@ -917,7 +798,6 @@ pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Respons
         f_status: f_status.clone(),
         f_q: f_q.clone(),
     };
-    let Some(b) = &app.backend else { return render(page) };
     match b.papers(Some(&f_status), 200).await {
         Err(e) => page.error = Some(e),
         Ok(all) => {
@@ -931,15 +811,19 @@ pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Respons
                             .to_lowercase()
                             .contains(&ql)
                 })
-                .map(paper_row)
+                .map(paper_ref)
                 .collect();
         }
     }
+    // papers_by_status is a list of [status, count] pairs.
     if let Ok(st) = b.pipeline_status().await {
         if let Some(list) = st.get("papers_by_status").and_then(|x| x.as_array()) {
             page.counts = list
                 .iter()
-                .filter_map(|x| Some((js(x, "status")?, js(x, "count")?)))
+                .filter_map(|pair| {
+                    let a = pair.as_array()?;
+                    Some((a.first()?.as_str()?.to_string(), a.get(1)?.to_string()))
+                })
                 .collect();
         }
     }
@@ -948,22 +832,23 @@ pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Respons
 
 pub struct ConditionRow {
     pub fuel: String,
-    pub oxidizer: String,
+    pub geometry: Option<String>,
     pub o2: String,
     pub pressure: String,
-    pub flow: String,
-    pub gravity: String,
-    pub geometry: String,
-    pub notes: Option<String>,
+    pub airflow: String,
+    pub sensors: String,
+    pub source: String,
+    pub confidence: String,
+    pub status: String,
     pub verified: bool,
 }
 
-pub struct FindingRow {
-    pub claim: String,
-    pub category: String,
-    pub metric: Option<String>,
-    pub confidence: Option<String>,
+pub struct PaperFinding {
+    pub text: String,
+    pub cat: Option<Cat>,
+    pub meta: String,
     pub quote: Option<String>,
+    pub status: String,
     pub verified: bool,
 }
 
@@ -978,17 +863,19 @@ pub struct PaperPage {
     pub abstract_text: Option<String>,
     pub ntrs_url: Option<String>,
     pub pdf_url: Option<String>,
+    pub experiments: Vec<(String, String)>,
     pub conditions: Vec<ConditionRow>,
-    pub findings: Vec<FindingRow>,
+    pub findings: Vec<PaperFinding>,
 }
 
 pub async fn paper(State(app): AppRef, Path(id): Path<String>) -> Response {
-    let Some(b) = &app.backend else {
-        return data_error("The research backend isn't connected, so papers can't be shown yet.".into());
+    let b = match backend(&app) {
+        Ok(b) => b,
+        Err(page) => return page,
     };
     let data = match b.extractions(&id).await {
         Ok(d) => d,
-        Err(e) => return data_error(e),
+        Err(e) => return message_page("papers", "Paper unavailable", e),
     };
     let p = data.get("paper").cloned().unwrap_or(Value::Null);
     let authors = match p.get("authors") {
@@ -998,33 +885,49 @@ pub async fn paper(State(app): AppRef, Path(id): Path<String>) -> Response {
     };
     let or_na = |x: Option<String>| x.unwrap_or_else(|| NA.into());
     let rows = |key: &str| data.get(key).and_then(|x| x.as_array()).cloned().unwrap_or_default();
+    let pct = |x: &Value| f(x, "confidence").map(|c| format!("{}%", (c * 100.0).round() as i64));
+    let page_no = |x: &Value| f(x, "source_page").map(|n| format!("p. {}", n as i64));
+    let status = |x: &Value| js(x, "verification_status").map(|v| capitalize(&v)).unwrap_or_else(|| "Pending".into());
+    let verified = |x: &Value| matches!(js(x, "verification_status").as_deref(), Some("verified") | Some("corrected"));
+
+    let experiments = rows("experiments")
+        .iter()
+        .filter_map(|e| js(e, "acronym"))
+        .map(|a| (a.to_lowercase().replace(' ', "-"), a))
+        .collect();
     let conditions = rows("conditions")
         .iter()
         .map(|c| ConditionRow {
-            fuel: or_na(js(c, "fuel_material")),
-            oxidizer: or_na(js(c, "oxidizer")),
-            o2: or_na(f(c, "oxygen_percent").map(|x| format!("{}%", num(x)))),
-            pressure: or_na(f(c, "pressure_kpa").map(|x| format!("{} kPa", num(x)))),
-            flow: or_na(f(c, "flow_velocity_cm_s").map(|x| format!("{} cm/s", num(x)))),
-            gravity: or_na(js(c, "gravity_level")),
-            geometry: or_na(js(c, "sample_geometry")),
-            notes: js(c, "notes"),
-            verified: flag(c, "verified"),
+            fuel: or_na(js(c, "fuel_type")),
+            geometry: js(c, "fuel_geometry"),
+            o2: or_na(js(c, "oxygen_concentration")),
+            pressure: or_na(js(c, "pressure")),
+            airflow: or_na(js(c, "airflow")),
+            sensors: c
+                .get("sensors")
+                .and_then(|v| v.as_array())
+                .map(|a| a.iter().filter_map(|x| x.as_str()).collect::<Vec<_>>().join(", "))
+                .filter(|t| !t.is_empty())
+                .unwrap_or_else(|| NA.into()),
+            source: or_na(page_no(c)),
+            confidence: or_na(pct(c)),
+            status: status(c),
+            verified: verified(c),
         })
         .collect();
     let findings = rows("findings")
         .iter()
-        .map(|x| FindingRow {
-            claim: or_na(js(x, "claim")),
-            category: js(x, "category").map(|c| capitalize(&c.replace('_', " "))).unwrap_or_default(),
-            metric: match (js(x, "metric_name"), js(x, "metric_value")) {
-                (Some(n), Some(v)) => Some(format!("{}: {v}", n.replace('_', " "))),
-                (None, Some(v)) => Some(v),
-                _ => None,
-            },
-            confidence: f(x, "confidence").map(|c| format!("{}%", (c * 100.0).round() as i64)),
+        .map(|x| PaperFinding {
+            text: or_na(js(x, "text")),
+            cat: js(x, "category").map(|c| category(&c.to_lowercase())),
+            meta: [page_no(x), pct(x).map(|c| format!("AI confidence {c}")), js(x, "provenance_kind").map(|k| capitalize(&k))]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<_>>()
+                .join(" · "),
             quote: js(x, "source_quote"),
-            verified: flag(x, "verified"),
+            status: status(x),
+            verified: verified(x),
         })
         .collect();
     let year = js(&p, "publication_date").map(|d| d.chars().take(4).collect::<String>());
@@ -1041,6 +944,7 @@ pub async fn paper(State(app): AppRef, Path(id): Path<String>) -> Response {
         abstract_text: js(&p, "abstract"),
         ntrs_url: https(&p, "ntrs_url"),
         pdf_url: https(&p, "pdf_url"),
+        experiments,
         conditions,
         findings,
     })
@@ -1058,14 +962,5 @@ pub struct ErrorPage {
 }
 
 pub async fn not_found() -> Response {
-    (
-        StatusCode::NOT_FOUND,
-        render(ErrorPage {
-            active: "",
-            page_title: "Not found".into(),
-            context_line: String::new(),
-            message: "That page doesn't exist.".into(),
-        }),
-    )
-        .into_response()
+    (StatusCode::NOT_FOUND, message_page("", "Not found", "That page doesn't exist.".into())).into_response()
 }

@@ -91,7 +91,8 @@
         <h3 class="text-[32px] font-semibold tracking-tight">Evidence for this habitat.</h3>
         <a href="/explorer" class="text-[14px] text-sky hover:underline">View all {{ total }}</a>
       </div>
-      <p class="mt-6 eyebrow">{% if ranked %}Most relevant experiments · Ranked for {{ sel_name }}{% else %}Experiments in the library · Relevance ranking for {{ sel_name }} is still being generated{% endif %}</p>
+      {% if let Some(n) = evidence_note %}<p class="mt-6 text-[14px] text-amber">{{ n }}</p>
+      {% else %}<p class="mt-6 eyebrow">Sorted by the highest oxygen level each experiment tested · from extracted test conditions</p>{% endif %}
       <ol class="mt-4">
         {% for r in evidence %}
         <li class="border-b border-line py-5">
@@ -101,14 +102,13 @@
               <span class="text-[21px] text-sky group-hover:underline w-40">{{ r.acronym }}</span>
               <span class="text-[12px] {{ r.cat.class }}">{{ r.cat.label }}</span>
             </span>
-            {% if let Some(s) = r.score %}<span class="text-[22px] font-medium">{{ s }}</span>{% else %}<span></span>{% endif %}
+            <span class="text-[13px] {{ r.badge_class }}">{{ r.badge }}</span>
             <span></span>
             <span class="mt-2 text-[14px] text-muted col-span-2">{{ r.line }}</span>
           </a>
         </li>
         {% endfor %}
       </ol>
-      {% if ranked %}<p class="mt-4 eyebrow">Relevance scores · 0–100 · AI-generated</p>{% endif %}
     </div>
     <aside class="lg:col-span-4">
       <h3 class="text-[19px] font-semibold">Fire safety insights</h3>

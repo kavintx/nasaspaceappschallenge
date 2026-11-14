@@ -14,7 +14,7 @@ pub struct Backend {
 
 pub type ApiResult<T> = Result<T, String>;
 
-const READ_TIMEOUT: Duration = Duration::from_secs(20);
+const READ_TIMEOUT: Duration = Duration::from_secs(15);
 const AI_TIMEOUT: Duration = Duration::from_secs(180);
 
 impl Backend {
@@ -109,15 +109,16 @@ impl Backend {
     }
 
     pub async fn query(&self, question: &str) -> ApiResult<Value> {
-        self.post("/ai/query", json!({ "question": question, "top_k": 8 })).await
+        self.post("/ai/query", json!({ "question": question })).await
     }
 
+    /// `experiment` is a UUID or an acronym such as "SAFFIRE I".
     pub async fn summarize(&self, experiment_id: &str) -> ApiResult<Value> {
         self.post(&format!("/ai/summarize/{}", urlencoding::encode(experiment_id)), json!({})).await
     }
 
-    pub async fn compare(&self, experiment_ids: &[String], focus: &str) -> ApiResult<Value> {
-        let mut body = json!({ "experiment_ids": experiment_ids });
+    pub async fn compare(&self, experiments: &[String], focus: &str) -> ApiResult<Value> {
+        let mut body = json!({ "experiments": experiments });
         if !focus.trim().is_empty() {
             body["focus"] = json!(focus.trim());
         }
@@ -154,19 +155,4 @@ pub fn flag(v: &Value, key: &str) -> bool {
 /// Only plain https links are ever rendered as links.
 pub fn https(v: &Value, key: &str) -> Option<String> {
     s(v, key).filter(|u| u.starts_with("https://"))
-}
-
-fn norm(x: &str) -> String {
-    x.chars().filter(|c| c.is_alphanumeric()).collect::<String>().to_uppercase()
-}
-
-/// Find the backend's id for one of our catalog experiments, by acronym.
-pub fn match_experiment(list: &[Value], acronym: &str) -> Option<String> {
-    let want = norm(acronym);
-    let key = |e: &Value| norm(&s(e, "acronym").or_else(|| s(e, "name")).unwrap_or_default());
-    list.iter()
-        .find(|e| key(e) == want)
-        // The backend indexes ACME as one program; our catalog splits it by experiment.
-        .or_else(|| list.iter().find(|e| want.starts_with("ACME") && key(e) == "ACME"))
-        .and_then(|e| s(e, "id"))
 }

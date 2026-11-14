@@ -6,51 +6,48 @@ A dashboard that summarizes, ranks and compares NASA microgravity combustion exp
 
 ## Layout
 
-- `web/` — the app: a Rust server (Axum + Askama templates, Tailwind CSS) that reads from Supabase
-- `db/schema.sql` — the Supabase tables (`experiments`, `papers`, `habitat_scores`)
+- `web/` — the app: a Rust server (Axum + Askama templates, Tailwind CSS). All data and AI come
+  from the `fire-intel` research backend (`/api/v1/*`).
 
 ## Run it
 
-```sh
-cd web
-cargo run            # http://localhost:3100
-```
+1. Copy `web/.env.example` to `web/.env` and fill it in:
+
+   ```
+   API_BASE_URL=http://127.0.0.1:8080
+   API_AUTH_TOKEN=<token>
+   ```
+
+2. Start it:
+
+   ```sh
+   cd web
+   cargo run            # http://localhost:3100
+   ```
+
+The token stays on this server; it is never sent to the browser.
 
 Pages: `/` Habitat Risk · `/explorer` · `/experiments/<id>` · `/compare` · `/papers` Literature · `/ask`
 
-## Connecting the research backend
+## Where each page gets its data
 
-The AI features and the Literature pages come from the `fire-intel` backend (`/api/v1/*`).
-Copy `web/.env.example` to `web/.env`, paste the token, and restart:
-
-```
-API_BASE_URL=http://127.0.0.1:8080
-API_AUTH_TOKEN=<token from Gus>
-```
-
-The token stays on this server; it is never sent to the browser. Without it the app still
-runs, and the AI sections say the backend isn't connected.
-
-What uses the backend:
-
-| Page | Endpoint |
+| Page | Backend calls |
 |---|---|
+| Explorer, experiment pages, Compare table, Habitat evidence | `GET /experiments`, `GET /papers`, then `GET /papers/{id}/extractions` per paper (4 at a time), rolled up per experiment and cached for 5 minutes. "Refresh" on the Explorer rebuilds it |
 | Ask the Data | `POST /ai/query` |
 | Habitat Risk → AI risk assessment | `POST /ai/habitat/analyze` |
 | Compare → AI comparison | `POST /ai/compare` |
-| Experiment → AI synthesis | `POST /ai/summarize/{id}` |
+| Experiment → AI synthesis | `POST /ai/summarize/{acronym}` |
 | Literature, paper pages | `GET /papers`, `GET /papers/{id}/extractions`, `GET /pipeline/status` |
 
-Not built into this app: running ingestion, the Google Sheets import, batch extraction, and
-editing/verifying conditions and findings. Those stay as direct API calls.
+Category, fuel phase and hardware per experiment are not in the database; they are a small
+table in `web/src/catalog.rs`, taken from the NASA challenge brief. Rejected conditions and
+findings are left out of the roll-ups.
 
-Other settings (all optional, env var or `.env`):
+Not built into this app: ingestion, the Google Sheets import, running extraction, editing or
+verifying conditions and findings, and streaming chat. Those stay as direct API calls.
 
-| Variable | What it does |
-|---|---|
-| `PORT` | Port to listen on (default 3100) |
-| `SUPABASE_URL`, `SUPABASE_KEY` | Override the Supabase project that holds the experiment catalog. Only ever use the publishable (read-only) key here |
-| `DATA_FIXTURE` | Path to a JSON snapshot (e.g. `data/fixture.json`) to run without Supabase |
+Optional settings (env var or `.env`): `PORT` (default 3100), `STATIC_DIR`.
 
 ## Changing the styling
 
