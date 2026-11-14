@@ -28,7 +28,7 @@ cd web
 cargo run            # http://localhost:3100 (or the next free port)
 ```
 
-That is enough to browse Habitat Risk, Explorer, Compare and Literature. To turn on AI answers, chat,
+That is enough to check a habitat, play the mission and browse the research. To turn on AI answers, chat,
 the Pipeline page and verify/edit, copy `web/.env.example` to `web/.env` and fill in the backend:
 
 ```
@@ -73,9 +73,10 @@ read chat history, job logs or the other tables. The backend connects as the dat
 
 | Page | Source |
 |---|---|
+| Check a habitat (`/`), its result (`/check`) and the mission game (`/mission`) | Supabase: material chips and verdicts come from the fuels and outcomes in `conditions`; protection cards from `findings`. The gas table on the result page is entered by hand in `web/src/air.rs` from two NASA documents, each entry with its page |
 | Explorer, experiment pages, Compare table, Habitat evidence, Literature, paper pages | Supabase (rolled up per experiment, cached 5 minutes; "Refresh" on the Explorer rebuilds it) |
 | Ask the Data (streaming chat) | backend `POST /ai/chat`, relayed through `/ask/stream` |
-| Habitat Risk → AI risk assessment | backend `POST /ai/habitat/analyze` |
+| Result page → AI check (only when the button is pressed) | backend `POST /ai/habitat/analyze` |
 | Compare → AI comparison | backend `POST /ai/compare` |
 | Experiment → AI synthesis | backend `POST /ai/summarize/{acronym}` |
 | Pipeline | backend `GET /ai/health`, `GET /pipeline/status`, `POST /ai/test`, `POST /pipeline/ingest`, `POST /pipeline/sheet/import`, `POST /ai/extract/batch` |

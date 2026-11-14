@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="relative overflow-hidden">
+  <img src="/static/img/moon-base.webp" alt="" width="1280" height="960" class="absolute inset-0 w-full h-full object-cover" fetchpriority="high">
+  <div class="absolute inset-0 bg-gradient-to-r from-ink-900/95 via-ink-900/60 to-ink-900/5"></div>
+  <div class="wrap relative min-h-[300px] md:min-h-[440px] py-12 flex flex-col justify-center gap-4">
+    <p class="text-[13px] font-medium text-sky uppercase">Fire safety check</p>
+    <h2 class="text-[44px] leading-[1.1] md:text-[72px] md:leading-[80px] font-semibold tracking-[-0.025em]">Will it burn here?</h2>
+    <p class="text-[17px] md:text-[20px] leading-7 text-muted max-w-xl">Three questions. Checked against NASA’s fire tests in space.</p>
+    <p class="absolute right-4 bottom-3 lg:right-24 text-[11px] text-dim">Illustration, not a NASA photo</p>
+  </div>
+</section>
+
+<form action="/check" method="get">
+  <div class="wrap pt-12 md:pt-16 pb-10 grid gap-12 lg:grid-cols-3">
+    <fieldset class="min-w-0">
+      <legend class="flex items-center gap-3 mb-5">
+        <span class="step-no">1</span><span class="text-[28px] leading-9 font-semibold">Where?</span>
+      </legend>
+      <div class="space-y-5">
+        {% for h in habitats %}
+        <label class="block cursor-pointer">
+          <input type="radio" name="h" value="{{ h.key }}" class="peer sr-only"{% if h.selected %} checked{% endif %}>
+          <span class="pick-card flex items-center gap-4 pl-3 pr-4 py-3">
+            <img src="{{ h.img }}" alt="" width="112" height="80" loading="lazy" class="w-28 h-20 rounded-lg object-cover shrink-0">
+            <span class="min-w-0">
+              <span class="block text-[18px] leading-6 font-semibold">{{ h.name }}</span>
+              <span class="block mt-1 text-[14px] text-muted">{{ h.air }}</span>
+            </span>
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+      <p class="mt-4 text-[12px] text-dim">Air values from the NASA challenge brief. Pictures are illustrations.</p>
+    </fieldset>
+
+    <fieldset class="min-w-0">
+      <legend class="flex items-center gap-3 mb-5">
+        <span class="step-no">2</span><span class="text-[28px] leading-9 font-semibold">What’s inside?</span>
+      </legend>
+      {% if let Some(e) = data_error %}
+      <p class="text-[15px] text-amber">{{ e }}</p>
+      {% else if materials.is_empty() %}
+      <p class="text-[16px] text-muted">No tested materials loaded yet.</p>
+      <p class="mt-2 text-[13px] text-dim">Materials appear here once test conditions are extracted from the NASA papers. You can still check the habitat’s air and protections.</p>
+      {% else %}
+      <div class="flex flex-wrap gap-2">
+        {% for m in materials %}
+        <label class="cursor-pointer">
+          <input type="checkbox" name="m" value="{{ m }}" class="peer sr-only">
+          <span class="pick-chip">{{ m }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <p class="mt-5 text-[13px] text-dim">Only materials NASA has tested.{% if more > 0 %} The {{ more }} least-tested are not shown.{% endif %}</p>
+      {% endif %}
+    </fieldset>
+
+    <fieldset class="min-w-0">
+      <legend class="flex items-center gap-3 mb-5">
+        <span class="step-no">3</span><span class="text-[28px] leading-9 font-semibold">What protects it?</span>
+      </legend>
+      <div class="space-y-5">
+        {% for p in protections %}
+        <label class="block cursor-pointer">
+          <input type="checkbox" name="p" value="{{ p.key }}" class="peer sr-only">
+          <span class="pick-row flex items-center gap-3 p-4">
+            <span class="text-muted shrink-0">{{ p.icon|safe }}</span>
+            <span class="flex-1 text-[16px]">{{ p.label }}</span>
+            <span class="pick-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17 19 7"/></svg></span>
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="wrap pt-2 pb-16 flex justify-center">
+    <button class="btn-big">Check this habitat</button>
+  </div>
+</form>
+{% endblock %}

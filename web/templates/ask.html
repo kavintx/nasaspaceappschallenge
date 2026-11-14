@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="wrap pt-12 pb-6">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h2 class="text-[36px] md:text-[44px] leading-[1.08] font-semibold tracking-tight">Ask the research.</h2>
+      <p class="mt-3 text-[18px] text-muted">A conversation grounded in indexed NASA papers, with page-level citations.</p>
+    </div>
+    <div class="flex items-end gap-4">
+      <label class="block"><span class="eyebrow block">Limit to one experiment</span>
+        <select id="scope" class="field mt-2 w-52"><option value="">All experiments</option>{% for e in experiments %}<option value="{{ e }}">{{ e }}</option>{% endfor %}</select></label>
+      <button id="new-chat" type="button" class="btn-ghost">New conversation</button>
+    </div>
+  </div>
+</section>
+
+<section class="wrap pb-6">
+  <div id="thread" class="max-w-4xl" aria-live="polite"></div>
+  <div id="starters" class="max-w-4xl">
+    <div class="eyebrow">Try</div>
+    <ul class="mt-3 space-y-2">
+      {% for s in suggestions %}<li><button type="button" class="starter text-left text-[16px] text-sky hover:underline">{{ s }}</button></li>{% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="wrap pb-16">
+  <form id="chat-form" class="max-w-4xl flex gap-4 items-start">
+    <label for="chat-input" class="sr-only">Your question</label>
+    <textarea id="chat-input" rows="2" maxlength="4000" required placeholder="Ask about materials, conditions or findings…" class="field h-auto py-3 text-[15px] placeholder:text-dim">{{ question }}</textarea>
+    <button id="chat-send" class="btn-primary shrink-0">Ask ↑</button>
+  </form>
+  <p class="mt-4 eyebrow">AI can miss context. Always verify critical safety decisions against the original NASA research.</p>
+</section>
+<script src="/static/chat.js"></script>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="check" data-selected="{{ sel_key }}">
+
+<nav class="wrap pt-6 no-print" aria-label="Habitat">
+  <div class="inline-flex flex-wrap gap-2" role="group">
+    {% for v in variants %}
+    <a href="{{ v.href }}" data-switch="{{ v.key }}" data-heat="{{ v.heat }}" data-context="{{ v.context }}" data-mission="{{ v.mission_href }}"
+       class="switch-btn" {% if v.selected %}aria-current="true"{% endif %}>{{ v.name }}</a>
+    {% endfor %}
+  </div>
+</nav>
+
+<section class="wrap py-10 md:py-14 grid gap-10 lg:grid-cols-[1fr_auto] items-center">
+  <div class="min-w-0">
+    {% for v in variants %}
+    <div data-hab="{{ v.key }}"{% if !v.selected %} hidden{% endif %}>
+      <p class="text-[13px] font-medium text-sky uppercase">Result · {{ v.name }}</p>
+      <p class="rise big-figure mt-3 font-semibold">{{ v.figure }}</p>
+      <p class="rise rise-2 print-verdict mt-3 text-[26px] leading-8 md:text-[32px] md:leading-[42px] font-semibold tracking-[-0.02em] max-w-2xl">{{ v.verdict }}</p>
+      <p class="mt-4 text-[14px] text-muted">{{ v.compare_line }} · oxygen compared with Earth air</p>
+    </div>
+    {% endfor %}
+    <div class="mt-6 flex flex-wrap gap-3 no-print">
+      <button type="button" class="btn-big" onclick="window.print()">Print the brief</button>
+      {% for v in variants %}{% if v.selected %}<a href="{{ v.mission_href }}" id="mission-link" class="btn-big-ghost">Try it as a mission</a>{% endif %}{% endfor %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 w-full lg:w-[520px] no-print">
+    <figure>
+      {% for v in variants %}{% if v.selected %}
+      <div class="flame-stage" id="flame" style="--heat: {{ v.heat }}" role="img" aria-label="Drawing of a round blue flame">
+        <div class="flame-ball"><div class="flame-core"></div></div>
+      </div>
+      {% endif %}{% endfor %}
+      <figcaption class="mt-3 text-[12px] leading-4 text-dim">Illustration. The orange core grows with the habitat’s oxygen. It is not a measurement.</figcaption>
+    </figure>
+    <figure>
+      <img src="/static/img/nasa-candle-flames.webp" alt="Two candle flames side by side: a tall yellow flame on Earth and a small round blue flame in microgravity" width="960" height="747" loading="lazy" class="w-full aspect-[9/7] object-cover rounded-xl">
+      <figcaption class="mt-3 text-[12px] leading-4 text-dim">Photo: a candle flame on Earth (left) and in microgravity (right). NASA Glenn Research Center, <a class="text-sky hover:underline" href="https://images.nasa.gov/details/GRC-1998-C-00485" target="_blank" rel="noopener">GRC-1998-C-00485</a>.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="wrap pb-12 print-tight">
+  <h2 class="text-[28px] leading-9 font-semibold">Your materials</h2>
+  {% if let Some(e) = data_error %}
+  <p class="mt-2 text-[16px] text-amber">{{ e }}</p>
+  {% else if !picked_any %}
+  <p class="mt-2 text-[16px] text-muted">No materials picked. <a href="/" class="text-sky hover:underline no-print">Pick materials</a></p>
+  {% else %}
+  {% for v in variants %}
+  <div data-hab="{{ v.key }}"{% if !v.selected %} hidden{% endif %}>
+    <p class="mt-2 text-[16px] text-muted">{{ v.summary }}</p>
+    <ul class="mt-2">
+      {% for r in v.rows %}
+      <li class="border-b border-line py-5 grid gap-x-6 gap-y-2 md:grid-cols-[220px_300px_1fr] rise rise-3 print-row">
+        <p class="text-[18px] leading-6 font-semibold break-words">{{ r.name }}</p>
+        <div>
+          <p class="text-[16px] leading-6 font-semibold {{ r.verdict_class }}">{{ r.verdict }}</p>
+          {% if !r.status.is_empty() %}<p class="mt-1 text-[14px] font-medium {{ r.status_class }}">{{ r.status }}</p>{% endif %}
+        </div>
+        <ul class="space-y-1.5 text-[14px] leading-5 text-muted min-w-0">
+          {% for e in r.evidence %}
+          <li><a href="{{ e.href }}" class="hover:text-fg underline decoration-line underline-offset-4" title="{{ e.paper }}">{{ e.text }}</a></li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+  <p class="mt-3 text-[12px] text-dim">Verdicts are what a NASA test recorded, at the oxygen level shown. Where no outcome was recorded, only the tested oxygen level is given. Each line links to its paper.</p>
+  {% endif %}
+</section>
+
+<section class="bg-ink-850 print-tight">
+  <div class="wrap pt-12 pb-14">
+    <h2 class="text-[28px] leading-9 font-semibold">Protections</h2>
+    <div class="mt-6 grid gap-6 md:grid-cols-3 print-cols-3">
+      {% for p in protections %}
+      <div class="bg-ink-800 rounded-xl p-6 print-card">
+        <div class="{{ p.class }} no-print">{{ p.icon|safe }}</div>
+        <p class="mt-3 text-[13px] font-medium uppercase {{ p.class }}">{{ p.label }}</p>
+        <p class="mt-3 text-[18px] leading-6 font-semibold {% if !p.picked %}text-amber{% endif %}">{{ p.title }}</p>
+        <p class="mt-3 text-[14px] leading-[22px] text-muted">{{ p.brief }} <span class="text-dim">Challenge brief.</span></p>
+        {% for f in p.findings %}
+        <p class="mt-3 text-[14px] leading-[22px] text-muted">{{ f.text }} <a href="{{ f.href }}" class="text-sky hover:underline whitespace-nowrap">{% if f.source.is_empty() %}Paper{% else %}{{ f.source }}{% endif %}</a></p>
+        {% endfor %}
+        {% if p.findings.is_empty() %}<p class="mt-3 text-[13px] text-dim">{{ p.none_note }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="wrap pt-12 pb-14 print-tight" id="air">
+  <h2 class="text-[28px] leading-9 font-semibold">Is the air safe to breathe?</h2>
+  <p class="mt-2 text-[16px] text-muted max-w-3xl">After a fire, the danger is gas you can’t see. NASA watches four marker gases to decide when cabin air is safe again.</p>
+
+  <div class="mt-6 grid gap-8 lg:grid-cols-[1fr_1.3fr] print-cols-2">
+    <div>
+      <h3 class="text-[13px] font-medium uppercase text-muted">What your materials give off when they burn</h3>
+      {% if gas_sources.is_empty() %}
+      <p class="mt-3 text-[15px] leading-6 text-muted">{% if picked_any %}None of your materials are in NASA’s table.{% else %}No materials picked.{% endif %} The table covers Kapton, Teflon, PVC and polyurethane.</p>
+      {% else %}
+      <ul class="mt-3 space-y-2">
+        {% for s in gas_sources %}
+        <li class="text-[16px]"><span class="font-semibold">{{ s.material }}</span> <span class="text-muted">· listed as {{ s.table_name }} ·</span> <span class="text-burn font-semibold">{{ s.gases }}</span></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% if !gas_uncovered.is_empty() && !gas_sources.is_empty() %}
+      <p class="mt-3 text-[14px] text-dim">Not in NASA’s table: {% for g in gas_uncovered %}{{ g }}{% if !loop.last %}, {% endif %}{% endfor %}.</p>
+      {% endif %}
+      <p class="mt-3 text-[12px] text-dim">Source: <a class="text-sky hover:underline" href="{{ analyzer_url }}" target="_blank" rel="noopener">A Combustion Products Analyzer for Contingency Use… (NTRS 19940007083)</a>, {{ table_page }}.</p>
+
+      <p class="mt-6 text-[16px] leading-6 font-semibold">Crew response: masks on. Check the gas monitor before taking them off.</p>
+      <p class="mt-1 text-[12px] text-dim">The same paper (p. 590) says toxic gas levels are hard to judge by sight or symptoms, so a monitor decides when the air is safe.</p>
+    </div>
+
+    <div class="min-w-0">
+      <h3 class="text-[13px] font-medium uppercase text-muted">NASA’s limit for each gas (parts per million)</h3>
+      <div class="mt-3 overflow-x-auto">
+        <table class="w-full text-left text-[15px]">
+          <thead class="text-[12px] text-dim">
+            <tr><th class="py-2 pr-4 font-normal">Gas</th><th class="py-2 pr-4 font-normal">1-hour limit</th><th class="py-2 pr-4 font-normal">24-hour limit</th><th class="py-2 font-normal">Source</th></tr>
+          </thead>
+          <tbody>
+            {% for g in gas_rows %}
+            <tr class="border-t border-line align-top">
+              <td class="py-3 pr-4"><span class="font-semibold">{{ g.name }}</span> <span class="text-muted">{{ g.formula }}</span>{% if g.from_yours %}<span class="block text-[12px] text-burn">From your materials</span>{% endif %}</td>
+              <td class="py-3 pr-4">{{ g.limit_1h }}{% if !g.page.is_empty() %} ppm{% endif %}</td>
+              <td class="py-3 pr-4">{{ g.limit_24h }}{% if !g.page.is_empty() %} ppm{% endif %}</td>
+              <td class="py-3 text-[13px]">{% if !g.page.is_empty() %}<a class="text-sky hover:underline" href="{{ limits_url }}" target="_blank" rel="noopener">JSC 20584 Rev C, {{ g.page }}</a>{% else %}<span class="text-dim">—</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6 rounded-xl border border-amber/50 px-5 py-4 text-[14px] leading-6 text-muted max-w-4xl print-card">
+    <p><span class="font-semibold text-amber">Read this first.</span> NASA set these limits for Earth-like air (21% O₂, 14.7 psi). They may not apply to a 30% O₂ habitat such as the Moon Base.</p>
+    <p class="mt-1">We do not estimate how much gas a fire makes, so this page cannot tell you whether a limit would be reached.</p>
+  </div>
+</section>
+
+<section class="border-t border-line/60 no-print" id="ai">
+  <div class="wrap py-12 grid lg:grid-cols-12 gap-10">
+    <div class="lg:col-span-4">
+      <h2 class="text-[28px] leading-9 font-semibold">AI check</h2>
+      <p class="mt-3 text-[15px] leading-relaxed text-muted">Asks the research backend to read the indexed NASA papers for this habitat and these materials. It runs only when you press the button.</p>
+      {% if !backend_on %}
+      <p class="mt-5 text-[15px] text-amber">The AI backend isn’t connected, so the AI check can’t run.</p>
+      {% else %}
+      <form method="get" action="/check#ai" data-slow class="mt-6">
+        <input type="hidden" name="h" value="{{ sel_key }}" data-hab-input>
+        {% for m in f_materials %}<input type="hidden" name="m" value="{{ m }}">{% endfor %}
+        {% for p in f_protections %}<input type="hidden" name="p" value="{{ p }}">{% endfor %}
+        <input type="hidden" name="analyze" value="1">
+        <button class="btn-primary">Run the AI check</button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="lg:col-span-8">
+      {% if let Some(ai) = ai %}{% include "_ai.html" %}
+      {% else if backend_on %}<p class="text-[15px] text-dim lg:mt-14">Not run yet.</p>{% endif %}
+    </div>
+  </div>
+</section>
+
+<p class="wrap pb-10 text-[12px] text-dim">Habitat air values are from the NASA Space Apps challenge brief. This page shows what has been tested. It is not a validated engineering risk model.</p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/check.js" defer></script>{% endblock %}
