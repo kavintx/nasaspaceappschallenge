@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-primary { @apply inline-flex items-center h-10 px-5 rounded-full bg-blue text-white text-[14px] font-medium hover:bg-sky transition-colors; }
+  .btn-ghost { @apply inline-flex items-center h-10 px-5 rounded-full border border-sky/70 text-sky text-[14px] font-medium hover:bg-sky/10 transition-colors; }
+  .field { @apply bg-ink-800 text-fg text-[13px] rounded-md h-10 px-3 w-full outline-none border border-transparent focus:border-sky/60; }
+  .chip { @apply inline-flex items-center h-7 px-3 rounded-full border border-line text-[12px] hover:border-muted transition-colors; }
+  .eyebrow { @apply text-[12px] text-muted; }
+  .wrap { @apply mx-auto max-w-page px-6 lg:px-24; }
+}
