@@ -12,7 +12,7 @@
 <section class="wrap pb-6">
   <div class="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
     {% for c in cards %}
-    <a href="/?h={{ c.key }}" class="block pb-4 border-b {% if c.selected %}border-sky{% else %}border-line hover:border-muted{% endif %}">
+    <a href="/habitat?h={{ c.key }}" class="block pb-4 border-b {% if c.selected %}border-sky{% else %}border-line hover:border-muted{% endif %}">
       <div class="text-[16px] {% if c.selected %}font-semibold text-fg{% else %}text-muted{% endif %}">{{ c.name }}</div>
       <div class="mt-4 flex items-baseline justify-between">
         <span class="text-[16px] font-semibold">{{ c.o2 }}</span>
@@ -67,7 +67,7 @@
       {% if !backend_on %}<p class="mt-5 text-[14px] text-amber">The AI backend isn't connected, so assessments can't be run right now.</p>
       {% else if !can_analyze %}<p class="mt-5 text-[14px] text-amber">No atmosphere is specified for {{ sel_name }}, so there's nothing to assess yet.</p>
       {% else %}
-      <form method="get" action="/#assessment" data-slow class="mt-6 space-y-4">
+      <form method="get" action="/habitat#assessment" data-slow class="mt-6 space-y-4">
         <input type="hidden" name="h" value="{{ sel_key }}"><input type="hidden" name="analyze" value="1">
         <label class="block"><span class="eyebrow">Materials on board (comma-separated)</span>
           <input name="materials" value="{{ f_materials }}" class="field mt-2"></label>

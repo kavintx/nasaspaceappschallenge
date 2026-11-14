@@ -40,7 +40,7 @@ pub(crate) fn backend(app: &AppState) -> Result<&Backend, Response> {
 }
 
 /// The cached catalog, rebuilt when stale or when `refresh` is set.
-async fn load_catalog(app: &AppState, refresh: bool) -> Result<Arc<Catalog>, String> {
+pub(crate) async fn load_catalog(app: &AppState, refresh: bool) -> Result<Arc<Catalog>, String> {
     let mut slot = app.catalog.lock().await;
     if let Some(c) = slot.as_ref() {
         if !refresh && c.built.elapsed() < CATALOG_TTL {
@@ -75,7 +75,7 @@ pub fn category(raw: &str) -> Cat {
     }
 }
 
-fn num(v: f64) -> String {
+pub(crate) fn num(v: f64) -> String {
     if (v - v.round()).abs() < 1e-9 {
         format!("{}", v as i64)
     } else {

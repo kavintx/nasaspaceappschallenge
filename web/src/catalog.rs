@@ -2,7 +2,7 @@
 //! with its linked papers and the test conditions and findings extracted from
 //! them. Built once and cached for a few minutes.
 
-use crate::backend::{f, s};
+use crate::backend::{f, https, s};
 use crate::store::Store;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -61,8 +61,59 @@ impl Exp {
     }
 }
 
+/// What a test recorded about the flame, from the `outcome` column of `conditions`.
+/// Anything missing or unrecognised is `Unknown`: the site never guesses a verdict.
+#[derive(Clone, Copy, PartialEq)]
+pub enum Outcome {
+    Burned,
+    WentOut,
+    NoIgnition,
+    Unknown,
+}
+
+impl Outcome {
+    pub fn parse(raw: Option<String>) -> Self {
+        match raw.unwrap_or_default().trim().to_lowercase().as_str() {
+            "ignited" | "sustained_flame" => Outcome::Burned,
+            "self_extinguished" => Outcome::WentOut,
+            "no_ignition" => Outcome::NoIgnition,
+            _ => Outcome::Unknown,
+        }
+    }
+}
+
+/// One extracted test condition that names a fuel.
+pub struct Test {
+    pub o2: Vec<f64>,
+    pub o2_raw: Option<String>,
+    pub pressure: Option<String>,
+    pub airflow: Option<String>,
+    pub outcome: Outcome,
+    pub outcome_note: Option<String>,
+    pub paper_href: String,
+    pub paper_title: String,
+    /// The paper on NTRS, when the database has a plain https link for it.
+    pub paper_url: Option<String>,
+    /// Experiment acronyms, empty when the test is not tied to one.
+    pub experiments: Vec<String>,
+}
+
+impl Test {
+    pub fn o2_max(&self) -> Option<f64> {
+        self.o2.iter().cloned().reduce(f64::max)
+    }
+}
+
+/// A fuel named in the extracted test conditions, with every test of it.
+pub struct Material {
+    pub name: String,
+    pub tests: Vec<Test>,
+}
+
 pub struct Catalog {
     pub exps: Vec<Exp>,
+    /// Fuels from the extracted test conditions, most tested first.
+    pub materials: Vec<Material>,
     pub paper_count: usize,
     /// Papers whose extractions could not be read.
     pub failed: usize,
@@ -199,6 +250,9 @@ pub async fn build(store: &Store) -> Result<Catalog, String> {
         })
         .collect();
 
+    let acronyms: HashMap<String, String> =
+        raw.iter().filter_map(|r| Some((s(r, "id")?, s(r, "acronym").or_else(|| s(r, "name"))?))).collect();
+    let mut materials: Vec<Material> = vec![];
     let mut acc: HashMap<String, Exp> = HashMap::new();
     let mut failed = 0;
     for res in results {
@@ -223,6 +277,26 @@ pub async fn build(store: &Store) -> Result<Catalog, String> {
         let rejected = |row: &Value| s(row, "verification_status").as_deref() == Some("rejected");
 
         for c in rows("conditions").iter().filter(|c| !rejected(c)) {
+            if let Some(fuel) = s(c, "fuel_type") {
+                let o2_raw = s(c, "oxygen_concentration");
+                let test = Test {
+                    o2: o2_raw.as_deref().map(pct_numbers).unwrap_or_default(),
+                    o2_raw,
+                    pressure: s(c, "pressure"),
+                    airflow: s(c, "airflow"),
+                    // These two columns may not exist yet; a missing column reads as unknown.
+                    outcome: Outcome::parse(s(c, "outcome")),
+                    outcome_note: s(c, "outcome_note"),
+                    paper_href: pref.href.clone(),
+                    paper_title: pref.title.clone(),
+                    paper_url: https(&paper, "ntrs_url"),
+                    experiments: owners(c).iter().filter_map(|id| acronyms.get(id).cloned()).collect(),
+                };
+                match materials.iter_mut().find(|m| m.name.eq_ignore_ascii_case(&fuel)) {
+                    Some(m) => m.tests.push(test),
+                    None => materials.push(Material { name: fuel, tests: vec![test] }),
+                }
+            }
             for id in owners(c) {
                 let e = acc.entry(id).or_default();
                 e.conditions += 1;
@@ -289,5 +363,6 @@ pub async fn build(store: &Store) -> Result<Catalog, String> {
         })
         .collect();
     exps.sort_by(|a, b| a.acronym.cmp(&b.acronym));
-    Ok(Catalog { exps, paper_count, failed, built: Instant::now() })
+    materials.sort_by(|a, b| b.tests.len().cmp(&a.tests.len()).then(a.name.to_lowercase().cmp(&b.name.to_lowercase())));
+    Ok(Catalog { exps, materials, paper_count, failed, built: Instant::now() })
 }

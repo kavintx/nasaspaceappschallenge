@@ -14,6 +14,13 @@ pub struct Backend {
 
 pub type ApiResult<T> = Result<T, String>;
 
+/// Why a call to one of the newer endpoints (photo scan, material lookup) failed.
+pub enum Fail {
+    /// The backend answered 404 or 405: this endpoint is not deployed yet.
+    NotLive,
+    Other(String),
+}
+
 const READ_TIMEOUT: Duration = Duration::from_secs(15);
 const AI_TIMEOUT: Duration = Duration::from_secs(180);
 
@@ -127,6 +134,48 @@ impl Backend {
 
     pub async fn habitat(&self, scenario: Value) -> ApiResult<Value> {
         self.post("/ai/habitat/analyze", scenario).await
+    }
+
+    // ----- photo scan and material lookup -----
+
+    /// Like `finish`, but tells "this endpoint doesn't exist yet" apart from other errors.
+    async fn finish_new(&self, what: &str, res: Result<reqwest::Response, reqwest::Error>) -> Result<Value, Fail> {
+        match &res {
+            Ok(resp) if matches!(resp.status().as_u16(), 404 | 405) => Err(Fail::NotLive),
+            _ => self.finish(what, res).await.map_err(Fail::Other),
+        }
+    }
+
+    /// Sends one photo to the backend's vision model. `mode` is "item" or "label".
+    /// The bytes are held only for this request; nothing is written to disk.
+    pub async fn scan(&self, image: Vec<u8>, mime: &str, mode: &str) -> Result<Value, Fail> {
+        let part = reqwest::multipart::Part::bytes(image)
+            .file_name("photo.jpg")
+            .mime_str(mime)
+            .map_err(|_| Fail::Other("That file type isn't an image.".into()))?;
+        let form = reqwest::multipart::Form::new().part("image", part).text("mode", mode.to_string());
+        let res = self
+            .http
+            .post(format!("{}/api/v1/ai/scan", self.base))
+            .bearer_auth(&self.token)
+            .multipart(form)
+            .timeout(AI_TIMEOUT)
+            .send()
+            .await;
+        self.finish_new("/ai/scan", res).await
+    }
+
+    /// Asks the backend which tested fuels each material name corresponds to.
+    pub async fn match_materials(&self, names: &[String]) -> Result<Value, Fail> {
+        let res = self
+            .http
+            .post(format!("{}/api/v1/materials/match", self.base))
+            .bearer_auth(&self.token)
+            .json(&json!({ "materials": names }))
+            .timeout(READ_TIMEOUT)
+            .send()
+            .await;
+        self.finish_new("/materials/match", res).await
     }
 
     // ----- diagnostics and pipeline control -----

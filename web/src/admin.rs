@@ -24,7 +24,7 @@ pub const PROGRAMS: [&str; 13] = [
 ];
 
 /// Refuse form posts that come from another website.
-fn same_origin(headers: &HeaderMap) -> bool {
+pub(crate) fn same_origin(headers: &HeaderMap) -> bool {
     let host = headers.get(header::HOST).and_then(|h| h.to_str().ok()).unwrap_or("");
     match headers.get(header::ORIGIN).and_then(|o| o.to_str().ok()) {
         Some(origin) => origin.split("://").nth(1) == Some(host),
