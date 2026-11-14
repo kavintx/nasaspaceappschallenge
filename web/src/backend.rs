@@ -131,8 +131,21 @@ impl Backend {
 
     // ----- diagnostics and pipeline control -----
 
+    /// The health route answers 503 with the same JSON body when the model is down,
+    /// so the body is returned whatever the status.
     pub async fn health(&self) -> ApiResult<Value> {
-        self.get("/ai/health", &[]).await
+        let resp = self
+            .http
+            .get(format!("{}/api/v1/ai/health", self.base))
+            .bearer_auth(&self.token)
+            .timeout(READ_TIMEOUT)
+            .send()
+            .await
+            .map_err(|_| format!("Couldn't reach the research backend at {}.", self.base))?;
+        if resp.status().as_u16() == 401 {
+            return Err("The research backend rejected the access token. Check API_AUTH_TOKEN.".into());
+        }
+        resp.json().await.map_err(|_| "The research backend sent an unreadable health reply.".to_string())
     }
 
     pub async fn test_model(&self, prompt: &str) -> ApiResult<Value> {

@@ -135,9 +135,20 @@ async fn pipeline_page(app: &AppState, result: Option<ActionResult>) -> Response
     };
     let (health, status) = tokio::join!(b.health(), b.pipeline_status());
     let (health_ok, health_line) = match health {
+        // The reply also carries the model server's address; that is never shown.
         Ok(h) => (
             flag(&h, "ok"),
-            [js(&h, "provider"), js(&h, "model"), js(&h, "detail")].into_iter().flatten().collect::<Vec<_>>().join(" · "),
+            [
+                js(&h, "configured_model"),
+                js(&h, "latency_ms").map(|ms| format!("{ms} ms")),
+                Some(if flag(&h, "model_verified") { "model verified".to_string() } else { "model not verified".to_string() }),
+                Some(if flag(&h, "embeddings_supported") { "embeddings on".to_string() } else { "embeddings off".to_string() }),
+                js(&h, "error"),
+            ]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join(" · "),
         ),
         Err(e) => (false, e),
     };

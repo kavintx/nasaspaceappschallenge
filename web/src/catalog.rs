@@ -35,6 +35,8 @@ pub struct Exp {
     pub acronym: String,
     pub name: String,
     pub description: Option<String>,
+    /// True when name and description come from the NASA brief, not the database.
+    pub from_brief: bool,
     pub category: &'static str,
     pub fuel_phase: &'static str,
     pub hardware: &'static str,
@@ -84,19 +86,38 @@ pub fn paper_ref(p: &Value) -> PaperRef {
     }
 }
 
-/// Category, fuel phase and hardware are not in the database. These come from
-/// the NASA challenge brief.
-fn meta(acronym: &str) -> (&'static str, &'static str, &'static str) {
+pub struct Meta {
+    pub category: &'static str,
+    pub fuel_phase: &'static str,
+    pub hardware: &'static str,
+    /// Official name and a one-line description, when the NASA brief gives them.
+    pub name: Option<&'static str>,
+    pub about: Option<&'static str>,
+}
+
+/// Facts about each experiment taken from the NASA challenge brief. Category,
+/// fuel phase and hardware are not in the database, and the database's seeded
+/// names and descriptions do not match NASA's, so the brief's are shown instead.
+fn meta(acronym: &str) -> Meta {
     let key: String = acronym.chars().filter(|c| c.is_alphanumeric()).collect::<String>().to_uppercase();
+    let m = |category, fuel_phase, hardware, name, about| Meta { category, fuel_phase, hardware, name: Some(name), about: Some(about) };
+    const SOLIDS: &str = "Studies the flammability of solid materials such as fabrics and plastics, which depends on oxygen concentration and, in microgravity, on airflow.";
+    const DROPLETS: &str = "Burned droplets of liquid fuel in the Multi-user Droplet Combustion Apparatus inside the Combustion Integrated Rack.";
     match key.as_str() {
-        "BASS" | "BASSII" => ("prevention", "solid", "MSG flow duct"),
-        "SAFFIREI" | "SAFFIREII" | "SAFFIREIII" => ("prevention", "solid", "Cygnus spacecraft"),
-        "SAME" | "SAMER" => ("detection", "solid", "MSG"),
-        "FLEX" | "FLEX2" => ("suppression", "liquid", "CIR / MDCA"),
-        "CFI" => ("other", "liquid", "CIR / MDCA"),
-        "ACME" => ("other", "gas", "CIR"),
-        "SPICE" | "SLICE" => ("other", "gas", "MSG flow duct"),
-        _ => ("other", "", ""),
+        "BASS" => m("prevention", "solid", "MSG flow duct", "Burning and Suppression of Solids", SOLIDS),
+        "BASSII" => m("prevention", "solid", "MSG flow duct", "Burning and Suppression of Solids II", SOLIDS),
+        "SAFFIREI" => m("prevention", "solid", "Cygnus spacecraft", "Spacecraft Fire Safety Demonstration I", SOLIDS),
+        "SAFFIREII" => m("prevention", "solid", "Cygnus spacecraft", "Spacecraft Fire Safety Demonstration II", SOLIDS),
+        "SAFFIREIII" => m("prevention", "solid", "Cygnus spacecraft", "Spacecraft Fire Safety Demonstration III", SOLIDS),
+        "SAME" => m("detection", "solid", "MSG", "Smoke and Aerosol Measurement Experiment", "Tested fire detection in microgravity by measuring smoke."),
+        "SAMER" => m("detection", "solid", "MSG", "Smoke and Aerosol Measurement Experiment Reflight", "Tested fire detection in microgravity by measuring smoke."),
+        "FLEX" => m("suppression", "liquid", "CIR / MDCA", "Flame Extinguishment Experiment", "Studied fire suppression by diluting the chamber atmosphere with carbon dioxide and helium while burning droplets of liquid fuel."),
+        "FLEX2" => m("suppression", "liquid", "CIR / MDCA", "Flame Extinguishment Experiment 2", DROPLETS),
+        "CFI" => m("other", "liquid", "CIR / MDCA", "Cool Flames Investigation", DROPLETS),
+        "ACME" => m("other", "gas", "CIR", "Advanced Combustion via Microgravity Experiments", "Six experiments on flames of gaseous fuels, all run on the same modular hardware in the Combustion Integrated Rack. They include the Burning Rate Emulator (materials flammability), Cool Flames Investigation with Gases (up to 85% oxygen) and E-FIELD Flames."),
+        "SPICE" => m("other", "gas", "MSG flow duct", "Smoke Point In Co-flow Experiment", "Run in the Microgravity Science Glovebox using the fan-driven flow duct that was built for it."),
+        "SLICE" => m("other", "gas", "MSG flow duct", "Structure & Liftoff In Combustion Experiment", "Run in the Microgravity Science Glovebox using the flow duct built for SPICE."),
+        _ => Meta { category: "other", fuel_phase: "", hardware: "", name: None, about: None },
     }
 }
 
@@ -221,7 +242,7 @@ pub async fn build(b: &Backend) -> Result<Catalog, String> {
         .filter_map(|r| {
             let uuid = s(r, "id")?;
             let acronym = s(r, "acronym").or_else(|| s(r, "name"))?;
-            let (category, fuel_phase, hardware) = meta(&acronym);
+            let m = meta(&acronym);
             let mut e = acc.remove(&uuid).unwrap_or_default();
             e.findings.sort_by(|a, b| {
                 b.verified
@@ -230,12 +251,13 @@ pub async fn build(b: &Backend) -> Result<Catalog, String> {
             });
             Some(Exp {
                 id: acronym.to_lowercase().replace(' ', "-"),
-                name: s(r, "name").unwrap_or_else(|| acronym.clone()),
-                description: s(r, "description"),
+                name: m.name.map(str::to_string).or_else(|| s(r, "name")).unwrap_or_else(|| acronym.clone()),
+                description: m.about.map(str::to_string).or_else(|| s(r, "description")),
+                from_brief: m.about.is_some(),
                 acronym,
-                category,
-                fuel_phase,
-                hardware,
+                category: m.category,
+                fuel_phase: m.fuel_phase,
+                hardware: m.hardware,
                 ..e
             })
         })
