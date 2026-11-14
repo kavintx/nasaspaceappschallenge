@@ -241,7 +241,7 @@ fn verdicts(tests: &[&Test]) -> Vec<Value> {
                     Outcome::Unknown => ("unrecorded", "Tested, outcome not recorded"),
                 };
                 let n = here.len();
-                (code, label.to_string(), format!("{n} NASA test{} at {}% O₂", if n == 1 { "" } else { "s" }, num(value)))
+                (code, label.to_string(), format!("{n} test{} in NASA papers at {}% O₂", if n == 1 { "" } else { "s" }, num(value)))
             };
             json!({
                 "key": h.key,
