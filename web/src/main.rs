@@ -61,9 +61,24 @@ async fn main() {
         .fallback(views::not_found)
         .with_state(state);
 
-    let port = cfg.get("PORT").unwrap_or_else(|| "3100".into());
-    let addr = format!("0.0.0.0:{port}");
-    let listener = tokio::net::TcpListener::bind(&addr).await.expect("bind failed");
+    // Use PORT if set; otherwise start at 3100 and step past ports that are taken.
+    let fixed = cfg.get("PORT").and_then(|p| p.trim().parse::<u16>().ok());
+    let candidates: Vec<u16> = match fixed {
+        Some(p) => vec![p],
+        None => (3100..3110).collect(),
+    };
+    let mut bound = None;
+    for port in candidates {
+        if let Ok(l) = tokio::net::TcpListener::bind(("0.0.0.0", port)).await {
+            bound = Some((l, port));
+            break;
+        }
+        println!("port {port} is already in use");
+    }
+    let Some((listener, port)) = bound else {
+        eprintln!("Could not find a free port. Close the other program or set PORT in web/.env.");
+        std::process::exit(1);
+    };
     println!("Flame in Freefall running on http://localhost:{port}");
     axum::serve(listener, app).await.expect("server error");
 }
