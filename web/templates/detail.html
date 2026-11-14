@@ -33,6 +33,21 @@
   </div>
 </section>
 
+{% if backend_on %}
+<section class="border-t border-line/60" id="summary">
+  <div class="wrap py-14 grid md:grid-cols-12 gap-8">
+    <div class="md:col-span-3">
+      <h3 class="text-[28px] font-semibold tracking-tight">AI synthesis.</h3>
+      <p class="mt-3 eyebrow">Across every indexed paper for {{ e.acronym }}</p>
+      <form method="get" action="#summary" data-slow class="mt-5"><input type="hidden" name="summarize" value="1"><button class="btn-ghost">{% if ai.is_some() %}Regenerate{% else %}Generate summary{% endif %}</button></form>
+    </div>
+    <div class="md:col-span-9">
+      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else %}<p class="text-[15px] text-dim">Not generated yet.</p>{% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <section class="bg-ink-850">
   <div class="wrap py-14 grid lg:grid-cols-12 gap-12">
     <div class="lg:col-span-8">
@@ -55,7 +70,14 @@
 <section class="wrap py-14 grid lg:grid-cols-12 gap-12">
   <div class="lg:col-span-8">
     <h3 class="text-[28px] font-semibold tracking-tight">Read the original research.</h3>
-    {% if papers.is_empty() %}<p class="mt-6 text-[16px] text-dim">No NASA papers are linked to this experiment yet.</p>{% endif %}
+    {% if papers.is_empty() && related.is_empty() %}<p class="mt-6 text-[16px] text-dim">No NASA papers are linked to this experiment yet.</p>{% endif %}
+    {% if !related.is_empty() %}<p class="mt-4 eyebrow">Indexed papers that mention {{ e.acronym }} by name</p>{% endif %}
+    {% for p in related %}
+    <div class="mt-6">
+      <a href="{{ p.href }}" class="text-[18px] text-sky hover:underline">{{ p.title }}</a>
+      <div class="mt-2 eyebrow">{{ p.year }} · {{ p.kind }} · {{ p.status }}</div>
+    </div>
+    {% endfor %}
     {% for p in papers %}
     <div class="mt-7">
       {% if let Some(u) = p.url %}<a href="{{ u }}" target="_blank" rel="noopener" class="text-[18px] text-sky hover:underline">{{ p.title }}</a>

@@ -69,7 +69,7 @@ pub struct HabitatScore {
 }
 
 #[derive(Debug, Deserialize, Default)]
-struct Fixture {
+pub struct Fixture {
     experiments: Vec<Experiment>,
     #[serde(default)]
     papers: Vec<Paper>,
@@ -91,8 +91,8 @@ pub type DataResult<T> = Result<T, String>;
 const PAPER_COLUMNS: &str = "id,experiment_id,ntrs_id,title,authors,year,abstract,url";
 
 impl Source {
-    pub fn from_env() -> Self {
-        if let Ok(path) = std::env::var("DATA_FIXTURE") {
+    pub fn from_cfg(cfg: &crate::config::Config) -> Self {
+        if let Some(path) = cfg.get("DATA_FIXTURE") {
             let raw = std::fs::read_to_string(&path)
                 .unwrap_or_else(|e| panic!("cannot read DATA_FIXTURE {path}: {e}"));
             let mut fx: Fixture = serde_json::from_str(&raw).expect("invalid fixture JSON");
@@ -111,11 +111,13 @@ impl Source {
             println!("data source: fixture {path}");
             return Source::Fixture(fx);
         }
-        let url = std::env::var("SUPABASE_URL")
-            .unwrap_or_else(|_| "https://hdawtwegmvuczzshrgmr.supabase.co".into());
+        let url = cfg
+            .get("SUPABASE_URL")
+            .unwrap_or_else(|| "https://hdawtwegmvuczzshrgmr.supabase.co".into());
         // Publishable (read-only) key: safe to ship. Never put the service_role key here.
-        let key = std::env::var("SUPABASE_KEY")
-            .unwrap_or_else(|_| "sb_publishable_9BFkivzzJw701pXLfe8ttA_MNP-Pc6I".into());
+        let key = cfg
+            .get("SUPABASE_KEY")
+            .unwrap_or_else(|| "sb_publishable_9BFkivzzJw701pXLfe8ttA_MNP-Pc6I".into());
         println!("data source: supabase {url}");
         Source::Supabase {
             url,

@@ -3,10 +3,11 @@
 {% if question.is_empty() %}
 <section class="wrap pt-16 pb-24">
   <h2 class="text-[40px] md:text-[52px] leading-[1.08] font-semibold tracking-tight">Ask the research.</h2>
-  <p class="mt-5 text-[20px] text-muted">Answers drawn from NASA PSI experiments and NTRS papers.</p>
-  <form method="get" action="/ask" class="mt-10 flex gap-4 items-start max-w-3xl">
+  <p class="mt-5 text-[20px] text-muted">Answers drawn from indexed NASA NTRS papers, with citations.</p>
+  {% if !backend_on %}<p class="mt-5 text-[14px] text-amber">The research backend isn't connected yet, so questions return catalog matches instead of AI answers.</p>{% endif %}
+  <form method="get" action="/ask" data-slow class="mt-10 flex gap-4 items-start max-w-3xl">
     <textarea name="q" rows="3" required placeholder="Ask about materials, conditions or findings…" class="field h-auto py-3 text-[16px] placeholder:text-dim"></textarea>
-    <button class="btn-primary shrink-0" aria-label="Ask">Ask ↑</button>
+    <button class="btn-primary shrink-0">Ask ↑</button>
   </form>
   <div class="mt-8 eyebrow">Try</div>
   <ul class="mt-3 space-y-2">
@@ -15,18 +16,20 @@
 </section>
 {% else %}
 <section class="wrap pt-10 pb-12">
-  <div class="flex justify-between eyebrow"><span>Your question</span><a href="/ask" class="text-[14px] text-sky hover:underline">New conversation</a></div>
+  <div class="flex justify-between eyebrow"><span>Your question</span><a href="/ask" class="text-[14px] text-sky hover:underline">New question</a></div>
   <h2 class="mt-6 text-[32px] md:text-[44px] leading-tight font-semibold tracking-tight max-w-5xl">{{ question }}</h2>
 </section>
 
 <section class="bg-ink-850">
-  <div class="wrap py-12 grid lg:grid-cols-12 gap-12">
-    <div class="lg:col-span-8">
-      <div class="eyebrow">{% if ai_live %}Source-grounded answer{% else %}Database matches{% endif %}</div>
-      {% if let Some(n) = notice %}<p class="mt-4 text-[14px] text-amber">{{ n }}</p>{% endif %}
-      {% for p in answer %}<p class="mt-5 text-[17px] leading-relaxed text-muted">{{ p }}</p>{% endfor %}
-      {% if !ai_live %}
-        {% if matched.is_empty() %}<p class="mt-6 text-[16px] text-dim">No experiments matched those keywords. Try naming a fuel, an experiment, or a hazard.</p>{% endif %}
+  <div class="wrap py-12 max-w-none">
+    <div class="max-w-4xl">
+      {% if let Some(ai) = ai %}
+        <div class="eyebrow">Source-grounded answer</div>
+        {% include "_ai.html" %}
+      {% else %}
+        <div class="eyebrow">Catalog matches</div>
+        <p class="mt-4 text-[14px] text-amber">The research backend isn't connected, so this is a keyword match against the experiment catalog, not an AI answer.</p>
+        {% if matched.is_empty() %}<p class="mt-6 text-[16px] text-dim">No experiments matched those keywords. Try naming an experiment or a hazard.</p>{% endif %}
         <ol class="mt-2">
           {% for m in matched %}
           <li class="border-b border-line py-5"><a class="text-[19px] text-sky hover:underline" href="/experiments/{{ m.0 }}">{{ m.1 }}</a><div class="mt-1 text-[14px] text-muted">{{ m.2 }}</div></li>
@@ -34,28 +37,16 @@
         </ol>
       {% endif %}
     </div>
-    <aside class="lg:col-span-4">
-      <h3 class="text-[19px] font-semibold">Evidence behind the answer.</h3>
-      <p class="mt-3 eyebrow">{{ sources.len() }} source{% if sources.len() != 1 %}s{% endif %}</p>
-      {% if sources.is_empty() %}<p class="mt-5 text-[14px] text-dim">No NASA papers matched yet.</p>{% endif %}
-      {% for s in sources %}
-      <div class="mt-6 pb-5 border-b border-line">
-        <a href="{{ s.href }}" {% if s.external %}target="_blank" rel="noopener"{% endif %} class="text-[16px] text-sky hover:underline">{{ s.title }}{% if s.external %} ↗{% endif %}</a>
-        <div class="mt-2 eyebrow">{{ s.meta }}</div>
-      </div>
-      {% endfor %}
-    </aside>
   </div>
 </section>
 
 <section class="wrap py-12 grid lg:grid-cols-12 gap-12">
-  <form method="get" action="/ask" class="lg:col-span-8">
-    <label for="q" class="text-[16px] font-medium">Ask a follow-up</label>
-    <div class="mt-3 flex gap-4 items-center">
+  <form method="get" action="/ask" data-slow class="lg:col-span-8">
+    <label for="q" class="text-[16px] font-medium">Ask another question</label>
+    <div class="mt-3 flex gap-4 items-start">
       <textarea id="q" name="q" rows="2" required placeholder="Ask about materials, conditions or findings…" class="field h-auto py-3 text-[15px] placeholder:text-dim"></textarea>
-      <button class="w-10 h-10 shrink-0 rounded-full bg-blue hover:bg-sky text-white" aria-label="Send">↑</button>
+      <button class="btn-primary shrink-0">Ask ↑</button>
     </div>
-    <p class="mt-3 text-[14px] text-muted">NASA PSI + NTRS only</p>
   </form>
   <p class="lg:col-span-4 eyebrow self-center">AI can miss context. Always verify critical safety decisions against the original NASA research.</p>
 </section>

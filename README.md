@@ -16,16 +16,41 @@ cd web
 cargo run            # http://localhost:3100
 ```
 
-Pages: `/` Habitat Risk · `/explorer` · `/experiments/<id>` · `/compare` · `/ask`
+Pages: `/` Habitat Risk · `/explorer` · `/experiments/<id>` · `/compare` · `/papers` Literature · `/ask`
 
-Settings (environment variables, all optional):
+## Connecting the research backend
+
+The AI features and the Literature pages come from the `fire-intel` backend (`/api/v1/*`).
+Copy `web/.env.example` to `web/.env`, paste the token, and restart:
+
+```
+API_BASE_URL=http://127.0.0.1:8080
+API_AUTH_TOKEN=<token from Gus>
+```
+
+The token stays on this server; it is never sent to the browser. Without it the app still
+runs, and the AI sections say the backend isn't connected.
+
+What uses the backend:
+
+| Page | Endpoint |
+|---|---|
+| Ask the Data | `POST /ai/query` |
+| Habitat Risk → AI risk assessment | `POST /ai/habitat/analyze` |
+| Compare → AI comparison | `POST /ai/compare` |
+| Experiment → AI synthesis | `POST /ai/summarize/{id}` |
+| Literature, paper pages | `GET /papers`, `GET /papers/{id}/extractions`, `GET /pipeline/status` |
+
+Not built into this app: running ingestion, the Google Sheets import, batch extraction, and
+editing/verifying conditions and findings. Those stay as direct API calls.
+
+Other settings (all optional, env var or `.env`):
 
 | Variable | What it does |
 |---|---|
 | `PORT` | Port to listen on (default 3100) |
-| `SUPABASE_URL`, `SUPABASE_KEY` | Override the Supabase project. Only ever use the publishable (read-only) key here |
-| `ASK_API_URL` | The AI endpoint for Ask the Data. The app POSTs `{"question": "..."}` and expects `{"answer": "...", "sources": [{"title", "url", "experiment_id"}]}`. Without it, Ask falls back to keyword matches |
-| `DATA_FIXTURE` | Path to a JSON snapshot (e.g. `data/fixture.json`) to run offline without Supabase |
+| `SUPABASE_URL`, `SUPABASE_KEY` | Override the Supabase project that holds the experiment catalog. Only ever use the publishable (read-only) key here |
+| `DATA_FIXTURE` | Path to a JSON snapshot (e.g. `data/fixture.json`) to run without Supabase |
 
 ## Changing the styling
 

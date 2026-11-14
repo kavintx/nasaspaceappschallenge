@@ -59,6 +59,31 @@
   <p class="mt-8 eyebrow">Atmospheres are from the NASA Space Apps challenge brief. This is context for reading the research, not a validated engineering risk model.</p>
 </section>
 
+<section class="border-t border-line/60" id="assessment">
+  <div class="wrap py-14 grid lg:grid-cols-12 gap-12">
+    <div class="lg:col-span-4">
+      <h3 class="text-[28px] font-semibold tracking-tight">AI risk assessment.</h3>
+      <p class="mt-3 text-[15px] leading-relaxed text-muted">Checks this habitat's atmosphere and your materials against the indexed NASA combustion papers.</p>
+      {% if !backend_on %}<p class="mt-5 text-[14px] text-amber">The research backend isn't connected yet.</p>
+      {% else if !can_analyze %}<p class="mt-5 text-[14px] text-amber">No atmosphere is specified for {{ sel_name }}, so there's nothing to assess yet.</p>
+      {% else %}
+      <form method="get" action="/#assessment" data-slow class="mt-6 space-y-4">
+        <input type="hidden" name="h" value="{{ sel_key }}"><input type="hidden" name="analyze" value="1">
+        <label class="block"><span class="eyebrow">Materials on board (comma-separated)</span>
+          <input name="materials" value="{{ f_materials }}" class="field mt-2"></label>
+        <label class="block"><span class="eyebrow">Ventilation speed (cm/s)</span>
+          <input name="vent" type="number" min="0" step="0.5" value="{{ f_vent }}" class="field mt-2"></label>
+        <button class="btn-primary">Run assessment for {{ sel_name }}</button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="lg:col-span-8">
+      {% if let Some(ai) = ai %}{% include "_ai.html" %}
+      {% else %}<p class="text-[15px] text-dim lg:mt-14">No assessment run yet for {{ sel_name }}.</p>{% endif %}
+    </div>
+  </div>
+</section>
+
 <section class="bg-ink-850">
   <div class="wrap py-16 grid lg:grid-cols-12 gap-12">
     <div class="lg:col-span-8">

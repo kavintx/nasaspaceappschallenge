@@ -1,5 +1,7 @@
 //! Page handlers and the view models each template renders.
 
+use crate::ai::{self, AiResult};
+use crate::backend::{self, f, flag, https, s as js};
 use crate::data::{Experiment, Paper};
 use crate::AppState;
 use askama::Template;
@@ -9,6 +11,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use serde::Deserialize;
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -174,11 +177,19 @@ pub struct HabitatPage {
     pub ranked: bool,
     pub total: usize,
     pub insights: Vec<Insight>,
+    pub backend_on: bool,
+    pub can_analyze: bool,
+    pub f_materials: String,
+    pub f_vent: String,
+    pub ai: Option<AiResult>,
 }
 
 #[derive(Deserialize)]
 pub struct HabitatQuery {
     h: Option<String>,
+    analyze: Option<String>,
+    materials: Option<String>,
+    vent: Option<String>,
 }
 
 pub fn context_for(key: &str) -> String {
@@ -310,7 +321,36 @@ pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Respo
         },
     ];
 
+    let f_materials = q.materials.clone().unwrap_or_else(|| "Nomex, PMMA, polyimide wire insulation".into());
+    let f_vent = q.vent.clone().unwrap_or_else(|| "10".into());
+    let ai = match (&app.backend, sel.o2_pct, sel.psi, q.analyze.is_some()) {
+        (Some(b), Some(o), Some(p), true) => {
+            let materials: Vec<&str> = f_materials.split(',').map(str::trim).filter(|m| !m.is_empty()).collect();
+            let gravity = match sel.key {
+                "iss" => "microgravity",
+                "mars" => "Mars gravity (3/8 g)",
+                _ => "lunar gravity (1/6 g)",
+            };
+            let scenario = json!({
+                "habitat_name": sel.name,
+                "oxygen_percent": o,
+                "pressure_kpa": (p * 6.89476 * 10.0).round() / 10.0,
+                "ventilation_velocity_cm_s": f_vent.trim().parse::<f64>().unwrap_or(10.0),
+                "gravity_level": gravity,
+                "materials": materials,
+                "notes": "Atmosphere from the NASA Space Apps challenge brief",
+            });
+            Some(ai::from_reply(b.habitat(scenario).await))
+        }
+        _ => None,
+    };
+
     render(HabitatPage {
+        backend_on: app.backend.is_some(),
+        can_analyze: sel.o2_pct.is_some(),
+        f_materials,
+        f_vent,
+        ai,
         active: "habitat",
         page_title: "Habitat Risk".into(),
         context_line: context_for(sel.key),
@@ -450,9 +490,17 @@ pub struct DetailPage {
     pub findings: Vec<String>,
     pub sensor_list: Vec<String>,
     pub papers: Vec<Paper>,
+    pub related: Vec<PaperRow>,
+    pub backend_on: bool,
+    pub ai: Option<AiResult>,
 }
 
-pub async fn detail(State(app): AppRef, Path(id): Path<String>) -> Response {
+#[derive(Deserialize, Default)]
+pub struct DetailQuery {
+    summarize: Option<String>,
+}
+
+pub async fn detail(State(app): AppRef, Path(id): Path<String>, Query(q): Query<DetailQuery>) -> Response {
     let e = match app.data.experiment(&id).await {
         Ok(Some(e)) => e,
         Ok(None) => {
@@ -496,7 +544,37 @@ pub async fn detail(State(app): AppRef, Path(id): Path<String>) -> Response {
     let brief = e.ai_summary.clone().or_else(|| e.objective.clone());
     let findings = lines(e.key_findings.as_deref());
     let sensor_list = e.sensors.clone().unwrap_or_default();
+
+    // From the research backend: papers that mention this experiment, and an AI summary on request.
+    let mut related = vec![];
+    let mut ai = None;
+    if let Some(b) = &app.backend {
+        if let Ok(all) = b.papers(None, 200).await {
+            let name = e.name.to_lowercase();
+            related = all
+                .iter()
+                .filter(|p| {
+                    let text = format!("{} {}", js(p, "title").unwrap_or_default(), js(p, "abstract").unwrap_or_default());
+                    text.contains(&e.acronym) || text.to_lowercase().contains(&name)
+                })
+                .take(8)
+                .map(paper_row)
+                .collect();
+        }
+        if q.summarize.is_some() {
+            ai = Some(match b.experiments().await {
+                Err(err) => ai::from_reply(Err(err)),
+                Ok(list) => match backend::match_experiment(&list, &e.acronym) {
+                    Some(uuid) => ai::from_reply(b.summarize(&uuid).await),
+                    None => ai::from_reply(Err(format!("{} hasn't been indexed by the research backend yet.", e.acronym))),
+                },
+            });
+        }
+    }
     render(DetailPage {
+        related,
+        backend_on: app.backend.is_some(),
+        ai,
         active: "explorer",
         page_title: e.acronym.clone(),
         context_line: meta.clone(),
@@ -541,6 +619,9 @@ pub struct ComparePage {
     pub selected: Vec<String>,
     pub can_add: bool,
     pub next_slot: &'static str,
+    pub backend_on: bool,
+    pub f_focus: String,
+    pub ai: Option<AiResult>,
 }
 
 #[derive(Deserialize, Default)]
@@ -548,6 +629,8 @@ pub struct CompareQuery {
     a: Option<String>,
     b: Option<String>,
     c: Option<String>,
+    ai: Option<String>,
+    focus: Option<String>,
 }
 
 pub async fn compare(State(app): AppRef, Query(q): Query<CompareQuery>) -> Response {
@@ -555,6 +638,8 @@ pub async fn compare(State(app): AppRef, Query(q): Query<CompareQuery>) -> Respo
         Ok(e) => e,
         Err(e) => return data_error(e),
     };
+    let want_ai = q.ai.is_some();
+    let f_focus = q.focus.clone().unwrap_or_default();
     let untouched = q.a.is_none() && q.b.is_none() && q.c.is_none();
     let picks: [(&'static str, String); 3] = if untouched {
         [("a", "bass-ii".into()), ("b", "saffire-iii".into()), ("c", "flex-2".into())]
@@ -636,7 +721,43 @@ pub async fn compare(State(app): AppRef, Query(q): Query<CompareQuery>) -> Respo
 
     let options = experiments.iter().map(|e| (e.id.clone(), e.acronym.clone())).collect();
     let can_add = chosen.len() < 3;
+    let ai = match (&app.backend, want_ai) {
+        (Some(b), true) => Some(match b.experiments().await {
+            Err(err) => ai::from_reply(Err(err)),
+            Ok(list) => {
+                let mut ids = vec![];
+                let mut missing = vec![];
+                for (_, e) in &chosen {
+                    match backend::match_experiment(&list, &e.acronym) {
+                        Some(id) => {
+                            if !ids.contains(&id) {
+                                ids.push(id)
+                            }
+                        }
+                        None => missing.push(e.acronym.clone()),
+                    }
+                }
+                if ids.len() < 2 {
+                    ai::from_reply(Err(if missing.is_empty() {
+                        "Pick at least two different experiments to compare.".to_string()
+                    } else {
+                        format!("Not indexed by the research backend yet: {}. The AI needs at least two indexed experiments.", missing.join(", "))
+                    }))
+                } else {
+                    let mut out = ai::from_reply(b.compare(&ids, &f_focus).await);
+                    if !missing.is_empty() && out.error.is_none() {
+                        out.error = Some(format!("Left out (not indexed yet): {}.", missing.join(", ")));
+                    }
+                    out
+                }
+            }
+        }),
+        _ => None,
+    };
     render(ComparePage {
+        backend_on: app.backend.is_some(),
+        f_focus,
+        ai,
         active: "compare",
         page_title: "Compare".into(),
         context_line: context_for("moon_base"),
@@ -651,13 +772,6 @@ pub async fn compare(State(app): AppRef, Query(q): Query<CompareQuery>) -> Respo
 
 // ---------- ask the data ----------
 
-pub struct SourceLink {
-    pub title: String,
-    pub meta: String,
-    pub href: String,
-    pub external: bool,
-}
-
 #[derive(Template)]
 #[template(path = "ask.html")]
 pub struct AskPage {
@@ -665,31 +779,15 @@ pub struct AskPage {
     pub page_title: String,
     pub context_line: String,
     pub question: String,
-    pub answer: Vec<String>,
-    pub ai_live: bool,
-    pub sources: Vec<SourceLink>,
+    pub backend_on: bool,
+    pub ai: Option<AiResult>,
     pub matched: Vec<(String, String, String)>,
-    pub notice: Option<String>,
     pub suggestions: Vec<&'static str>,
 }
 
 #[derive(Deserialize, Default)]
 pub struct AskQuery {
     q: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct AskApiResponse {
-    answer: String,
-    #[serde(default)]
-    sources: Vec<AskApiSource>,
-}
-
-#[derive(Deserialize)]
-struct AskApiSource {
-    title: String,
-    url: Option<String>,
-    experiment_id: Option<String>,
 }
 
 const STOPWORDS: &[&str] = &[
@@ -711,94 +809,35 @@ fn keywords(q: &str) -> Vec<String> {
 
 pub async fn ask(State(app): AppRef, Query(q): Query<AskQuery>) -> Response {
     let question = q.q.unwrap_or_default().trim().to_string();
-    let suggestions = vec![
-        "What materials are most flammable at Moon base oxygen levels?",
-        "How does airflow change flame spread in microgravity?",
-        "Which experiments studied fire suppression?",
-    ];
     let mut page = AskPage {
         active: "ask",
         page_title: "Ask the Data".into(),
         context_line: context_for("moon_base"),
         question: question.clone(),
-        answer: vec![],
-        ai_live: false,
-        sources: vec![],
+        backend_on: app.backend.is_some(),
+        ai: None,
         matched: vec![],
-        notice: None,
-        suggestions,
+        suggestions: vec![
+            "How does low cabin pressure with elevated oxygen affect flame spread?",
+            "How does airflow change flame spread in microgravity?",
+            "Which experiments studied fire suppression?",
+        ],
     };
     if question.is_empty() {
         return render(page);
     }
-
-    // 1) Preferred: the team's AI endpoint (ASK_API_URL).
-    if let Some(endpoint) = &app.ask_api_url {
-        let res = app
-            .http
-            .post(endpoint)
-            .json(&serde_json::json!({ "question": question }))
-            .timeout(std::time::Duration::from_secs(45))
-            .send()
-            .await;
-        match res {
-            Ok(r) if r.status().is_success() => match r.json::<AskApiResponse>().await {
-                Ok(body) => {
-                    page.ai_live = true;
-                    page.answer = body
-                        .answer
-                        .split("\n\n")
-                        .map(|p| p.trim().to_string())
-                        .filter(|p| !p.is_empty())
-                        .collect();
-                    page.sources = body
-                        .sources
-                        .into_iter()
-                        .map(|s| {
-                            let external = s.url.is_some();
-                            SourceLink {
-                                href: s.url.unwrap_or_else(|| {
-                                    s.experiment_id
-                                        .as_ref()
-                                        .map(|id| format!("/experiments/{id}"))
-                                        .unwrap_or_else(|| "#".into())
-                                }),
-                                meta: s.experiment_id.unwrap_or_default().to_uppercase(),
-                                title: s.title,
-                                external,
-                            }
-                        })
-                        .collect();
-                    return render(page);
-                }
-                Err(e) => page.notice = Some(format!("The AI service replied in an unexpected format ({e}).")),
-            },
-            Ok(r) => page.notice = Some(format!("The AI service returned {}.", r.status())),
-            Err(e) => page.notice = Some(format!("The AI service could not be reached ({e}).")),
+    if let Some(b) = &app.backend {
+        let mut out = ai::from_reply(b.query(&question).await);
+        // The question is already the page headline.
+        out.blocks.retain(|blk| blk.heading.as_deref() != Some("Question"));
+        if out.blocks.len() == 1 {
+            out.blocks[0].heading = None;
         }
-    } else {
-        page.notice = Some("The AI answer service isn't connected yet, so here are the closest matches in the research database.".into());
+        page.ai = Some(out);
+        return render(page);
     }
-
-    // 2) Fallback: keyword matches straight from the database.
+    // Not connected: show catalog experiments whose text matches the question.
     let terms = keywords(&question);
-    if let Ok(papers) = app.data.search_papers(&terms).await {
-        page.sources = papers
-            .into_iter()
-            .map(|p| SourceLink {
-                meta: [p.year.map(|y| y.to_string()), p.ntrs_id.clone()]
-                    .into_iter()
-                    .flatten()
-                    .collect::<Vec<_>>()
-                    .join(" · "),
-                external: p.url.is_some(),
-                href: p.url.clone().unwrap_or_else(|| {
-                    p.experiment_id.as_ref().map(|id| format!("/experiments/{id}")).unwrap_or_else(|| "#".into())
-                }),
-                title: p.title,
-            })
-            .collect();
-    }
     if let Ok(exps) = app.data.experiments().await {
         page.matched = exps
             .iter()
@@ -809,7 +848,7 @@ pub async fn ask(State(app): AppRef, Query(q): Query<AskQuery>) -> Response {
                     e.name,
                     e.objective.clone().unwrap_or_default(),
                     e.key_findings.clone().unwrap_or_default(),
-                    e.fuel_details.clone().unwrap_or_default()
+                    e.category.clone().unwrap_or_default()
                 )
                 .to_lowercase();
                 terms.iter().any(|t| hay.contains(t.as_str()))
@@ -819,6 +858,192 @@ pub async fn ask(State(app): AppRef, Query(q): Query<AskQuery>) -> Response {
             .collect();
     }
     render(page)
+}
+
+// ---------- literature (research backend) ----------
+
+pub struct PaperRow {
+    pub href: String,
+    pub title: String,
+    pub year: String,
+    pub kind: String,
+    pub status: String,
+}
+
+fn paper_row(p: &Value) -> PaperRow {
+    let id = js(p, "ntrs_id").or_else(|| js(p, "id")).unwrap_or_default();
+    PaperRow {
+        href: format!("/papers/{}", urlencoding::encode(&id)),
+        title: js(p, "title").unwrap_or_else(|| "Untitled".into()),
+        year: js(p, "publication_date").map(|d| d.chars().take(4).collect()).unwrap_or_else(|| NA.into()),
+        kind: js(p, "pub_type").unwrap_or_else(|| NA.into()),
+        status: js(p, "status").map(|x| capitalize(&x)).unwrap_or_else(|| NA.into()),
+    }
+}
+
+#[derive(Template)]
+#[template(path = "papers.html")]
+pub struct PapersPage {
+    pub active: &'static str,
+    pub page_title: String,
+    pub context_line: String,
+    pub backend_on: bool,
+    pub error: Option<String>,
+    pub rows: Vec<PaperRow>,
+    pub loaded: usize,
+    pub counts: Vec<(String, String)>,
+    pub f_status: String,
+    pub f_q: String,
+}
+
+#[derive(Deserialize, Default)]
+pub struct PapersQuery {
+    status: Option<String>,
+    q: Option<String>,
+}
+
+pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Response {
+    let f_status = q.status.unwrap_or_default();
+    let f_q = q.q.unwrap_or_default();
+    let mut page = PapersPage {
+        active: "papers",
+        page_title: "Literature".into(),
+        context_line: "NASA NTRS papers · AI-extracted".into(),
+        backend_on: app.backend.is_some(),
+        error: None,
+        rows: vec![],
+        loaded: 0,
+        counts: vec![],
+        f_status: f_status.clone(),
+        f_q: f_q.clone(),
+    };
+    let Some(b) = &app.backend else { return render(page) };
+    match b.papers(Some(&f_status), 200).await {
+        Err(e) => page.error = Some(e),
+        Ok(all) => {
+            page.loaded = all.len();
+            let ql = f_q.trim().to_lowercase();
+            page.rows = all
+                .iter()
+                .filter(|p| {
+                    ql.is_empty()
+                        || format!("{} {}", js(p, "title").unwrap_or_default(), js(p, "abstract").unwrap_or_default())
+                            .to_lowercase()
+                            .contains(&ql)
+                })
+                .map(paper_row)
+                .collect();
+        }
+    }
+    if let Ok(st) = b.pipeline_status().await {
+        if let Some(list) = st.get("papers_by_status").and_then(|x| x.as_array()) {
+            page.counts = list
+                .iter()
+                .filter_map(|x| Some((js(x, "status")?, js(x, "count")?)))
+                .collect();
+        }
+    }
+    render(page)
+}
+
+pub struct ConditionRow {
+    pub fuel: String,
+    pub oxidizer: String,
+    pub o2: String,
+    pub pressure: String,
+    pub flow: String,
+    pub gravity: String,
+    pub geometry: String,
+    pub notes: Option<String>,
+    pub verified: bool,
+}
+
+pub struct FindingRow {
+    pub claim: String,
+    pub category: String,
+    pub metric: Option<String>,
+    pub confidence: Option<String>,
+    pub quote: Option<String>,
+    pub verified: bool,
+}
+
+#[derive(Template)]
+#[template(path = "paper.html")]
+pub struct PaperPage {
+    pub active: &'static str,
+    pub page_title: String,
+    pub context_line: String,
+    pub title: String,
+    pub authors: String,
+    pub abstract_text: Option<String>,
+    pub ntrs_url: Option<String>,
+    pub pdf_url: Option<String>,
+    pub conditions: Vec<ConditionRow>,
+    pub findings: Vec<FindingRow>,
+}
+
+pub async fn paper(State(app): AppRef, Path(id): Path<String>) -> Response {
+    let Some(b) = &app.backend else {
+        return data_error("The research backend isn't connected, so papers can't be shown yet.".into());
+    };
+    let data = match b.extractions(&id).await {
+        Ok(d) => d,
+        Err(e) => return data_error(e),
+    };
+    let p = data.get("paper").cloned().unwrap_or(Value::Null);
+    let authors = match p.get("authors") {
+        Some(Value::Array(a)) => a.iter().filter_map(|x| x.as_str()).collect::<Vec<_>>().join(", "),
+        Some(Value::String(x)) => x.clone(),
+        _ => String::new(),
+    };
+    let or_na = |x: Option<String>| x.unwrap_or_else(|| NA.into());
+    let rows = |key: &str| data.get(key).and_then(|x| x.as_array()).cloned().unwrap_or_default();
+    let conditions = rows("conditions")
+        .iter()
+        .map(|c| ConditionRow {
+            fuel: or_na(js(c, "fuel_material")),
+            oxidizer: or_na(js(c, "oxidizer")),
+            o2: or_na(f(c, "oxygen_percent").map(|x| format!("{}%", num(x)))),
+            pressure: or_na(f(c, "pressure_kpa").map(|x| format!("{} kPa", num(x)))),
+            flow: or_na(f(c, "flow_velocity_cm_s").map(|x| format!("{} cm/s", num(x)))),
+            gravity: or_na(js(c, "gravity_level")),
+            geometry: or_na(js(c, "sample_geometry")),
+            notes: js(c, "notes"),
+            verified: flag(c, "verified"),
+        })
+        .collect();
+    let findings = rows("findings")
+        .iter()
+        .map(|x| FindingRow {
+            claim: or_na(js(x, "claim")),
+            category: js(x, "category").map(|c| capitalize(&c.replace('_', " "))).unwrap_or_default(),
+            metric: match (js(x, "metric_name"), js(x, "metric_value")) {
+                (Some(n), Some(v)) => Some(format!("{}: {v}", n.replace('_', " "))),
+                (None, Some(v)) => Some(v),
+                _ => None,
+            },
+            confidence: f(x, "confidence").map(|c| format!("{}%", (c * 100.0).round() as i64)),
+            quote: js(x, "source_quote"),
+            verified: flag(x, "verified"),
+        })
+        .collect();
+    let year = js(&p, "publication_date").map(|d| d.chars().take(4).collect::<String>());
+    render(PaperPage {
+        active: "papers",
+        page_title: "Paper".into(),
+        context_line: [js(&p, "ntrs_id").map(|n| format!("NTRS {n}")), year, js(&p, "pub_type")]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join(" · "),
+        title: js(&p, "title").unwrap_or_else(|| "Untitled NASA paper".into()),
+        authors,
+        abstract_text: js(&p, "abstract"),
+        ntrs_url: https(&p, "ntrs_url"),
+        pdf_url: https(&p, "pdf_url"),
+        conditions,
+        findings,
+    })
 }
 
 // ---------- errors ----------
