@@ -5,8 +5,92 @@
 @layer components {
   .btn-primary { @apply inline-flex items-center h-10 px-5 rounded-full bg-blue text-white text-[14px] font-medium hover:bg-sky transition-colors; }
   .btn-ghost { @apply inline-flex items-center h-10 px-5 rounded-full border border-sky/70 text-sky text-[14px] font-medium hover:bg-sky/10 transition-colors; }
+  .btn-big { @apply inline-flex items-center justify-center h-11 px-6 rounded-full bg-blue text-fg text-[17px] font-medium hover:bg-sky transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky; }
+  .btn-big-ghost { @apply inline-flex items-center justify-center h-11 px-6 rounded-full border border-blue text-sky text-[17px] font-medium hover:bg-sky/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky; }
   .field { @apply bg-ink-800 text-fg text-[13px] rounded-md h-10 px-3 w-full outline-none border border-transparent focus:border-sky/60; }
   .chip { @apply inline-flex items-center h-7 px-3 rounded-full border border-line text-[12px] hover:border-muted transition-colors; }
   .eyebrow { @apply text-[12px] text-muted; }
-  .wrap { @apply mx-auto max-w-page px-6 lg:px-24; }
+  .wrap { @apply mx-auto max-w-page px-4 sm:px-6 lg:px-24; }
+
+  /* The three-question form. Each control is a hidden input followed by its visible part. */
+  .step-no { @apply inline-flex items-center justify-center w-9 h-9 rounded-full bg-rowhl text-sky text-[14px] font-medium shrink-0; }
+  .pick-card, .pick-row { @apply bg-ink-800 rounded-xl border border-line transition-colors hover:border-muted; }
+  .pick-chip { @apply inline-flex items-center min-h-9 px-4 py-2 rounded-full border border-line text-[14px] font-medium text-muted transition-colors hover:border-muted; }
+  .pick-box { @apply inline-flex items-center justify-center w-[22px] h-[22px] rounded-md border-[1.5px] border-line text-transparent shrink-0 transition-colors; }
+  .peer:checked + .pick-card { @apply border-sky shadow-[0_0_0_1px_#2997ff]; }
+  .peer:checked + .pick-chip { @apply bg-rowhl border-sky text-sky; }
+  .peer:checked + .pick-row .pick-box { @apply bg-blue border-blue text-white; }
+  .peer:focus-visible + .pick-card, .peer:focus-visible + .pick-chip, .peer:focus-visible + .pick-row { @apply outline outline-2 outline-offset-2 outline-sky; }
+
+  .switch-btn { @apply inline-flex items-center h-10 px-4 rounded-full border border-line text-[14px] font-medium text-muted transition-colors hover:border-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky; }
+  .switch-btn[aria-current="true"] { @apply bg-rowhl border-sky text-sky; }
+
+  .big-figure { font-size: clamp(88px, 17vw, 156px); line-height: 1.02; letter-spacing: -0.025em; }
+
+  /* Mission cards */
+  .step-card { @apply bg-ink-800 border border-line rounded-xl p-5 flex flex-col gap-3 transition-colors; }
+  .step-card[data-state="now"] { @apply bg-rowhl border-sky shadow-[0_0_0_1px_#2997ff]; }
+  .step-card[data-state="locked"] { @apply opacity-60; }
+}
+
+/* A flame in microgravity is a round blue ball. This one is drawn, not measured:
+   --heat runs from 0 (21% oxygen, as on Earth) to 1 (30%) and grows the orange core. */
+.flame-stage {
+  aspect-ratio: 9 / 7; border-radius: 12px; background: #000; display: grid; place-items: center; overflow: hidden;
+}
+.flame-ball {
+  height: calc(44% + 20% * var(--heat, 0)); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 55%, rgba(20, 40, 120, 0.15) 0%, rgba(30, 70, 220, 0.55) 52%, #3d7bff 70%, rgba(41, 151, 255, 0.35) 82%, transparent 100%);
+  box-shadow: 0 0 calc(24px + 36px * var(--heat, 0)) calc(4px + 10px * var(--heat, 0)) rgba(41, 110, 255, 0.45);
+  transition: height 0.45s ease, box-shadow 0.45s ease;
+  animation: flame-breathe 3.2s ease-in-out infinite;
+}
+.flame-core {
+  width: calc(26% + 34% * var(--heat, 0)); aspect-ratio: 1; border-radius: 50%; margin-top: 12%;
+  background: radial-gradient(circle, #ffd9a0 0%, #ff9a3d 38%, rgba(255, 106, 61, 0.55) 62%, transparent 100%);
+  opacity: calc(0.45 + 0.55 * var(--heat, 0));
+  filter: blur(calc(3px - 1px * var(--heat, 0)));
+  transition: width 0.45s ease, opacity 0.45s ease;
+  animation: flame-flicker 1.7s ease-in-out infinite;
+}
+@keyframes flame-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+@keyframes flame-flicker { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.08) translateY(-2%); } 70% { transform: scale(0.96); } }
+
+/* The figure and verdicts come in on load and when the habitat changes. */
+.rise { animation: rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.rise-2 { animation-delay: 0.06s; }
+.rise-3 { animation-delay: 0.1s; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .flame-ball, .flame-core, .rise { animation: none; }
+  .flame-ball, .flame-core { transition: none; }
+}
+
+/* Print the brief: black on white, one page. */
+@media print {
+  @page { margin: 12mm; }
+  .no-print { display: none !important; }
+  html, body { background: #fff !important; color: #000 !important; }
+  body * { color: #000 !important; background: transparent !important; box-shadow: none !important; animation: none !important; }
+  a { text-decoration: none !important; }
+  main section { padding-top: 0 !important; padding-bottom: 8px !important; border: 0 !important; display: block !important; }
+  main section > div { padding-top: 0 !important; padding-bottom: 0 !important; }
+  .wrap { max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
+  .big-figure { font-size: 44px !important; margin-top: 0 !important; }
+  .print-verdict { font-size: 14px !important; line-height: 18px !important; }
+  h2 { font-size: 15px !important; line-height: 20px !important; margin-top: 6px !important; }
+  h3 { font-size: 10px !important; }
+  p, li, td, th, table { font-size: 10px !important; line-height: 14px !important; margin-top: 2px !important; }
+  .print-tight .grid { gap: 6px 14px !important; margin-top: 4px !important; }
+  .print-row { padding: 4px 0 !important; border-color: #bbb !important; break-inside: avoid; grid-template-columns: 130px 190px 1fr !important; }
+  .print-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .print-cols-2 { grid-template-columns: 1fr 1.3fr !important; }
+  .print-card { padding: 6px 8px !important; margin-top: 4px !important; border: 1px solid #bbb !important; border-radius: 4px !important; break-inside: avoid; }
+  td, th { padding: 1px 8px 1px 0 !important; }
+  .overflow-x-auto { overflow: visible !important; }
+  td span { display: inline !important; }
+  td span + span::before { content: " · "; }
+  tr { border-color: #bbb !important; }
+  .rise { opacity: 1 !important; transform: none !important; }
 }

@@ -4,8 +4,10 @@
 
 mod admin;
 mod ai;
+mod air;
 mod backend;
 mod catalog;
+mod check;
 mod config;
 mod store;
 mod views;
@@ -45,7 +47,9 @@ async fn main() {
 
     let static_dir = cfg.get("STATIC_DIR").unwrap_or_else(|| "static".into());
     let app = Router::new()
-        .route("/", get(views::habitat))
+        .route("/", get(check::home))
+        .route("/check", get(check::check))
+        .route("/mission", get(check::mission))
         .route("/explorer", get(views::explorer))
         .route("/experiments/{id}", get(views::detail))
         .route("/compare", get(views::compare))

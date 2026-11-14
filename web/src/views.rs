@@ -11,7 +11,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -31,7 +31,7 @@ pub(crate) fn message_page(active: &'static str, title: &str, message: String) -
     render(ErrorPage { active, page_title: title.into(), context_line: String::new(), message })
 }
 
-const NOT_CONNECTED: &str = "The AI backend isn't connected, so this page is unavailable. Habitat Risk, Explorer, Compare and Literature work without it. To turn it on, set API_BASE_URL and API_AUTH_TOKEN in web/.env and restart the app.";
+const NOT_CONNECTED: &str = "The AI backend isn't connected, so this page is unavailable. Check a habitat and Browse research work without it. To turn it on, set API_BASE_URL and API_AUTH_TOKEN in web/.env and restart the app.";
 
 pub(crate) fn backend(app: &AppState) -> Result<&Backend, Response> {
     app.backend
@@ -40,7 +40,7 @@ pub(crate) fn backend(app: &AppState) -> Result<&Backend, Response> {
 }
 
 /// The cached catalog, rebuilt when stale or when `refresh` is set.
-async fn load_catalog(app: &AppState, refresh: bool) -> Result<Arc<Catalog>, String> {
+pub(crate) async fn load_catalog(app: &AppState, refresh: bool) -> Result<Arc<Catalog>, String> {
     let mut slot = app.catalog.lock().await;
     if let Some(c) = slot.as_ref() {
         if !refresh && c.built.elapsed() < CATALOG_TTL {
@@ -75,7 +75,7 @@ pub fn category(raw: &str) -> Cat {
     }
 }
 
-fn num(v: f64) -> String {
+pub(crate) fn num(v: f64) -> String {
     if (v - v.round()).abs() < 1e-9 {
         format!("{}", v as i64)
     } else {
@@ -133,255 +133,24 @@ fn hardware(e: &Exp) -> String {
 pub struct Habitat {
     pub key: &'static str,
     pub name: &'static str,
-    pub o2_pct: Option<f64>,
-    pub psi: Option<f64>,
-    pub note: &'static str,
+    pub o2_pct: f64,
+    pub psi: f64,
+    pub thumb: &'static str,
 }
 
-const EARTH_O2: f64 = 21.0;
-const EARTH_PSI: f64 = 14.7;
+pub const EARTH_O2: f64 = 21.0;
 
-// Atmospheres come from the challenge brief. Mars has no published target there,
-// so it is left unspecified rather than invented.
-pub const HABITATS: [Habitat; 4] = [
-    Habitat { key: "iss", name: "ISS", o2_pct: Some(21.0), psi: Some(14.7), note: "Earth-like cabin air" },
-    Habitat { key: "moon_base", name: "Moon Base", o2_pct: Some(30.0), psi: Some(10.2), note: "Planned · challenge brief" },
-    Habitat { key: "rover", name: "Pressurized Rover", o2_pct: Some(30.0), psi: Some(10.2), note: "Expected to match Moon Base" },
-    Habitat { key: "mars", name: "Mars", o2_pct: None, psi: None, note: "Atmosphere not yet specified" },
+// Atmospheres come from the challenge brief. Mars is left out: the brief gives no
+// atmosphere for it, and one is not invented here. The first entry is the default.
+pub const HABITATS: [Habitat; 3] = [
+    Habitat { key: "moon_base", name: "Moon Base", o2_pct: 30.0, psi: 10.2, thumb: "/static/img/moon-base-thumb.webp" },
+    Habitat { key: "iss", name: "ISS", o2_pct: 21.0, psi: 14.7, thumb: "/static/img/iss.webp" },
+    Habitat { key: "rover", name: "Pressurized Rover", o2_pct: 30.0, psi: 10.2, thumb: "/static/img/rover.webp" },
 ];
 
-pub struct HabitatCard {
-    pub key: &'static str,
-    pub name: &'static str,
-    pub o2: String,
-    pub psi: String,
-    pub note: &'static str,
-    pub selected: bool,
-}
-
-pub struct EvidenceRow {
-    pub rank: String,
-    pub id: String,
-    pub acronym: String,
-    pub cat: Cat,
-    pub line: String,
-    pub badge: String,
-    pub badge_class: &'static str,
-}
-
-pub struct Insight {
-    pub kind: &'static str,
-    pub class: &'static str,
-    pub title: &'static str,
-    pub body: &'static str,
-    pub links: Vec<(&'static str, &'static str)>,
-}
-
-#[derive(Template)]
-#[template(path = "habitat.html")]
-pub struct HabitatPage {
-    pub active: &'static str,
-    pub page_title: String,
-    pub context_line: String,
-    pub cards: Vec<HabitatCard>,
-    pub sel_name: &'static str,
-    pub sel_key: &'static str,
-    pub big_figure: String,
-    pub big_caption: String,
-    pub verdict: String,
-    pub explanation: String,
-    pub pp_habitat: String,
-    pub pp_earth: String,
-    pub earth_pos: f64,
-    pub hab_pos: Option<f64>,
-    pub evidence: Vec<EvidenceRow>,
-    pub evidence_note: Option<String>,
-    pub total: usize,
-    pub insights: Vec<Insight>,
-    pub backend_on: bool,
-    pub can_analyze: bool,
-    pub f_materials: String,
-    pub f_vent: String,
-    pub ai: Option<AiResult>,
-}
-
-#[derive(Deserialize)]
-pub struct HabitatQuery {
-    h: Option<String>,
-    analyze: Option<String>,
-    materials: Option<String>,
-    vent: Option<String>,
-}
-
 pub fn context_for(key: &str) -> String {
-    let h = HABITATS.iter().find(|h| h.key == key).unwrap_or(&HABITATS[1]);
-    match (h.o2_pct, h.psi) {
-        (Some(o), Some(p)) => format!("{} · {}% O₂ · {} psi", h.name, num(o), num(p)),
-        _ => format!("{} · atmosphere TBD", h.name),
-    }
-}
-
-pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Response {
-    let key = q.h.clone().unwrap_or_else(|| "moon_base".into());
-    let sel = HABITATS.iter().find(|h| h.key == key).unwrap_or(&HABITATS[1]);
-
-    // Evidence: which experiments tested oxygen levels as high as this habitat's.
-    let (evidence, evidence_note, total) = match load_catalog(&app, false).await {
-        Err(e) => (vec![], Some(e), 0),
-        Ok(cat) => {
-            let mut ranked: Vec<&Exp> = cat.exps.iter().collect();
-            let covers = |e: &Exp| matches!((e.o2_max(), sel.o2_pct), (Some(m), Some(h)) if m >= h);
-            ranked.sort_by(|a, b| {
-                covers(b)
-                    .cmp(&covers(a))
-                    .then(b.o2_max().partial_cmp(&a.o2_max()).unwrap_or(std::cmp::Ordering::Equal))
-                    .then(b.findings.len().cmp(&a.findings.len()))
-            });
-            let rows = ranked
-                .iter()
-                .take(6)
-                .enumerate()
-                .map(|(i, e)| {
-                    let tested = if e.o2_values.is_empty() {
-                        "No oxygen levels extracted yet".to_string()
-                    } else {
-                        format!("Tested at {} O₂", o2_text(e))
-                    };
-                    let (badge, badge_class) = match (e.o2_max(), sel.o2_pct) {
-                        (Some(m), Some(h)) if m >= h => (format!("Reaches {}% O₂", num(h)), "text-cyan"),
-                        (Some(_), Some(h)) => (format!("Below {}% O₂", num(h)), "text-dim"),
-                        _ => (String::new(), "text-dim"),
-                    };
-                    EvidenceRow {
-                        rank: format!("{:02}", i + 1),
-                        id: e.id.clone(),
-                        acronym: e.acronym.clone(),
-                        cat: category(e.category),
-                        line: format!("{tested} · {} papers · {} findings", e.papers.len(), e.findings.len()),
-                        badge,
-                        badge_class,
-                    }
-                })
-                .collect();
-            (rows, None, cat.exps.len())
-        }
-    };
-
-    let scale_max = 40.0;
-    let (big_figure, verdict, explanation, pp_habitat, hab_pos) = match (sel.o2_pct, sel.psi) {
-        (Some(o), Some(p)) => {
-            let delta = (o / EARTH_O2 - 1.0) * 100.0;
-            let big = if delta.abs() < 0.5 { "±0%".to_string() } else { format!("+{}%", delta.round() as i64) };
-            let (verdict, expl) = if delta.abs() < 0.5 {
-                (
-                    "Earth-normal oxygen.".to_string(),
-                    "Same oxygen fraction as Earth air. Microgravity still changes how flames spread, because hot gases don't rise.".to_string(),
-                )
-            } else {
-                (
-                    "More oxygen. More flammable.".to_string(),
-                    format!(
-                        "{}% oxygen at {} psi keeps breathing normal while cutting spacesuit pre-breathe time, but flammability depends heavily on oxygen concentration. Materials cleared for Earth air need re-testing.",
-                        num(o),
-                        num(p)
-                    ),
-                )
-            };
-            (big, verdict, expl, format!("{:.2} psi", o / 100.0 * p), Some((o / scale_max * 100.0).min(100.0)))
-        }
-        _ => (
-            NA.to_string(),
-            "Atmosphere not yet specified.".to_string(),
-            "No Mars habitat atmosphere is given in the challenge data. Microgravity and Earth-gravity results can bound what happens at partial gravity.".to_string(),
-            NA.to_string(),
-            None,
-        ),
-    };
-
-    let cards = HABITATS
-        .iter()
-        .map(|h| HabitatCard {
-            key: h.key,
-            name: h.name,
-            o2: h.o2_pct.map(|o| format!("{}% O₂", num(o))).unwrap_or_else(|| "O₂ TBD".into()),
-            psi: h.psi.map(|p| format!("{} psi", num(p))).unwrap_or_else(|| NA.into()),
-            note: h.note,
-            selected: h.key == sel.key,
-        })
-        .collect();
-
-    let insights = vec![
-        Insight {
-            kind: "Prevention",
-            class: "text-amber",
-            title: "Pick materials for the habitat's air.",
-            body: "Flammability rises with oxygen concentration, and in microgravity airflow matters too. BASS, BASS-II and Saffire burned fabrics and plastics to map how solids ignite and spread.",
-            links: vec![("BASS-II", "bass-ii"), ("SAFFIRE III", "saffire-iii")],
-        },
-        Insight {
-            kind: "Detection",
-            class: "text-cyan",
-            title: "Smoke behaves differently in orbit.",
-            body: "SAME and SAME-R measured smoke particles in microgravity to inform spacecraft smoke detectors.",
-            links: vec![("SAME", "same"), ("SAME-R", "same-r")],
-        },
-        Insight {
-            kind: "Suppression",
-            class: "text-sky",
-            title: "Diluting the air puts fires out.",
-            body: "FLEX burned fuel droplets while adding carbon dioxide or helium to the chamber, both of which suppress fire.",
-            links: vec![("FLEX", "flex"), ("FLEX-2", "flex-2")],
-        },
-    ];
-
-    let f_materials = q.materials.clone().unwrap_or_else(|| "Nomex, PMMA, polyimide wire insulation".into());
-    let f_vent = q.vent.clone().unwrap_or_else(|| "10".into());
-    let ai = match (&app.backend, sel.o2_pct, sel.psi, q.analyze.is_some()) {
-        (Some(b), Some(o), Some(p), true) => {
-            let materials: Vec<&str> = f_materials.split(',').map(str::trim).filter(|m| !m.is_empty()).collect();
-            if materials.is_empty() {
-                Some(ai::from_reply(Err("List at least one material to assess.".into())))
-            } else {
-                let mut scenario = json!({
-                    "materials": materials,
-                    "habitat_name": sel.name,
-                    "oxygen_percent": o,
-                    "pressure_kpa": (p * 6.89476 * 10.0).round() / 10.0,
-                });
-                if let Ok(v) = f_vent.trim().parse::<f64>() {
-                    scenario["airflow_cm_s"] = json!(v);
-                }
-                Some(ai::from_reply(b.habitat(scenario).await))
-            }
-        }
-        _ => None,
-    };
-
-    render(HabitatPage {
-        active: "habitat",
-        page_title: "Habitat Risk".into(),
-        context_line: context_for(sel.key),
-        cards,
-        sel_name: sel.name,
-        sel_key: sel.key,
-        big_figure,
-        big_caption: "Oxygen concentration vs. Earth air".into(),
-        verdict,
-        explanation,
-        pp_habitat,
-        pp_earth: format!("{:.2} psi", EARTH_O2 / 100.0 * EARTH_PSI),
-        earth_pos: EARTH_O2 / scale_max * 100.0,
-        hab_pos,
-        evidence,
-        evidence_note,
-        total,
-        insights,
-        backend_on: app.backend.is_some(),
-        can_analyze: sel.o2_pct.is_some(),
-        f_materials,
-        f_vent,
-        ai,
-    })
+    let h = HABITATS.iter().find(|h| h.key == key).unwrap_or(&HABITATS[0]);
+    format!("{} · {}% O₂ · {} psi", h.name, num(h.o2_pct), num(h.psi))
 }
 
 // ---------- explorer ----------

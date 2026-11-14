@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./templates/**/*.html", "./src/**/*.rs", "./static/chat.js"],
+  content: ["./templates/**/*.html", "./src/**/*.rs", "./static/*.js"],
   theme: {
     extend: {
       colors: {
@@ -14,6 +14,9 @@ module.exports = {
         amber: "#e5b67a",
         cyan: "#91c7d4",
         rowhl: "#10203a",
+        // Verdicts: burned, and went out / did not ignite. Amber is tested-lower; plain text is tested-only.
+        burn: "#ff6a3d",
+        safe: "#4fd38a",
       },
       fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
       maxWidth: { page: "1440px" },
