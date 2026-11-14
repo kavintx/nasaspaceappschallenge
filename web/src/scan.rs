@@ -147,6 +147,7 @@ fn read_scan(v: &Value) -> Value {
         "unclear": flag(v, "unclear") || parts.is_empty(),
         "message": s(v, "message"),
         "model": s(v, "model"),
+        "summary": s(v, "summary"),
         "parts": parts,
     })
 }
