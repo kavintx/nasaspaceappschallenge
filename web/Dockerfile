@@ -1,6 +1,6 @@
 FROM rust:1-slim AS build
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends cmake clang make && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
 COPY . .
 RUN cargo build --release
 
@@ -9,6 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 WORKDIR /app
 COPY --from=build /app/target/release/flame_in_freefall ./flame_in_freefall
 COPY static ./static
-ENV PORT=3000
-EXPOSE 3000
+ENV PORT=3100
+EXPOSE 3100
 CMD ["./flame_in_freefall"]

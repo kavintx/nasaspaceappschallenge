@@ -17,6 +17,8 @@ pub struct AppState {
 
 #[tokio::main]
 async fn main() {
+    // Pure-Rust-friendly TLS (ring): builds on Windows without CMake or NASM.
+    let _ = rustls::crypto::ring::default_provider().install_default();
     let state = Arc::new(AppState {
         data: data::Source::from_env(),
         ask_api_url: std::env::var("ASK_API_URL").ok().filter(|s| !s.is_empty()),
@@ -35,7 +37,7 @@ async fn main() {
         .fallback(views::not_found)
         .with_state(state);
 
-    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".into());
+    let port = std::env::var("PORT").unwrap_or_else(|_| "3100".into());
     let addr = format!("0.0.0.0:{port}");
     let listener = tokio::net::TcpListener::bind(&addr).await.expect("bind failed");
     println!("Flame in Freefall running on http://localhost:{port}");

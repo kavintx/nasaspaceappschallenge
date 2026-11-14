@@ -13,7 +13,7 @@ A dashboard that summarizes, ranks and compares NASA microgravity combustion exp
 
 ```sh
 cd web
-cargo run            # http://localhost:3000
+cargo run            # http://localhost:3100
 ```
 
 Pages: `/` Habitat Risk · `/explorer` · `/experiments/<id>` · `/compare` · `/ask`
@@ -22,7 +22,7 @@ Settings (environment variables, all optional):
 
 | Variable | What it does |
 |---|---|
-| `PORT` | Port to listen on (default 3000) |
+| `PORT` | Port to listen on (default 3100) |
 | `SUPABASE_URL`, `SUPABASE_KEY` | Override the Supabase project. Only ever use the publishable (read-only) key here |
 | `ASK_API_URL` | The AI endpoint for Ask the Data. The app POSTs `{"question": "..."}` and expects `{"answer": "...", "sources": [{"title", "url", "experiment_id"}]}`. Without it, Ask falls back to keyword matches |
 | `DATA_FIXTURE` | Path to a JSON snapshot (e.g. `data/fixture.json`) to run offline without Supabase |
