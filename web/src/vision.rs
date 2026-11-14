@@ -272,11 +272,17 @@ fn prompt(mode: &str) -> String {
          glass, steel, aluminium, copper, rubber, silicone, PVC, polyethylene, polypropylene, PET, acrylic, \
          polycarbonate, ABS, polyurethane foam. Use the specific name when you can tell and \"plastic\" or \
          \"metal\" when you can't.\n\
+         - Give one material per part: your single best reading. List two or more only when the part really is \
+         a blend or mix (for example a cotton and polyester fabric, or a label that lists several fibres). \
+         Never add a generic name such as \"plastic\" next to a specific guess for the same part.\n\
+         - share is the rough percentage of that part made of that material. Shares within one part add up \
+         to 100 or less. A part with one material has share 100.\n\
          - confidence is a number from 0 to 1 for how sure you are from this photo alone. A photo rarely proves \
          a material: plastics and synthetic fabrics that look alike get 0.5 or lower. Do not guess high.\n\
          - The top-level confidence is how sure you are about what the item is.\n\
-         - If the photo is blurry, too dark, too far away, or does not show a clear item, set unclear to true, \
-         say why in message in one short sentence, and return an empty parts list.\n\
+         - If the photo is too blurry, too dark or too far away to tell what anything is made of, set unclear \
+         to true, say why in message in one short sentence, and return an empty parts list. A close-up that \
+         shows only part of an item is fine: name what you can see and report its material.\n\
          - Do not describe or identify any person in the photo.\n\n\
          Reply with one JSON object and nothing else, in exactly this shape:\n\
          {{\"item\": string or null, \"confidence\": number, \"unclear\": boolean, \"message\": string or null, \
