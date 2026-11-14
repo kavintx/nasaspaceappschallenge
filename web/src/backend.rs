@@ -26,7 +26,7 @@ impl Backend {
             .unwrap_or_else(|| "http://127.0.0.1:8080".into())
             .trim_end_matches('/')
             .to_string();
-        println!("research backend: {base}");
+        println!("AI backend: {base}");
         Some(Backend { base, token, http: reqwest::Client::new() })
     }
 

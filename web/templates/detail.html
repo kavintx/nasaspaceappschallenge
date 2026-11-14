@@ -42,10 +42,10 @@
     <div class="md:col-span-3">
       <h3 class="text-[28px] font-semibold tracking-tight">AI synthesis.</h3>
       <p class="mt-3 eyebrow">Across every indexed paper for {{ acronym }}</p>
-      <form method="get" action="#summary" data-slow class="mt-5"><input type="hidden" name="summarize" value="1"><button class="btn-ghost">{% if ai.is_some() %}Regenerate{% else %}Generate summary{% endif %}</button></form>
+      {% if ai_on %}<form method="get" action="#summary" data-slow class="mt-5"><input type="hidden" name="summarize" value="1"><button class="btn-ghost">{% if ai.is_some() %}Regenerate{% else %}Generate summary{% endif %}</button></form>{% endif %}
     </div>
     <div class="md:col-span-9">
-      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else %}<p class="text-[15px] text-dim">Not generated yet. Takes 5–30 seconds.</p>{% endif %}
+      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else if ai_on %}<p class="text-[15px] text-dim">Not generated yet. Takes 5–30 seconds.</p>{% else %}<p class="text-[14px] text-amber">The AI backend isn't connected, so summaries can't be generated right now.</p>{% endif %}
     </div>
   </div>
 </section>

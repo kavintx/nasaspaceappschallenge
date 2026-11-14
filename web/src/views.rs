@@ -31,24 +31,23 @@ pub(crate) fn message_page(active: &'static str, title: &str, message: String) -
     render(ErrorPage { active, page_title: title.into(), context_line: String::new(), message })
 }
 
-const NOT_CONNECTED: &str = "The research backend isn't connected. Copy web/.env.example to web/.env, paste the API token after API_AUTH_TOKEN=, and restart the app.";
+const NOT_CONNECTED: &str = "The AI backend isn't connected, so this page is unavailable. Habitat Risk, Explorer, Compare and Literature work without it. To turn it on, set API_BASE_URL and API_AUTH_TOKEN in web/.env and restart the app.";
 
 pub(crate) fn backend(app: &AppState) -> Result<&Backend, Response> {
     app.backend
         .as_ref()
-        .ok_or_else(|| message_page("", "Backend not connected", NOT_CONNECTED.into()))
+        .ok_or_else(|| message_page("", "AI backend not connected", NOT_CONNECTED.into()))
 }
 
 /// The cached catalog, rebuilt when stale or when `refresh` is set.
 async fn load_catalog(app: &AppState, refresh: bool) -> Result<Arc<Catalog>, String> {
-    let b = app.backend.as_ref().ok_or_else(|| NOT_CONNECTED.to_string())?;
     let mut slot = app.catalog.lock().await;
     if let Some(c) = slot.as_ref() {
         if !refresh && c.built.elapsed() < CATALOG_TTL {
             return Ok(c.clone());
         }
     }
-    let fresh = Arc::new(catalog::build(b).await?);
+    let fresh = Arc::new(catalog::build(&app.store).await?);
     *slot = Some(fresh.clone());
     Ok(fresh)
 }
@@ -541,6 +540,7 @@ pub struct DetailPage {
     pub findings_total: usize,
     pub sensor_list: Vec<String>,
     pub papers: Vec<PaperRef>,
+    pub ai_on: bool,
     pub ai: Option<AiResult>,
 }
 
@@ -589,6 +589,7 @@ pub async fn detail(State(app): AppRef, Path(id): Path<String>, Query(q): Query<
         findings_total: e.findings.len(),
         sensor_list: e.sensors.clone(),
         papers: e.papers.clone(),
+        ai_on: app.backend.is_some(),
         ai,
     })
 }
@@ -622,6 +623,7 @@ pub struct ComparePage {
     pub can_add: bool,
     pub next_slot: &'static str,
     pub f_focus: String,
+    pub ai_on: bool,
     pub ai: Option<AiResult>,
 }
 
@@ -717,6 +719,7 @@ pub async fn compare(State(app): AppRef, Query(q): Query<CompareQuery>) -> Respo
         next_slot: SLOTS[chosen.len().min(2)],
         selected,
         f_focus,
+        ai_on: app.backend.is_some(),
         ai,
     })
 }
@@ -740,11 +743,11 @@ pub struct AskQuery {
 }
 
 pub async fn ask(State(app): AppRef, Query(q): Query<AskQuery>) -> Response {
-    let b = match backend(&app) {
-        Ok(b) => b,
-        Err(page) => return page,
-    };
-    let experiments = b
+    if let Err(page) = backend(&app) {
+        return page;
+    }
+    let experiments = app
+        .store
         .experiments()
         .await
         .map(|list| list.iter().filter_map(|e| js(e, "acronym")).collect())
@@ -786,10 +789,6 @@ pub struct PapersQuery {
 }
 
 pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Response {
-    let b = match backend(&app) {
-        Ok(b) => b,
-        Err(page) => return page,
-    };
     let f_status = q.status.unwrap_or_default();
     let f_q = q.q.unwrap_or_default();
     let mut page = PapersPage {
@@ -803,13 +802,29 @@ pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Respons
         f_status: f_status.clone(),
         f_q: f_q.clone(),
     };
-    match b.papers(Some(&f_status), 200).await {
+    match app.store.papers(None).await {
         Err(e) => page.error = Some(e),
         Ok(all) => {
-            page.loaded = all.len();
+            // Status counts across every paper, most common first.
+            let mut counts: Vec<(String, usize)> = vec![];
+            for p in &all {
+                let st = js(p, "status").unwrap_or_else(|| "unknown".into());
+                match counts.iter_mut().find(|(k, _)| *k == st) {
+                    Some(c) => c.1 += 1,
+                    None => counts.push((st, 1)),
+                }
+            }
+            counts.sort_by(|a, b| b.1.cmp(&a.1));
+            page.counts = counts.into_iter().map(|(k, n)| (k, n.to_string())).collect();
+
             let ql = f_q.trim().to_lowercase();
-            page.rows = all
+            let shown: Vec<&Value> = all
                 .iter()
+                .filter(|p| f_status.is_empty() || js(p, "status").as_deref() == Some(f_status.as_str()))
+                .collect();
+            page.loaded = shown.len();
+            page.rows = shown
+                .into_iter()
                 .filter(|p| {
                     ql.is_empty()
                         || format!("{} {}", js(p, "title").unwrap_or_default(), js(p, "abstract").unwrap_or_default())
@@ -817,18 +832,6 @@ pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Respons
                             .contains(&ql)
                 })
                 .map(paper_ref)
-                .collect();
-        }
-    }
-    // papers_by_status is a list of [status, count] pairs.
-    if let Ok(st) = b.pipeline_status().await {
-        if let Some(list) = st.get("papers_by_status").and_then(|x| x.as_array()) {
-            page.counts = list
-                .iter()
-                .filter_map(|pair| {
-                    let a = pair.as_array()?;
-                    Some((a.first()?.as_str()?.to_string(), a.get(1)?.to_string()))
-                })
                 .collect();
         }
     }
@@ -902,12 +905,11 @@ pub struct PaperQuery {
 }
 
 pub async fn paper(State(app): AppRef, Path(id): Path<String>, Query(pq): Query<PaperQuery>) -> Response {
-    let b = match backend(&app) {
-        Ok(b) => b,
-        Err(page) => return page,
-    };
-    let data = match b.extractions(&id).await {
-        Ok(d) => d,
+    let data = match app.store.paper_bundle(&id).await {
+        Ok(Some(d)) => d,
+        Ok(None) => {
+            return (StatusCode::NOT_FOUND, message_page("papers", "Paper not found", format!("No paper with id \"{id}\"."))).into_response()
+        }
         Err(e) => return message_page("papers", "Paper unavailable", e),
     };
     let p = data.get("paper").cloned().unwrap_or(Value::Null);
@@ -1003,7 +1005,7 @@ pub async fn paper(State(app): AppRef, Path(id): Path<String>, Query(pq): Query<
         paper_key: id,
         statuses: ["pending", "verified", "corrected", "rejected"],
         categories: ["prevention", "detection", "suppression", "other"],
-        can_edit: !app.read_only,
+        can_edit: app.backend.is_some() && !app.read_only,
         msg: pq.msg.filter(|m| !m.is_empty()),
         err: pq.err.filter(|m| !m.is_empty()),
     })

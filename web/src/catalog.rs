@@ -1,9 +1,9 @@
-//! The experiment catalog, built from the research backend: every experiment
+//! The experiment catalog, built from the research database: every experiment
 //! with its linked papers and the test conditions and findings extracted from
-//! them. Built once and cached, because it takes one request per paper.
+//! them. Built once and cached for a few minutes.
 
-use crate::backend::{f, s, Backend};
-use futures::stream::{self, StreamExt};
+use crate::backend::{f, s};
+use crate::store::Store;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::time::Instant;
@@ -160,18 +160,44 @@ fn add_distinct(list: &mut Vec<String>, value: Option<String>) {
     }
 }
 
-pub async fn build(b: &Backend) -> Result<Catalog, String> {
-    let raw = b.experiments().await?;
-    let papers = b.papers(None, 200).await?;
-    let ids: Vec<String> = papers.iter().filter_map(|p| s(p, "id").or_else(|| s(p, "ntrs_id"))).collect();
-    let paper_count = ids.len();
+pub async fn build(store: &Store) -> Result<Catalog, String> {
+    let (raw, papers, links, conditions, findings) =
+        tokio::join!(store.experiments(), store.papers(None), store.links(), store.conditions(), store.findings());
+    let (raw, papers, links, conditions, findings) = (raw?, papers?, links?, conditions?, findings?);
+    let paper_count = papers.len();
 
-    // One request per paper, at most 4 at a time.
-    let results: Vec<Result<Value, String>> = stream::iter(ids)
-        .map(|id| async move { b.extractions(&id).await })
-        .buffer_unordered(4)
-        .collect()
-        .await;
+    // Group everything by paper, then roll each paper up into its experiments.
+    let group = |rows: Vec<Value>, key: &str| {
+        let mut map: HashMap<String, Vec<Value>> = HashMap::new();
+        for row in rows {
+            if let Some(id) = s(&row, key) {
+                map.entry(id).or_default().push(row);
+            }
+        }
+        map
+    };
+    let mut links = group(links, "paper_id");
+    let mut conditions = group(conditions, "paper_id");
+    let mut findings = group(findings, "paper_id");
+    let results: Vec<Result<Value, String>> = papers
+        .into_iter()
+        .map(|paper| {
+            let id = s(&paper, "id").unwrap_or_default();
+            let experiments: Vec<Value> = links
+                .remove(&id)
+                .unwrap_or_default()
+                .iter()
+                .filter_map(|l| s(l, "experiment_id"))
+                .map(|e| serde_json::json!({ "id": e }))
+                .collect();
+            Ok(serde_json::json!({
+                "paper": paper,
+                "experiments": experiments,
+                "conditions": conditions.remove(&id).unwrap_or_default(),
+                "findings": findings.remove(&id).unwrap_or_default(),
+            }))
+        })
+        .collect();
 
     let mut acc: HashMap<String, Exp> = HashMap::new();
     let mut failed = 0;

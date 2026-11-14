@@ -1,11 +1,13 @@
 //! Flame in Freefall — fire safety insights from NASA microgravity combustion data.
-//! A Rust (Axum) web server that renders the dashboard from the fire-intel research backend.
+//! A Rust (Axum) web server. It reads the research database in Supabase and
+//! calls the fire-intel backend for AI answers and pipeline actions.
 
 mod admin;
 mod ai;
 mod backend;
 mod catalog;
 mod config;
+mod store;
 mod views;
 
 use axum::{
@@ -16,7 +18,9 @@ use std::sync::Arc;
 use tower_http::services::ServeDir;
 
 pub struct AppState {
-    /// The fire-intel research backend (papers, findings, AI). None until API_AUTH_TOKEN is set.
+    /// The research database (Supabase), read-only.
+    pub store: store::Store,
+    /// The fire-intel backend (AI, pipeline, editing). None until API_AUTH_TOKEN is set.
     pub backend: Option<backend::Backend>,
     /// Cached experiment catalog and when it was built.
     pub catalog: tokio::sync::Mutex<Option<Arc<catalog::Catalog>>>,
@@ -30,12 +34,13 @@ async fn main() {
     let _ = rustls::crypto::ring::default_provider().install_default();
     let cfg = config::Config::load();
     let state = Arc::new(AppState {
+        store: store::Store::from_cfg(&cfg),
         backend: backend::Backend::from_cfg(&cfg),
         catalog: tokio::sync::Mutex::new(None),
         read_only: cfg.get("READ_ONLY").is_some_and(|v| v.eq_ignore_ascii_case("true") || v == "1"),
     });
     if state.backend.is_none() {
-        println!("research backend: not connected (set API_AUTH_TOKEN in web/.env)");
+        println!("AI backend: not connected. Browsing works; AI answers and the Pipeline page need API_AUTH_TOKEN in web/.env.");
     }
 
     let static_dir = cfg.get("STATIC_DIR").unwrap_or_else(|| "static".into());
