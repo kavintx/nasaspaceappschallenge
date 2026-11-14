@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page_title }} · Flame in Freefall</title>
+  <meta name="description" content="Photograph an item and see how its materials did in NASA's spacecraft fire tests.">
+  <link rel="icon" href="/static/flame.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="bg-ink-950 text-fg font-sans antialiased min-h-screen flex flex-col">
+  <header class="bg-ink-900 border-b border-line/60 no-print">
+    <nav class="mx-auto max-w-page px-4 sm:px-6 lg:px-24 min-h-[52px] py-2 flex flex-wrap items-center gap-x-6 gap-y-1" aria-label="Main">
+      <a href="/" class="flex items-center gap-2.5 text-[16px] font-semibold shrink-0">
+        <img src="/static/flame.svg" alt="" class="w-5 h-5">Flame in Freefall
+      </a>
+      <div class="order-3 md:order-none w-full md:w-auto md:flex-1 flex md:justify-center gap-5 md:gap-7 text-[13px] md:text-[12px]">
+        <a href="/" class="py-1.5 {% if active == "scan" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Scan</a>
+        <a href="/items" class="py-1.5 {% if active == "items" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">My items</a>
+        <a href="/ask" class="py-1.5 {% if active == "ask" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Ask</a>
+      </div>
+      <form action="/explorer" method="get" class="ml-auto md:ml-0 hidden sm:block">
+        <label class="flex items-center gap-2 bg-ink-800 rounded-lg px-3 h-9 w-36 sm:w-48 lg:w-[248px] text-[13px] text-muted focus-within:ring-1 focus-within:ring-sky/60">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input name="q" placeholder="Search research" aria-label="Search research" class="bg-transparent outline-none w-full text-fg placeholder:text-muted">
+        </label>
+      </form>
+    </nav>
+  </header>
+  <div class="bg-ink-950 border-b border-line">
+    <div class="mx-auto max-w-page px-4 sm:px-6 lg:px-24 min-h-16 py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+      <h1 class="text-[21px] leading-7 font-semibold tracking-tight">{{ page_title }}</h1>
+      <p class="text-[12px] text-muted" id="context-line">{{ context_line }}</p>
+    </div>
+  </div>
+
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-ink-900 border-t border-line/60 no-print">
+    <div class="mx-auto max-w-page px-4 sm:px-6 lg:px-24 min-h-[84px] py-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-2 text-[12px] text-muted">
+      <span>Data: NASA PSI + NTRS</span>
+      <span>More: <a href="/habitat" class="hover:text-fg underline underline-offset-2">Habitat risk</a> · <a href="/explorer" class="hover:text-fg underline underline-offset-2">Explorer</a> · <a href="/compare" class="hover:text-fg underline underline-offset-2">Compare</a> · <a href="/papers" class="hover:text-fg underline underline-offset-2">Papers</a> · <a href="/pipeline" class="hover:text-fg underline underline-offset-2">Pipeline</a></span>
+      <span class="hidden sm:inline">Built for NASA Space Apps 2026</span>
+      <span>Research preview · v0.1</span>
+    </div>
+  </footer>
+  <script>
+    // AI requests can take a while: show that something is happening.
+    document.querySelectorAll("form[data-slow]").forEach(function (f) {
+      f.addEventListener("submit", function () {
+        var b = f.querySelector("button");
+        if (b) { b.textContent = "Working… this can take a minute"; b.disabled = true; b.classList.add("opacity-60"); }
+      });
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

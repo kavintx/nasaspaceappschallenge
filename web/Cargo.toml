@@ -1,0 +1,16 @@
+[package]
+name = "flame_in_freefall"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+askama = "0.16.1"
+axum = "0.8.9"
+base64 = "0.23.1"
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls-no-provider", "query", "form", "http2", "system-proxy", "stream"] }
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+tokio = { version = "1.54.1", features = ["full"] }
+tower-http = { version = "0.7.1", features = ["fs"] }
+urlencoding = "2.1.3"
