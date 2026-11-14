@@ -1,10 +1,9 @@
 //! Burn Scan: photograph an item, confirm what it is made of, and see how those
 //! materials did in NASA's fire tests at Moon Base and ISS oxygen levels.
 //!
-//! The backend does the AI. This server only relays to it, so the access token
-//! never reaches the browser:
-//!   POST /scan/identify  ->  backend POST /api/v1/ai/scan        (photo -> parts and materials)
+//!   POST /scan/identify  ->  vision.rs (Ollama or Anthropic)       (photo -> parts and materials)
 //!   POST /scan/result    ->  backend POST /api/v1/materials/match (material name -> tested fuels)
+//! Keys and the backend token stay on this server and never reach the browser.
 //! Photos are passed straight through and never written to disk. Verdicts come
 //! only from the `conditions` table; gases and limits only from `air.rs`.
 //! The request and response shapes this file expects are in web/SCAN_API.md.
@@ -14,6 +13,7 @@ use crate::air;
 use crate::backend::{f, flag, s, Fail};
 use crate::catalog::{Catalog, Outcome, Test};
 use crate::views::{load_catalog, num, render, HABITATS};
+use crate::vision::VisionError;
 use crate::AppState;
 use askama::Template;
 use axum::{
@@ -31,7 +31,7 @@ use std::sync::Arc;
 
 type AppRef = State<Arc<AppState>>;
 
-/// The backend refuses request bodies over 2 MiB, so larger photos stop here.
+/// Photos over 2 MiB stop here.
 /// The browser resizes to a 1280 px long edge first, which is far below this.
 pub const MAX_IMAGE_BYTES: usize = 2 * 1024 * 1024;
 const MAX_MATERIALS: usize = 12;
@@ -59,7 +59,7 @@ pub async fn home(State(app): AppRef) -> Response {
         active: "scan",
         page_title: "Burn Scan".into(),
         context_line: "NASA spacecraft fire tests".into(),
-        scanner_on: app.backend.is_some(),
+        scanner_on: app.vision.may_work(),
     })
 }
 
@@ -97,15 +97,12 @@ pub async fn identify(State(app): AppRef, headers: HeaderMap, Query(q): Query<Id
     if body.len() > MAX_IMAGE_BYTES {
         return refused("bad_image", "That photo is too large. Try again.");
     }
-    let Some(backend) = &app.backend else {
-        return refused("not_connected", NOT_CONNECTED);
-    };
     let mode = if q.mode.as_deref() == Some("label") { "label" } else { "item" };
     // `body` is dropped when this function returns: the photo is not kept.
-    match backend.scan(body.to_vec(), mime, mode).await {
+    match app.vision.scan(&body, mime, mode).await {
         Ok(reply) => Json(read_scan(&reply)).into_response(),
-        Err(Fail::NotLive) => refused("not_connected", NOT_CONNECTED),
-        Err(Fail::Other(message)) => refused("error", &message),
+        Err(VisionError::NotConnected) => refused("not_connected", NOT_CONNECTED),
+        Err(VisionError::Failed(message)) => refused("error", &message),
     }
 }
 
@@ -149,6 +146,7 @@ fn read_scan(v: &Value) -> Value {
         "confidence": confidence(v),
         "unclear": flag(v, "unclear") || parts.is_empty(),
         "message": s(v, "message"),
+        "model": s(v, "model"),
         "parts": parts,
     })
 }

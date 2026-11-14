@@ -3,9 +3,13 @@
 Proposed shapes, written before the endpoints existed. The site is built to these;
 if the backend ships something different, change `web/src/scan.rs` (`read_scan`, `read_matches`).
 
-Both calls go to `{API_BASE_URL}/api/v1/...` with `Authorization: Bearer {API_AUTH_TOKEN}`,
-like every other backend call. A 404 or 405 is shown as "Scanner not connected" /
-"Material lookup not connected".
+**Photo identification currently runs in the site itself** (`web/src/vision.rs`), with Ollama or
+Anthropic chosen by `VISION_PROVIDER` / `VISION_FALLBACK` (see `web/.env.example`). It returns the
+`/ai/scan` shape below plus `"model"`, the provider that answered. When the backend ships `/ai/scan`,
+point `scan::identify` at it and delete `vision.rs`.
+
+Material lookup goes to `{API_BASE_URL}/api/v1/materials/match` with `Authorization: Bearer {API_AUTH_TOKEN}`,
+like every other backend call. A 404 or 405 is shown as "Material lookup not connected".
 
 ## POST /api/v1/ai/scan
 
@@ -21,6 +25,7 @@ Response:
   "confidence": 0.82,
   "unclear": false,
   "message": null,
+  "model": "anthropic:claude-haiku-5-5",
   "parts": [
     { "name": "body", "materials": [
       { "material": "cotton", "share": 80, "confidence": 0.8 },

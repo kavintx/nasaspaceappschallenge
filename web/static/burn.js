@@ -245,7 +245,7 @@
   function scanPage(root) {
     var steps = { scan: root.querySelector("#step-scan"), busy: root.querySelector("#step-busy"), edit: root.querySelector("#step-edit"), result: root.querySelector("#step-result") };
     var errorLine = root.querySelector("#scan-error");
-    var state = { item: "", rows: [], thumb: null, notice: null };
+    var state = { item: "", rows: [], thumb: null, notice: null, model: null };
 
     function show(name) {
       Object.keys(steps).forEach(function (k) { steps[k].hidden = k !== name; });
@@ -277,13 +277,15 @@
         }).then(function (reply) {
           if (!reply.ok) {
             if (reply.reason === "bad_image") return fail(reply.message);
-            // Scanner unavailable: carry on by hand rather than stopping.
+            // Scanner unavailable or failed: carry on by hand rather than stopping.
             state.item = "";
             state.rows = [];
-            state.notice = reply.message;
+            state.model = null;
+            state.notice = reply.reason === "error" ? reply.message + " You can type the materials in instead." : reply.message;
             return openEdit();
           }
           state.item = reply.item || "";
+          state.model = reply.model || null;
           state.rows = [];
           (reply.parts || []).forEach(function (part) {
             part.materials.forEach(function (m) {
@@ -317,6 +319,7 @@
       box.appendChild(el("p", { class: "text-[12px] text-dim", text: state.rows.length ? "A best guess from the photo. Tap to change, remove or add." : "Add each material, for example cotton or PVC." }));
       var list = el("ul", { class: "mt-3 space-y-2" });
       box.appendChild(list);
+      if (state.model && state.rows.length) box.appendChild(el("p", { class: "mt-2 text-[12px] text-dim", text: "Identified by " + state.model + ". AI can be wrong: check each material." }));
 
       function drawRows() {
         clear(list);
@@ -435,7 +438,7 @@
     onPick(root.querySelector("#pick-upload"), "item");
     onPick(root.querySelector("#pick-label"), "label");
     root.querySelector("#pick-manual").addEventListener("click", function () {
-      state = { item: "", rows: [{ part: "", material: "", share: null, confidence: null }], thumb: null, notice: null };
+      state = { item: "", rows: [{ part: "", material: "", share: null, confidence: null }], thumb: null, notice: null, model: null };
       errorLine.hidden = true;
       openEdit();
     });

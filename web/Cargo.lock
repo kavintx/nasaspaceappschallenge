@@ -237,6 +237,7 @@ version = "0.1.0"
 dependencies = [
  "askama",
  "axum",
+ "base64",
  "reqwest",
  "rustls",
  "serde",
@@ -837,7 +838,6 @@ dependencies = [
  "hyper-util",
  "js-sys",
  "log",
- "mime_guess",
  "percent-encoding",
  "pin-project-lite",
  "rustls",
