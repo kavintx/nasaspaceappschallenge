@@ -241,7 +241,7 @@ fn verdicts(tests: &[&Test]) -> Vec<Value> {
                     Outcome::Unknown => ("unrecorded", "Tested, outcome not recorded"),
                 };
                 let n = here.len();
-                (code, label.to_string(), format!("{n} NASA test{} at {}% O₂", if n == 1 { "" } else { "s" }, num(value)))
+                (code, label.to_string(), format!("{n} test{} in NASA papers at {}% O₂", if n == 1 { "" } else { "s" }, num(value)))
             };
             json!({
                 "key": h.key,
@@ -267,7 +267,13 @@ fn evidence(tests: &[&Test]) -> Vec<Value> {
             if !t.experiments.is_empty() {
                 parts.push(t.experiments.join(" / "));
             }
-            parts.push(t.o2_raw.clone().map(|o| format!("{o} oxygen")).unwrap_or_else(|| "oxygen not recorded".into()));
+            // The database's oxygen text often already says "O2" or "air"; don't repeat it.
+            parts.push(match &t.o2_raw {
+                Some(o) if o.to_lowercase().contains("o2") || o.to_lowercase().contains("oxygen") => o.clone(),
+                Some(o) if o.trim().eq_ignore_ascii_case("air") => "in air".to_string(),
+                Some(o) => format!("{o} oxygen"),
+                None => "oxygen not recorded".into(),
+            });
             parts.extend(t.pressure.clone());
             parts.extend(t.airflow.clone().map(|a| format!("airflow {a}")));
             parts.push(

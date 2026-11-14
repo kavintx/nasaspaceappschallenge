@@ -290,7 +290,9 @@ pub async fn build(store: &Store) -> Result<Catalog, String> {
                     paper_href: pref.href.clone(),
                     paper_title: pref.title.clone(),
                     paper_url: https(&paper, "ntrs_url"),
-                    experiments: owners(c).iter().filter_map(|id| acronyms.get(id).cloned()).collect(),
+                    // Only the experiment the row itself names. A paper's single linked experiment is
+                    // not assumed: proceedings volumes report many unrelated tests.
+                    experiments: s(c, "experiment_id").and_then(|id| acronyms.get(&id).cloned()).into_iter().collect(),
                 };
                 match materials.iter_mut().find(|m| m.name.eq_ignore_ascii_case(&fuel)) {
                     Some(m) => m.tests.push(test),
