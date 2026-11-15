@@ -41,7 +41,7 @@ const O2_TOLERANCE: f64 = 1.0;
 /// Result cards compare these two habitats, in this order.
 const SHOWN: [&str; 2] = ["moon_base", "iss"];
 
-const NOT_CONNECTED: &str = "Scanner not connected. You can still type the materials in.";
+const NOT_CONNECTED: &str = "Scanner not connected. Paste your Anthropic or OpenAI key in the box above, or run Ollama — you can still type the materials in.";
 
 // ---------- pages ----------
 
@@ -94,10 +94,16 @@ pub async fn overview(State(app): AppRef) -> Response {
 #[template(path = "scan.html")]
 pub struct ScanPage {
     pub scanner_on: bool,
+    /// True when no Anthropic/OpenAI key is stored — the page shows its
+    /// one-box unlock, which arms the scanner without a restart.
+    pub needs_key: bool,
 }
 
 pub async fn scan_page(State(app): AppRef) -> Response {
-    render(ScanPage { scanner_on: app.vision.read().await.may_work() })
+    let v = app.vision.read().await;
+    let (scanner_on, needs_key) = (v.may_work(), !v.has_own_key());
+    drop(v);
+    render(ScanPage { scanner_on, needs_key })
 }
 
 #[derive(Template)]

@@ -14,18 +14,18 @@ cd nasaspaceappschallenge
 py main.py
 ```
 
-The first run asks **one** thing: which model identifies your photos (an Anthropic/OpenAI key, or Ollama). Everything else is automatic — it clones the research backend next to this repo if you don't have it, sets it up silently, generates the shared site token into both `.env` files, then builds and starts **both** containers. The research database and model server are the project's own setup, filled in by the team — a first-time runner is never asked and never needs to know about them. Keys are typed hidden and written only to local `.env` files — never printed, never committed. Later runs ask nothing and start in seconds.
+`main.py` asks nothing. It clones the research backend next to this repo if you don't have it, sets it up silently, generates the shared site token into both `.env` files, then builds and starts **both** containers. When it finishes, it prints a link. The first build compiles everything inside a `rust:1-bookworm` container and takes a few minutes; the results are kept in named Docker volumes, so every later start is nearly instant.
 
-Open **http://localhost:3101**. The first build compiles everything inside a `rust:1-bookworm` container and takes a few minutes; the results are kept in named Docker volumes, so every later start is nearly instant.
+Then open **http://localhost:3101/scan** and paste an **Anthropic or OpenAI key** into the box. That's the one step. The key is saved on this machine only (never shown back), the scanner arms immediately — no restart — and Burn Scan works: photo → materials → how those materials did in NASA's tests, all read from the research database (Supabase) which is baked in. The photo-recognition scanner lives **inside the dashboard itself**, so a pasted key is all scanning ever needs.
 
-Scanning runs on your own model key and Supabase — no backend needed for it. If you skip or decline the backend, browsing and Burn Scan still work (the dashboard reads the research database from Supabase with a read-only publishable key; material synonyms fall back to exact name matches); accounts, AI answers and the Pipeline page need the backend running.
+The research database and model server are the project's own setup, filled in by the team — a first-time runner is never asked and never needs to know they exist. Accounts, Ask-the-Data and the Pipeline page run through the research backend; on a machine where the team has wired in its database address, that comes up automatically from the same command. Where it hasn't, browsing and Burn Scan still work; the rest stays off rather than crashing.
 
 ### main.py flags
 
 | Flag | What it does |
 |---|---|
-| *(none)* | First run: wizard, then build and run dashboard **+ research backend** (backend cloned to `../fireset` if missing) |
-| `--configure` | Re-run the scanner setup questions and exit |
+| *(none)* | Build and run the dashboard **+ research backend** in one go (backend cloned to `../fireset` if missing); no questions |
+| `--configure` | Set the scanner from the terminal instead of pasting a key on the site, then exit |
 | `--port N` | Dashboard port |
 | `--backend-port N` | Backend port (default 8080) |
 | `--no-build` | Skip cargo builds, start the existing binaries |
