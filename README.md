@@ -18,7 +18,7 @@ py main.py
 
 Then open **http://localhost:3101/scan** and paste an **Anthropic or OpenAI key** into the box. That's the one step. The key is saved on this machine only (never shown back), the scanner arms immediately — no restart — and Burn Scan works: photo → materials → how those materials did in NASA's tests, all read from the research database (Supabase) which is baked in. The photo-recognition scanner lives **inside the dashboard itself**, so a pasted key is all scanning ever needs.
 
-The research database and model server are the project's own setup, filled in by the team — a first-time runner is never asked and never needs to know they exist. Accounts, Ask-the-Data and the Pipeline page run through the research backend; on a machine where the team has wired in its database address, that comes up automatically from the same command. Where it hasn't, browsing and Burn Scan still work; the rest stays off rather than crashing.
+The research database and model server are the project's own setup, filled in by the team — a first-time runner is never asked and never needs to know they exist. Ask-the-Data and the Pipeline page run through the research backend; on a machine where the team has wired in its database address, that comes up automatically from the same command. Where it hasn't, browsing and Burn Scan still work; the rest stays off rather than crashing.
 
 ### main.py flags
 
@@ -39,12 +39,12 @@ The containers it manages are `flame-web` and `flame-backend`; everything it com
 ```
 NASA NTRS ──> backend (Fireset repo) ──writes──> Supabase database <──reads── dashboard (web/)
                     ^                                                               │
-                    └────── AI answers, accounts, pipeline (+ material synonyms) ────┘
+                    └────── AI answers, pipeline (+ material synonyms) ────┘
 ```
 
 - **Supabase** holds the research database: experiments, papers, extracted test conditions and findings.
 - **`web/`** — this dashboard (Rust: Axum + Askama templates, Tailwind). It reads the database straight from Supabase with the publishable key, and relays anything that needs writing or AI to the backend. The browser never sees the backend token: the dashboard holds it server-side and swaps it for an HttpOnly session cookie of its own.
-- **The [Fireset backend](https://github.com/MonsterLXW/Fireset)** ingests NTRS papers, extracts conditions with a self-hosted model, answers questions with citations, runs the Burn Scan vision endpoint and owns the user accounts. The `crates/` folder here is a snapshot of it (`f4622a8`); the Fireset repo is the source of truth.
+- **The [Fireset backend](https://github.com/MonsterLXW/Fireset)** ingests NTRS papers, extracts conditions with a self-hosted model, answers questions with citations and matches material names to tested fuels. The `crates/` folder here is a snapshot of it (`f4622a8`); the Fireset repo is the source of truth.
 - **`db/supabase_setup.sql`** — the backend's tables, with public read access set read-only.
 
 ### Where each page gets its data
@@ -53,7 +53,6 @@ NASA NTRS ──> backend (Fireset repo) ──writes──> Supabase database <
 |---|---|
 | Explorer, experiment pages, Compare table, Habitat evidence, Literature, paper pages | Supabase (rolled up per experiment, cached 5 minutes; "Refresh" rebuilds) |
 | Burn Scan (photo → materials → test results) | photo → your own model key (Anthropic/OpenAI/Ollama, via `/scan/identify`); verdicts from Supabase; material-name synonyms via backend `POST /materials/match` when it runs (exact matches only without it) |
-| Log in / sign up / account | backend `/api/v1/auth/*`, relayed with an HttpOnly cookie |
 | Ask the Data (streaming chat) | backend `POST /ai/chat`, through `/ask/stream` |
 | Habitat Risk → AI risk assessment | backend `POST /ai/habitat/analyze` |
 | Compare → AI comparison | backend `POST /ai/compare` |
@@ -80,10 +79,6 @@ The dashboard reads `web/.env` (`main.py` creates one from `web/.env.example` on
 | `STATIC_DIR`, `SUPABASE_URL`, `SUPABASE_KEY` | Rarely needed; sane defaults built in |
 
 The backend has its own `.env` (in the Fireset checkout): `DATABASE_URL` (use the Supabase **Session pooler** string — the backend uses prepared statements), `API_AUTH_TOKEN` (24+ chars), `BIND_ADDR` (default `0.0.0.0:8080`), `VLLM_BASE_URL` and model ids. It applies its SQL migrations itself on startup.
-
-## Accounts
-
-With the backend connected, **`/signup`** and **`/login`** are separate pages and **`/account`** shows the profile. Passwords are argon2id-hashed; sessions are random tokens stored only as SHA-256 hashes, 30-day expiry, per-email rate limiting on sign-up and log-in. The browser only ever gets an HttpOnly cookie — the site token stays on the dashboard server.
 
 ## Photos and the camera
 
