@@ -30,8 +30,8 @@ impl Config {
     }
 
     /// Same as `get`, but the `.env` file wins over process env vars. Vision
-    /// settings use this: the settings page rewrites `.env`, and the running
-    /// process still carries the values the container was launched with.
+    /// uses this so a value edited in `web/.env` (directly, or by
+    /// `main.py --configure`) beats the copy the container was launched with.
     pub fn get_file_first(&self, key: &str) -> Option<String> {
         self.0
             .get(key)

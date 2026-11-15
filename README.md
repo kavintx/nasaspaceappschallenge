@@ -18,7 +18,7 @@ The first run asks a few questions (which model identifies your photos, optional
 
 Open **http://localhost:3101**. The first build compiles everything inside a `rust:1-bookworm` container and takes a few minutes; the results are kept in named Docker volumes, so every later start is nearly instant.
 
-If you skip or decline the backend, browsing still works (the dashboard reads the research database from Supabase with a read-only publishable key); scanning, accounts, AI answers and the Pipeline page will say "not connected" until the backend runs.
+Scanning runs on your own model key and Supabase — no backend needed for it. If you skip or decline the backend, browsing and Burn Scan still work (the dashboard reads the research database from Supabase with a read-only publishable key; material synonyms fall back to exact name matches); accounts, AI answers and the Pipeline page need the backend running.
 
 ### main.py flags
 
@@ -39,7 +39,7 @@ The containers it manages are `flame-web` and `flame-backend`; everything it com
 ```
 NASA NTRS ──> backend (Fireset repo) ──writes──> Supabase database <──reads── dashboard (web/)
                     ^                                                               │
-                    └────── AI answers, photo scan, accounts, pipeline ──────────────┘
+                    └────── AI answers, accounts, pipeline (+ material synonyms) ────┘
 ```
 
 - **Supabase** holds the research database: experiments, papers, extracted test conditions and findings.
@@ -52,7 +52,7 @@ NASA NTRS ──> backend (Fireset repo) ──writes──> Supabase database <
 | Page | Source |
 |---|---|
 | Explorer, experiment pages, Compare table, Habitat evidence, Literature, paper pages | Supabase (rolled up per experiment, cached 5 minutes; "Refresh" rebuilds) |
-| Burn Scan (photo → materials → test results) | backend `POST /ai/scan` + `POST /materials/match`, relayed through `/scan/*` |
+| Burn Scan (photo → materials → test results) | photo → your own model key (Anthropic/OpenAI/Ollama, via `/scan/identify`); verdicts from Supabase; material-name synonyms via backend `POST /materials/match` when it runs (exact matches only without it) |
 | Log in / sign up / account | backend `/api/v1/auth/*`, relayed with an HttpOnly cookie |
 | Ask the Data (streaming chat) | backend `POST /ai/chat`, through `/ask/stream` |
 | Habitat Risk → AI risk assessment | backend `POST /ai/habitat/analyze` |
@@ -72,7 +72,7 @@ The dashboard reads `web/.env` (`main.py` creates one from `web/.env.example` on
 | `PORT` | Dashboard port (default 3101; it steps past busy ports if unset) |
 | `API_BASE_URL` | Where the dashboard reaches the backend. From inside its Docker container that is `http://host.docker.internal:8080`; from a plain `cargo run`, `http://127.0.0.1:8080` |
 | `API_AUTH_TOKEN` | The backend's site token. Server-side only, never sent to a browser |
-| `VISION_PROVIDER` | `anthropic`, `openai`, `ollama` or `backend`. **Leave it unset** and the scanner picks itself by whichever key is present (anthropic → openai → backend → ollama) — no ollama install needed unless you want it |
+| `VISION_PROVIDER` | `anthropic`, `openai` or `ollama` — always a key on this machine, never the research backend. **Leave it unset** and the scanner picks itself by whichever key is present (anthropic → openai → ollama) — no ollama install needed unless you want it |
 | `VISION_FALLBACK` | `anthropic`, `openai` or `none`: tried once if the provider fails |
 | `OLLAMA_BASE_URL`, `OLLAMA_VISION_MODEL` | Local vision model for scanning |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Only for the anthropic provider |
@@ -121,7 +121,7 @@ The publishable key in `web/src/store.rs` can only read `experiments`, `experime
 |---|---|
 | `error: Docker is not running` | Start Docker Desktop, wait for the whale, re-run |
 | Port busy | `python main.py --port 3102` |
-| Scan says "Scanner not connected" | Open `/settings` (or run `python main.py --configure`) and pick a scanner — `python main.py` also starts the research backend if `../fireset` exists |
+| Scan says "Scanner not connected" | Run `python main.py --configure` and pick a scanner with a key (anthropic/openai/ollama), then restart |
 | Camera never opens | Not on `localhost`/HTTPS — the file-picker fallback (and phone camera) still works |
 | Phone can't reach the site | Windows Firewall: allow inbound TCP on the port for "Private networks" |
 | Weird state after a crash | `python main.py --stop` then run again |

@@ -113,9 +113,8 @@ def setup_wizard(env: Path) -> None:
     print("  1) anthropic   Claude on api.anthropic.com (needs an API key)")
     print("  2) openai      GPT-4o or any OpenAI-compatible endpoint (needs an API key)")
     print("  3) ollama      a model running locally on this machine (free, but you must install it)")
-    print("  4) backend     the research backend's model (needs the Fireset repo)")
-    print("  5) none        just browse for now; scanning says 'not connected'")
-    match ask("scanner provider", "5"):
+    print("  4) none        just browse for now; scanning says 'not connected'")
+    match ask("scanner provider", "4"):
         case "1" | "anthropic":
             provider = "anthropic"
             key = getpass.getpass("  ANTHROPIC_API_KEY (hidden, Enter to skip): ").strip()
@@ -136,12 +135,6 @@ def setup_wizard(env: Path) -> None:
             print("  (install ollama.com and `ollama pull <model>` if you haven't)")
             rewrite_env_line(env, "OLLAMA_BASE_URL", ask("ollama address", "http://host.docker.internal:11434"))
             rewrite_env_line(env, "OLLAMA_VISION_MODEL", ask("ollama vision model", "llama3.2-vision"))
-        case "4" | "backend":
-            provider = "backend"
-            rewrite_env_line(env, "API_BASE_URL", ask("backend address", "http://host.docker.internal:8080"))
-            token = getpass.getpass("  backend API_AUTH_TOKEN (from your Fireset .env, Enter to skip): ").strip()
-            if token:
-                rewrite_env_line(env, "API_AUTH_TOKEN", token)
         case _:
             provider = ""
     if provider:
