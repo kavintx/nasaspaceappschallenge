@@ -1,5 +1,61 @@
 {% extends "base.html" %}
 {% block content %}
+
+{# Intro: full-screen video, pinned. While its frames last, scrolling changes
+   nothing but the video frame. When the frames run out, the page continues. #}
+<section class="hero-pin" id="hero" aria-label="Flame animation">
+  <div class="hero-fixed">
+    <video id="hero-video" src="/static/hero.mp4" muted playsinline preload="auto"
+           disablepictureinpicture tabindex="-1" aria-label="Flame animation"></video>
+    <div class="hero-flame" id="hero-flame" hidden>
+      <svg viewBox="0 0 120 190" width="150" height="230" aria-hidden="true">
+        <defs>
+          <radialGradient id="flame-body" cx="50%" cy="70%" r="65%">
+            <stop offset="0%" stop-color="#eaf7ff"/>
+            <stop offset="26%" stop-color="#9fd9ff"/>
+            <stop offset="60%" stop-color="#2f9bff"/>
+            <stop offset="100%" stop-color="#0a3f8f" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="flame-halo" cx="50%" cy="58%" r="50%">
+            <stop offset="0%" stop-color="#3aa4ff" stop-opacity=".5"/>
+            <stop offset="100%" stop-color="#3aa4ff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="60" cy="86" rx="48" ry="64" fill="url(#flame-halo)"/>
+        <rect x="46" y="148" width="28" height="40" rx="7" fill="#dfe6f2" opacity=".92"/>
+        <rect x="46" y="148" width="13" height="40" rx="6" fill="#bfc9dd" opacity=".92"/>
+        <path d="M60 148 q-2 -7 0 -12" stroke="#8f9bb0" stroke-width="2" fill="none"/>
+        <g>
+          <path d="M60 30 C 79 60, 86 80, 79 102 C 75 118, 67 128, 60 136 C 53 128, 45 118, 41 102 C 34 80, 41 60, 60 30 Z" fill="url(#flame-body)"/>
+          <path d="M60 72 C 67 85, 70 97, 65 111 C 63 119, 61 127, 60 131 C 59 127, 57 119, 55 111 C 50 97, 53 85, 60 72 Z" fill="#eaf7ff" opacity=".88"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-pin { height: 300vh; height: 300dvh; }
+  .hero-fixed {
+    position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden;
+    background: #02040d;
+  }
+  /* Phones: no long scrub section — one screen, the video simply plays. */
+  @media (pointer: coarse) and (max-width: 900px) {
+    .hero-pin { height: 100dvh; }
+  }
+  .hero-fixed video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    /* Zoom past the edges so the stock watermark sits outside the viewport. */
+    transform: scale(1.2);
+  }
+  .hero-flame {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  }
+  /* display:flex would otherwise beat the [hidden] attribute */
+  .hero-flame[hidden] { display: none; }
+</style>
+
 <section class="wrap py-10 md:py-16 grid gap-10 lg:grid-cols-[1fr_520px] items-center">
   <div class="min-w-0">
     <p class="text-[12px] font-semibold tracking-[0.12em] text-sky">FLAME IN FREEFALL</p>
@@ -84,6 +140,59 @@
     document.querySelectorAll("video[data-autoplay]").forEach(function (v) {
       if (still) { v.controls = true; } else { v.play().catch(function () { v.controls = true; }); }
     });
+  })();
+</script>
+<script>
+  // Intro video: on desktop, scrolling drives ONLY the video frame (video paused,
+  // scroll position maps linearly to currentTime). On phones, where scrubbing is
+  // unreliable, the intro is one screen and the video simply loops.
+  (function () {
+    var hero = document.getElementById("hero");
+    var video = document.getElementById("hero-video");
+    var flameFallback = document.getElementById("hero-flame");
+    if (!hero || !video) return;
+
+    video.addEventListener("error", function () {
+      video.style.display = "none";
+      if (flameFallback) flameFallback.hidden = false;
+    });
+
+    var touchSmall = window.matchMedia && window.matchMedia("(pointer: coarse) and (max-width: 900px)").matches;
+    if (touchSmall) {
+      video.loop = true;
+      // iOS only lets a muted video start after a first touch; try immediately too.
+      function play() { var p = video.play(); if (p && p.catch) p.catch(function () { /* retried on touch */ }); }
+      play();
+      document.addEventListener("touchstart", play, { once: true, passive: true });
+      document.addEventListener("click", play, { once: true });
+      return;
+    }
+
+    var raf = null, dur = 0, seeking = false;
+    video.addEventListener("loadedmetadata", function () {
+      dur = video.duration || 0;
+      try { video.currentTime = 0; } catch (e) { /* ignore */ }
+    });
+    video.addEventListener("seeked", function () { seeking = false; });
+
+    function seek(s) {
+      if (!dur || seeking || video.readyState < 1) return;
+      var t = s * Math.max(0, dur - 0.05);
+      if (Math.abs(video.currentTime - t) > 0.02) {
+        seeking = true;
+        try { video.currentTime = t; } catch (e) { seeking = false; }
+      }
+    }
+    function update() {
+      raf = null;
+      var r = hero.getBoundingClientRect();
+      var total = r.height - window.innerHeight;
+      var s = total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
+      seek(s);
+    }
+    window.addEventListener("scroll", function () { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    window.addEventListener("resize", update);
+    update();
   })();
 </script>
 {% endblock %}
