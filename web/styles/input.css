@@ -61,35 +61,37 @@ html.motion-off .flame-ball, html.motion-off .flame-core { animation: none; }
    Everything below is decoration. A visitor can switch it off in the footer (html.motion-off),
    and reveals only hide content when scripts are running (html.js). */
 
-/* Overview intro: a tilted screen that lies flat as you scroll, with the flame clip in it.
-   A plain-CSS port of the "container scroll" effect (rotateX 20deg -> 0, slight scale,
-   title sliding up). static/motion.js sets --p, the scroll progress from 0 to 1. */
-/* The section is one screen plus some scroll room; its content is pinned while that room
-   is used up, so the screen stays in view the whole time it flattens. */
-.cscroll { --p: 0; position: relative; height: calc(100vh + 520px); height: calc(100svh + 520px); overflow: clip; }
-.cscroll-inner { position: sticky; top: 0; display: flex; flex-direction: column; justify-content: center; width: 100%; height: 100vh; height: 100svh; padding: 1rem 0.5rem; perspective: 1000px; }
-.cscroll-head { max-width: 64rem; margin: 0 auto; padding: 0 0.75rem; text-align: center; transform: translateY(calc(var(--p) * -100px)); will-change: transform; }
-.cscroll-kicker { display: block; font-size: clamp(22px, 3.4vw, 36px); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
-.cscroll-title { display: block; margin-top: 0.25rem; font-size: clamp(44px, 11vw, 96px); line-height: 1; font-weight: 700; letter-spacing: -0.03em; background: linear-gradient(180deg, #ffffff 30%, #7fc0ff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.cscroll-card { width: 100%; max-width: 64rem; height: min(30rem, 52vh); margin: 1.5rem auto 0; padding: 0.5rem; border: 4px solid #6c6c6c; border-radius: 30px; background: #222222; transform: rotateX(calc((1 - var(--p)) * 20deg)) scale(calc(0.7 + var(--p) * 0.2)); will-change: transform;
+/* Overview intro: a tilted screen that lies flat and grows to fill the whole window as
+   you scroll, with the flame clip in it. Based on the "container scroll" effect (rotateX
+   20deg -> 0, scale up, title sliding away). static/motion.js sets the transforms each
+   frame, gliding toward the scroll position; the values here are the starting pose,
+   shown before the script runs. The section is one screen plus a long stretch of scroll
+   room, and its content is pinned while that room is used up. */
+.cscroll { position: relative; height: calc(100vh + 900px); height: calc(100svh + 900px); overflow: clip; }
+.cscroll-inner { position: sticky; top: 0; width: 100%; height: 100vh; height: 100svh; overflow: hidden; perspective: 1200px; }
+.cscroll-head { position: absolute; left: 0; right: 0; top: 7vh; z-index: 1; padding: 0 0.75rem; text-align: center; will-change: transform, opacity; backface-visibility: hidden; }
+.cscroll-kicker { display: block; font-size: clamp(20px, 3vw, 34px); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
+.cscroll-title { display: block; margin-top: 0.25rem; font-size: clamp(44px, min(11vw, 13vh), 104px); line-height: 1; font-weight: 700; letter-spacing: -0.03em; background: linear-gradient(180deg, #ffffff 30%, #7fc0ff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* The screen is laid out at its final size, the full window, and starts scaled down. */
+.cscroll-card { position: absolute; inset: 0; padding: 0.4rem; border: 4px solid #6c6c6c; border-radius: 30px; background: #222222; transform: translate3d(0, 19vh, 0) rotateX(20deg) scale(0.66); transform-origin: 50% 50%; will-change: transform; backface-visibility: hidden;
   box-shadow: 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003; }
-.cscroll-screen { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 1rem; background: #000; }
+.cscroll-screen { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 1.4rem; background: #000; }
 .cscroll-screen video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.cscroll-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.5rem 1rem 0.9rem; text-align: center; font-size: clamp(14px, 1.7vw, 18px); line-height: 1.4; color: #f5f5f7; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.75) 70%); }
+.cscroll-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 3rem 1rem 1.6rem; text-align: center; font-size: clamp(15px, 1.9vw, 26px); line-height: 1.4; color: #f5f5f7; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.75) 70%); }
 .cscroll-caption span { display: block; transition: opacity 0.35s ease; }
-.cscroll-caption .cap-b { position: absolute; left: 1rem; right: 1rem; bottom: 0.9rem; opacity: 0; }
+.cscroll-caption .cap-b { position: absolute; left: 1rem; right: 1rem; bottom: 1.6rem; opacity: 0; }
 .cscroll.is-late .cap-a { opacity: 0; }
 .cscroll.is-late .cap-b { opacity: 1; }
-.intro-credit { position: absolute; right: 12px; top: 10px; font-size: 10px; color: rgba(165, 168, 181, 0.7); }
+.intro-credit { position: absolute; right: 16px; top: 12px; font-size: 10px; color: rgba(165, 168, 181, 0.7); }
 @media (min-width: 768px) {
-  .cscroll { height: calc(100vh + 760px); height: calc(100svh + 760px); }
-  .cscroll-inner { padding: 1.5rem 5rem; }
-  .cscroll-card { height: min(40rem, 58vh); margin-top: 2rem; padding: 1.5rem; transform: rotateX(calc((1 - var(--p)) * 20deg)) scale(calc(1.05 - var(--p) * 0.05)); }
+  .cscroll { height: calc(100vh + 1500px); height: calc(100svh + 1500px); }
+  .cscroll-card { padding: 0.75rem; transform: translate3d(0, 21vh, 0) rotateX(20deg) scale(0.6); }
 }
-/* No scripts, or animations switched off: no pinning, and the screen simply lies flat. */
+/* No scripts, or animations switched off: no pinning; the title sits above a flat screen. */
 html:not(.js) .cscroll, .cscroll.is-flat { height: auto; }
-html:not(.js) .cscroll-inner, .cscroll.is-flat .cscroll-inner { position: static; height: auto; padding-top: 3rem; padding-bottom: 3rem; }
-html:not(.js) .cscroll, .cscroll.is-flat { --p: 1; }
+html:not(.js) .cscroll-inner, .cscroll.is-flat .cscroll-inner { position: static; height: auto; overflow: visible; padding: 3rem 0.75rem; }
+html:not(.js) .cscroll-head, .cscroll.is-flat .cscroll-head { position: static; }
+html:not(.js) .cscroll-card, .cscroll.is-flat .cscroll-card { position: relative; inset: auto; height: 70vh; max-width: 76rem; margin: 1.5rem auto 0; transform: none; }
 
 /* Reveal on scroll. */
 .js [data-reveal] { opacity: 0; transform: translateY(16px); transition: opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); transition-delay: var(--reveal-delay, 0ms); }
