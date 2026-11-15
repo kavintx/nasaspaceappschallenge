@@ -42,6 +42,10 @@ pub async fn unlock(State(app): State<Arc<AppState>>, headers: HeaderMap, form: 
     if !same_origin(&headers) {
         return (StatusCode::FORBIDDEN, "Cross-site request refused.").into_response();
     }
+    // Keys are only ever pasted into a copy on your own computer, never the public website.
+    if crate::hosted() {
+        return Redirect::to("/scan").into_response();
+    }
     // Anthropic wins when both are pasted; it is the one the page recommends.
     let Some((key_env, provider_env, key)) = [
         form.anthropic_key.as_deref().map(str::trim).filter(|k| k.len() >= 20).map(|k| ("ANTHROPIC_API_KEY", "anthropic", k)),

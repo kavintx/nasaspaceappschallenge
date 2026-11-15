@@ -39,6 +39,11 @@ pub struct AppState {
     pub read_only: bool,
 }
 
+/// True on the public website (a serverless function), false for a copy run on a computer.
+pub fn hosted() -> bool {
+    std::env::var_os("AWS_LAMBDA_RUNTIME_API").is_some()
+}
+
 #[tokio::main]
 async fn main() {
     // Pure-Rust-friendly TLS (ring): builds on Windows without CMake or NASM.
