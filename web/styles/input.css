@@ -18,6 +18,18 @@
   .cam-btn { @apply flex flex-col items-center justify-center gap-3 w-full aspect-[4/3] max-h-[46vh] rounded-3xl bg-blue text-fg cursor-pointer transition-colors hover:bg-sky focus-within:outline focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-sky; }
   .notice { @apply rounded-lg border border-amber/60 bg-amber/10 text-amber text-[14px] leading-5 px-4 py-3; }
   .result-card { @apply mt-6 rounded-2xl bg-ink-850 border border-line p-4 sm:p-5; }
+  /* Redesigned scan screen (/scan). Design: Figma "Burn Scan – scan screen redesign". */
+  .scan2-viewfinder { @apply relative flex flex-col items-center justify-center gap-3.5 w-full h-[330px] max-h-[46vh] min-h-[260px] rounded-[28px] border border-sky/35 text-fg cursor-pointer transition-colors hover:border-sky/70 focus-within:outline focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-sky; background: linear-gradient(180deg, #0d1830 0%, #090d18 100%); }
+  .scan2-brackets { @apply absolute inset-5 text-sky pointer-events-none; width: calc(100% - 40px); height: calc(100% - 40px); }
+  .scan2-shutter { @apply flex items-center justify-center w-24 h-24 rounded-full bg-blue text-white transition-transform; box-shadow: 0 0 0 3px rgba(245, 245, 247, 0.9), 0 0 36px 2px rgba(41, 151, 255, 0.55); }
+  .scan2-viewfinder:active .scan2-shutter { transform: scale(0.96); }
+  .scan2-tile { @apply flex items-center gap-2.5 rounded-[18px] border border-line bg-ink-800 px-3.5 py-3.5 cursor-pointer transition-colors hover:border-muted focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky; }
+  .scan2-badge { @apply flex items-center justify-center w-9 h-9 rounded-[10px] bg-sky/15 text-sky shrink-0; }
+  .scan2-tabs { @apply fixed bottom-0 inset-x-0 z-10 border-t border-line bg-ink-900/95 px-3 pt-2.5; padding-bottom: max(14px, env(safe-area-inset-bottom)); backdrop-filter: blur(12px); }
+  .scan2-tab { @apply flex flex-col items-center gap-1 text-[11px] font-medium text-dim; }
+  .scan2-tab[aria-current="page"] { @apply font-semibold text-sky; }
+  .scan2-glow { @apply fixed pointer-events-none; left: 50%; top: 200px; width: 520px; height: 520px; transform: translateX(-50%); background: radial-gradient(circle, rgba(41, 151, 255, 0.28) 0%, rgba(41, 151, 255, 0) 70%); }
+
   .verdict-tile { @apply rounded-xl bg-ink-800 border-l-4 p-3 min-w-0 break-words; }
 }
 
