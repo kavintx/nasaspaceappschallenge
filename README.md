@@ -14,23 +14,18 @@ cd nasaspaceappschallenge
 py main.py
 ```
 
-Open **http://localhost:3101**. The first build compiles the site inside a `rust:1-bookworm` container and takes a few minutes; the results are kept in named Docker volumes, so every later start is nearly instant.
+The first run asks a few questions (which model identifies your photos, optional Supabase/model addresses), clones the research backend next to this repo if you don't have it, generates the shared site token into both `.env` files, then builds and starts **both** containers. Keys are typed hidden and written only to local `.env` files — never printed, never committed. Later runs ask nothing and start in seconds.
 
-Browsing works with nothing else running: the dashboard reads the research database from Supabase with a read-only publishable key. **Photo scanning, accounts, AI answers and the Pipeline page need the research backend** — clone it next to this repo and point the script at it:
+Open **http://localhost:3101**. The first build compiles everything inside a `rust:1-bookworm` container and takes a few minutes; the results are kept in named Docker volumes, so every later start is nearly instant.
 
-```sh
-git clone https://github.com/MonsterLXW/Fireset ../fireset
-# copy Fireset's .env.example to ../fireset/.env and fill in DATABASE_URL,
-# API_AUTH_TOKEN and the model address (see "The research backend" below)
-python main.py --backend
-```
+If you skip or decline the backend, browsing still works (the dashboard reads the research database from Supabase with a read-only publishable key); scanning, accounts, AI answers and the Pipeline page will say "not connected" until the backend runs.
 
 ### main.py flags
 
 | Flag | What it does |
 |---|---|
-| *(none)* | Build and run the dashboard on the port from `web/.env` (`PORT`, default 3101) |
-| `--backend [PATH]` | Also build and run the Fireset backend (`../fireset` by default) and fix `API_BASE_URL` for container-to-container talk |
+| *(none)* | First run: wizard, then build and run dashboard **+ research backend** (backend cloned to `../fireset` if missing) |
+| `--configure` | Re-run the scanner setup questions and exit |
 | `--port N` | Dashboard port |
 | `--backend-port N` | Backend port (default 8080) |
 | `--no-build` | Skip cargo builds, start the existing binaries |
@@ -126,7 +121,7 @@ The publishable key in `web/src/store.rs` can only read `experiments`, `experime
 |---|---|
 | `error: Docker is not running` | Start Docker Desktop, wait for the whale, re-run |
 | Port busy | `python main.py --port 3102` |
-| Scan says "Scanner not connected" | Run with `--backend`, and check `VISION_PROVIDER=backend` in `web/.env` |
+| Scan says "Scanner not connected" | Open `/settings` (or run `python main.py --configure`) and pick a scanner — `python main.py` also starts the research backend if `../fireset` exists |
 | Camera never opens | Not on `localhost`/HTTPS — the file-picker fallback (and phone camera) still works |
 | Phone can't reach the site | Windows Firewall: allow inbound TCP on the port for "Private networks" |
 | Weird state after a crash | `python main.py --stop` then run again |
