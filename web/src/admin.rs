@@ -23,12 +23,28 @@ pub const PROGRAMS: [&str; 13] = [
 ];
 
 /// Refuse form posts that come from another website.
+///
+/// Works behind a proxy (a Cloudflare tunnel, for instance): the browser's Origin is
+/// checked against every name the server is reached under — the direct Host header or
+/// the proxy's X-Forwarded-Host — so a tunnel rewriting Host doesn't break its own
+/// visitors. A page on some other site still can't forge either value.
 pub(crate) fn same_origin(headers: &HeaderMap) -> bool {
-    let host = headers.get(header::HOST).and_then(|h| h.to_str().ok()).unwrap_or("");
-    match headers.get(header::ORIGIN).and_then(|o| o.to_str().ok()) {
-        Some(origin) => origin.split("://").nth(1) == Some(host),
-        None => true,
+    let Some(origin) = headers.get(header::ORIGIN).and_then(|o| o.to_str().ok()) else {
+        return true; // plain same-site form posts from browsers all carry Origin; anything without it is a non-browser client
+    };
+    let want = trim_host(origin);
+    let matches = |name: &str| headers.get(name).and_then(|h| h.to_str().ok()).is_some_and(|v| trim_host(v) == want);
+    matches("host") || matches("x-forwarded-host")
+}
+
+/// "https://abc.trycloudflare.com" or "localhost:3101:443"-style values down to the host[:port].
+fn trim_host(value: &str) -> &str {
+    let rest = value.split("://").nth(1).unwrap_or(value);
+    let rest = rest.trim_end_matches('/');
+    if let Some(stripped) = rest.strip_suffix(":443") {
+        return stripped;
     }
+    rest
 }
 
 /// Checks shared by every action that writes: same site, not read-only, backend connected.
