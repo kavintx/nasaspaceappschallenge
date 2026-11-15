@@ -203,15 +203,21 @@
   }
 
   function flameFigure() {
-    function stage(file, caption) {
-      return el("div", {}, [
-        el("img", { src: "/static/img/" + file, alt: "", width: "900", height: "678", loading: "lazy", class: "w-full aspect-[4/3] object-cover rounded-xl bg-black" }),
-        el("p", { class: "mt-2 text-[12px] text-muted text-center", text: caption }),
-      ]);
+    // A short silent loop. It plays by itself, except for people who ask their device for
+    // reduced motion: they get the still frame and a play button.
+    var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function stage(name, caption) {
+      var picture = el("video", {
+        src: "/static/img/" + name + ".mp4", poster: "/static/img/" + name + ".webp",
+        autoplay: !still, controls: still, loop: true, muted: true, playsinline: true, preload: "metadata",
+        class: "w-full aspect-[4/3] object-cover rounded-xl bg-black",
+      });
+      picture.muted = true; // the attribute alone doesn't mute a video made in script
+      return el("div", {}, [picture, el("p", { class: "mt-2 text-[12px] text-muted text-center", text: caption })]);
     }
-    return el("figure", { class: "mt-5", role: "img", "aria-label": "Two pictures of a round blue flame on a wick. The one at 30% oxygen is larger and brighter than the one at 21%." }, [
-      el("div", { class: "grid grid-cols-2 gap-3" }, [stage("flame-o2-30.webp", "Moon Base · 30% O₂"), stage("flame-o2-21.webp", "ISS · 21% O₂")]),
-      el("figcaption", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Illustration, made with AI. Not a NASA photo and not a measurement. Flames in weightlessness are round and blue; more oxygen makes them bigger and brighter." }),
+    return el("figure", { class: "mt-5", role: "img", "aria-label": "Two clips of a round blue flame on a wick. The one at 30% oxygen is larger and brighter than the one at 21%." }, [
+      el("div", { class: "grid grid-cols-2 gap-3" }, [stage("flame-o2-30", "Moon Base · 30% O₂"), stage("flame-o2-21", "ISS · 21% O₂")]),
+      el("figcaption", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Illustration, made with AI. Not NASA footage and not a measurement. Flames in weightlessness are round and blue; more oxygen makes them bigger and brighter." }),
     ]);
   }
 
