@@ -41,6 +41,9 @@ const O2_TOLERANCE: f64 = 1.0;
 /// Result cards compare these two habitats, in this order.
 const SHOWN: [&str; 2] = ["moon_base", "iss"];
 
+/// The same message on the public website, where there is no box to paste a key into.
+const NOT_CONNECTED_HOSTED: &str = "The photo scanner isn’t available right now. You can still type the materials in.";
+
 const NOT_CONNECTED: &str = "Scanner not connected. Paste your Anthropic or OpenAI key in the box above, or run Ollama — you can still type the materials in.";
 
 // ---------- pages ----------
@@ -101,8 +104,14 @@ pub struct ScanPage {
 
 pub async fn scan_page(State(app): AppRef) -> Response {
     let v = app.vision.read().await;
-    let (scanner_on, needs_key) = (v.may_work(), !v.has_own_key());
+    let (mut scanner_on, mut needs_key) = (v.may_work(), !v.has_own_key());
     drop(v);
+    // The public website never asks visitors for a key (that box is for people running
+    // their own copy), and it has no local Ollama: the scanner is on only with a key set.
+    if crate::hosted() {
+        scanner_on = !needs_key;
+        needs_key = false;
+    }
     render(ScanPage { scanner_on, needs_key })
 }
 
@@ -145,7 +154,7 @@ pub async fn identify(State(app): AppRef, headers: HeaderMap, Query(q): Query<Id
     let outcome = { app.vision.read().await.scan(&body, mime, mode).await };
     match outcome {
         Ok(reply) => Json(read_scan(&reply)).into_response(),
-        Err(VisionError::NotConnected) => refused("not_connected", NOT_CONNECTED),
+        Err(VisionError::NotConnected) => refused("not_connected", if crate::hosted() { NOT_CONNECTED_HOSTED } else { NOT_CONNECTED }),
         Err(VisionError::Failed(message)) => refused("error", &message),
     }
 }
