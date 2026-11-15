@@ -11,7 +11,7 @@ You need **Docker Desktop** (or any working `docker`), **Python 3.12 or newer**,
 ```sh
 git clone https://github.com/kavintx/nasaspaceappschallenge
 cd nasaspaceappschallenge
-python main.py
+py main.py
 ```
 
 Open **http://localhost:3101**. The first build compiles the site inside a `rust:1-bookworm` container and takes a few minutes; the results are kept in named Docker volumes, so every later start is nearly instant.
