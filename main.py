@@ -348,7 +348,7 @@ def main() -> None:
     token = provision_backend(fireset) if fireset else None
     if fireset and not backend_is_live(fireset):
         print("  the research database address isn't filled in on this machine yet,")
-        print("  so Ask and accounts stay off. Browsing and Burn Scan work regardless.")
+        print("  so Ask and the Pipeline page stay off. Browsing and Burn Scan work regardless.")
         fireset = None
     if fireset:
         sync_web_to_backend(web_env, token, args.backend_port)
