@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="wrap py-10 md:py-16 grid gap-10 lg:grid-cols-[1fr_520px] items-center">
+  <div class="min-w-0">
+    <p class="text-[12px] font-semibold tracking-[0.12em] text-sky">FLAME IN FREEFALL</p>
+    <h2 class="mt-3 text-[34px] leading-[40px] md:text-[48px] md:leading-[54px] font-semibold tracking-[-0.02em] max-w-2xl">How things burn in a spacecraft, from NASA’s own tests.</h2>
+    <p class="mt-4 text-[17px] leading-7 text-muted max-w-xl">A Moon base will run at 30% oxygen instead of Earth’s 21%. This site gathers NASA’s microgravity fire experiments and lets you check any everyday item against them.</p>
+    <div class="mt-7 flex flex-wrap gap-3">
+      <a href="/scan" class="btn-big">Scan an item</a>
+      <a href="/explorer" class="btn-big-ghost">Browse the experiments</a>
+    </div>
+  </div>
+
+  <figure class="min-w-0">
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <video src="/static/img/flame-o2-30.mp4" poster="/static/img/flame-o2-30.webp" loop muted playsinline preload="metadata" data-autoplay class="w-full aspect-[4/3] object-cover rounded-xl bg-black"></video>
+        <p class="mt-2 text-[12px] text-muted text-center">Moon Base · 30% O₂</p>
+      </div>
+      <div>
+        <video src="/static/img/flame-o2-21.mp4" poster="/static/img/flame-o2-21.webp" loop muted playsinline preload="metadata" data-autoplay class="w-full aspect-[4/3] object-cover rounded-xl bg-black"></video>
+        <p class="mt-2 text-[12px] text-muted text-center">ISS · 21% O₂</p>
+      </div>
+    </div>
+    <figcaption class="mt-2 text-[12px] leading-4 text-dim">Illustration, made with AI. Not NASA footage and not a measurement. Flames in weightlessness are round and blue; more oxygen makes them bigger and brighter.</figcaption>
+  </figure>
+</section>
+
+<section class="bg-ink-850 border-y border-line/60">
+  <div class="wrap py-10">
+    <h3 class="text-[22px] leading-7 font-semibold">What’s in the database right now</h3>
+    {% if let Some(e) = data_error %}
+    <p class="notice mt-4" role="status">{{ e }}</p>
+    {% else %}
+    <div class="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+      {% for s in stats %}
+      <a href="{{ s.href }}" class="rounded-xl bg-ink-800 border border-line p-4 hover:border-muted transition-colors">
+        <p class="text-[32px] leading-9 font-semibold">{{ s.value }}</p>
+        <p class="mt-1 text-[13px] leading-5 text-muted">{{ s.label }}</p>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="mt-3 text-[12px] text-dim">Counted live from the research database. Test conditions are extracted from the papers by AI and are not all reviewed by a person.</p>
+    {% endif %}
+  </div>
+</section>
+
+{% if !materials.is_empty() %}
+<section class="wrap py-10">
+  <h3 class="text-[22px] leading-7 font-semibold">Most-tested materials</h3>
+  <p class="mt-1 text-[14px] text-muted">By number of test conditions in the database. Names are as the papers write them.</p>
+  <ul class="mt-4 flex flex-wrap gap-2">
+    {% for m in materials %}
+    <li><a href="{{ m.2 }}" class="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[14px] hover:border-muted transition-colors">{{ m.0 }}<span class="text-dim text-[12px]">{{ m.1 }}</span></a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="wrap pb-14">
+  <h3 class="text-[22px] leading-7 font-semibold">Where to go</h3>
+  <div class="mt-4 grid gap-3 md:grid-cols-3">
+    <a href="/scan" class="rounded-xl bg-ink-850 border border-line p-5 hover:border-muted transition-colors">
+      <p class="text-[17px] font-semibold">Scan</p>
+      <p class="mt-1 text-[14px] leading-5 text-muted">Photograph an item, confirm what it’s made of, and see how those materials did in the tests.</p>
+    </a>
+    <a href="/items" class="rounded-xl bg-ink-850 border border-line p-5 hover:border-muted transition-colors">
+      <p class="text-[17px] font-semibold">My items</p>
+      <p class="mt-1 text-[14px] leading-5 text-muted">Everything you’ve scanned, grouped into spaces, saved on your device.</p>
+    </a>
+    <a href="/ask" class="rounded-xl bg-ink-850 border border-line p-5 hover:border-muted transition-colors">
+      <p class="text-[17px] font-semibold">Ask</p>
+      <p class="mt-1 text-[14px] leading-5 text-muted">Ask a question and get an answer that cites the NASA papers.</p>
+    </a>
+  </div>
+  <p class="mt-6 text-[13px] leading-5 text-muted">This is NASA spacecraft research, not a home safety rating.</p>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Play the flame loops unless the device asks for reduced motion; then show a play button.
+  (function () {
+    var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.querySelectorAll("video[data-autoplay]").forEach(function (v) {
+      if (still) { v.controls = true; } else { v.play().catch(function () { v.controls = true; }); }
+    });
+  })();
+</script>
+{% endblock %}
