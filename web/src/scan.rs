@@ -63,6 +63,17 @@ pub async fn home(State(app): AppRef) -> Response {
     })
 }
 
+/// The redesigned scan screen, on its own page so the original stays as it is.
+#[derive(Template)]
+#[template(path = "scan_v2.html")]
+pub struct ScanV2Page {
+    pub scanner_on: bool,
+}
+
+pub async fn home_v2(State(app): AppRef) -> Response {
+    render(ScanV2Page { scanner_on: app.vision.may_work() })
+}
+
 #[derive(Template)]
 #[template(path = "items.html")]
 pub struct ItemsPage {

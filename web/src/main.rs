@@ -53,6 +53,7 @@ async fn main() {
     let static_dir = cfg.get("STATIC_DIR").unwrap_or_else(|| "static".into());
     let app = Router::new()
         .route("/", get(scan::home))
+        .route("/scan", get(scan::home_v2))
         .route("/items", get(scan::items))
         .route("/scan/identify", post(scan::identify).layer(DefaultBodyLimit::max(scan::MAX_IMAGE_BYTES + 1024)))
         .route("/scan/result", post(scan::result))
