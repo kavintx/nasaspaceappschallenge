@@ -118,12 +118,171 @@
     });
   }
 
+
+  // ---------- visuals on the result ----------
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  function svg(tag, attrs, kids) {
+    var node = document.createElementNS(SVG_NS, tag);
+    Object.keys(attrs || {}).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+    (kids || []).forEach(function (kid) { if (kid) node.appendChild(kid); });
+    return node;
+  }
+  function svgText(text, attrs) {
+    var node = svg("text", attrs);
+    node.textContent = text;
+    return node;
+  }
+
+  // How a test ended: one colour and one shape each, so colour is never the only cue.
+  var OUTCOMES = [
+    { key: "burned", label: "Burned", color: "#ff6a3d" },
+    { key: "went_out", label: "Went out on its own", color: "#e5b67a" },
+    { key: "no_ignition", label: "Did not ignite", color: "#4fd38a" },
+    { key: "unrecorded", label: "Outcome not recorded", color: "#a5a8b5" },
+  ];
+  function outcomeMark(key, x, y, r) {
+    var o = OUTCOMES.filter(function (it) { return it.key === key; })[0] || OUTCOMES[3];
+    var ring = { stroke: "#090d18", "stroke-width": 1.5 };
+    var mark;
+    if (key === "burned") mark = svg("circle", { cx: x, cy: y, r: r, fill: o.color });
+    else if (key === "went_out") mark = svg("rect", { x: x - r * 0.8, y: y - r * 0.8, width: r * 1.6, height: r * 1.6, fill: o.color, transform: "rotate(45 " + x + " " + y + ")" });
+    else if (key === "no_ignition") mark = svg("path", { d: "M" + x + " " + (y - r) + "L" + (x + r) + " " + (y + r * 0.8) + "L" + (x - r) + " " + (y + r * 0.8) + "Z", fill: o.color });
+    else return svg("circle", { cx: x, cy: y, r: r - 1, fill: "#090d18", stroke: o.color, "stroke-width": 2 });
+    Object.keys(ring).forEach(function (k) { mark.setAttribute(k, ring[k]); });
+    return mark;
+  }
+
+  // Every NASA test of this material placed on an oxygen scale, with the two habitats marked.
+  function oxygenChart(material) {
+    var data = material.chart;
+    if (!data || !data.points || !data.points.length) return null;
+    var points = data.points.slice().sort(function (a, b) { return a.o2 - b.o2; });
+    var lo = Math.min(15, Math.floor(points[0].o2 / 5) * 5);
+    var hi = Math.max(35, Math.ceil(points[points.length - 1].o2 / 5) * 5);
+    var W = 328, left = 12, right = 12, R = 6, step = 14;
+    var plot = W - left - right;
+    function x(v) { return left + ((v - lo) / (hi - lo)) * plot; }
+
+    // Stack marks that would overlap: same column, one above the other.
+    var columns = {}, tallest = 1;
+    points.forEach(function (p) {
+      var col = Math.round(x(p.o2) / (R * 2 + 1));
+      columns[col] = (columns[col] || 0) + 1;
+      p.col = col;
+      p.row = columns[col] - 1;
+      tallest = Math.max(tallest, columns[col]);
+    });
+    var top = 26, rows = Math.min(tallest, 9), base = top + rows * step + 6, H = base + 22;
+    var kids = [];
+
+    // The two habitats: a band one point either side, which is what counts as "at that level".
+    [{ v: 30, name: "Moon Base 30%" }, { v: 21, name: "ISS 21%" }].forEach(function (h) {
+      kids.push(svg("rect", { x: x(h.v - 1), y: top - 8, width: x(h.v + 1) - x(h.v - 1), height: base - top + 8, rx: 3, fill: "#2997ff", opacity: 0.16 }));
+      kids.push(svg("line", { x1: x(h.v), x2: x(h.v), y1: top - 8, y2: base, stroke: "#2997ff", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.8 }));
+      kids.push(svgText(h.name, { x: x(h.v), y: 11, "text-anchor": "middle", "font-size": 10, "font-weight": 600, fill: "#f5f5f7" }));
+    });
+    kids.push(svg("line", { x1: left, x2: W - right, y1: base, y2: base, stroke: "#2a3040", "stroke-width": 1 }));
+    for (var tick = lo; tick <= hi; tick += (hi - lo > 50 ? 20 : hi - lo > 25 ? 10 : 5)) {
+      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: base, y2: base + 4, stroke: "#2a3040", "stroke-width": 1 }));
+      kids.push(svgText(tick + "%", { x: x(tick), y: base + 16, "text-anchor": "middle", "font-size": 10, fill: "#a5a8b5" }));
+    }
+    points.forEach(function (p) {
+      if (p.row >= 9) return; // a very tall column is cut; the count below still includes it
+      var mark = outcomeMark(p.outcome, p.col * (R * 2 + 1), base - 8 - p.row * step, R);
+      var name = (OUTCOMES.filter(function (o) { return o.key === p.outcome; })[0] || OUTCOMES[3]).label;
+      var tip = svg("title", {});
+      tip.textContent = name + " at " + p.o2 + "% oxygen";
+      mark.appendChild(tip);
+      kids.push(mark);
+    });
+
+    var counts = {};
+    points.forEach(function (p) { counts[p.outcome] = (counts[p.outcome] || 0) + 1; });
+    var legend = el("ul", { class: "mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted" }, OUTCOMES.filter(function (o) { return counts[o.key]; }).map(function (o) {
+      return el("li", { class: "flex items-center gap-1.5" }, [
+        svg("svg", { width: 12, height: 12, viewBox: "0 0 12 12", "aria-hidden": "true" }, [outcomeMark(o.key, 6, 6, 4.5)]),
+        el("span", { text: o.label + " · " + counts[o.key] }),
+      ]);
+    }));
+    var summary = OUTCOMES.filter(function (o) { return counts[o.key]; }).map(function (o) { return counts[o.key] + " " + o.label.toLowerCase(); }).join(", ");
+    return el("figure", { class: "o2-chart" }, [
+      el("figcaption", { class: "text-[13px] font-medium", text: "NASA’s tests by oxygen level" }),
+      svg("svg", { viewBox: "0 0 " + W + " " + H, class: "mt-2 w-full h-auto", role: "img", "aria-label": "Tests placed by oxygen level, from " + lo + "% to " + hi + "%: " + summary + "." }, kids),
+      legend,
+      el("p", { class: "mt-1 text-[11px] leading-4 text-dim", text: "Each mark is one test at one oxygen level. Shaded bands are within one point of each habitat’s air."
+        + (data.no_level ? " " + data.no_level + (data.no_level === 1 ? " more test has" : " more tests have") + " no oxygen level recorded." : "") }),
+    ]);
+  }
+
+  // What the item is made of, part by part. Colour follows the material, in a fixed order.
+  var MATERIAL_COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#9085e9"];
+  function materialsFigure(rows) {
+    rows = (rows || []).filter(function (r) { return (r.material || "").trim(); });
+    if (!rows.length) return null;
+    var order = [];
+    rows.forEach(function (r) {
+      var key = r.material.trim().toLowerCase();
+      if (order.indexOf(key) < 0) order.push(key);
+    });
+    function color(name) {
+      var i = order.indexOf(name.trim().toLowerCase());
+      return i < MATERIAL_COLORS.length ? MATERIAL_COLORS[i] : "#8b8f9d";
+    }
+    var parts = [], byPart = {};
+    rows.forEach(function (r) {
+      var part = (r.part || "").trim();
+      if (!byPart[part]) { byPart[part] = []; parts.push(part); }
+      byPart[part].push(r);
+    });
+    var box = el("figure", { class: "mat-figure" }, [el("figcaption", { class: "text-[13px] font-medium", text: "What it’s made of" })]);
+    parts.forEach(function (part) {
+      var list = byPart[part];
+      var known = list.every(function (r) { return typeof r.share === "number" && r.share > 0; });
+      var total = known ? list.reduce(function (sum, r) { return sum + r.share; }, 0) : 0;
+      var line = el("div", { class: "mt-3" }, [part ? el("p", { class: "text-[12px] text-muted", text: part }) : null]);
+      // A bar only when the shares are known; otherwise the materials are listed without sizes.
+      if (known && total > 0) {
+        line.appendChild(el("div", { class: "mat-bar", role: "img", "aria-label": list.map(function (r) { return r.material + " " + Math.round(r.share) + "%"; }).join(", ") },
+          list.map(function (r) {
+            var seg = el("span", { class: "mat-seg", title: r.material + " · " + Math.round(r.share) + "%" });
+            seg.style.width = (r.share / Math.max(total, 100)) * 100 + "%";
+            seg.style.background = color(r.material);
+            return seg;
+          })));
+      }
+      line.appendChild(el("ul", { class: "mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[13px]" }, list.map(function (r) {
+        var dot = el("span", { class: "mat-dot" });
+        dot.style.background = color(r.material);
+        return el("li", { class: "flex items-center gap-1.5" }, [dot, el("span", { text: r.material + (known ? " · " + Math.round(r.share) + "%" : "") })]);
+      })));
+      box.appendChild(line);
+    });
+    box.appendChild(el("p", { class: "mt-3 text-[11px] leading-4 text-dim", text: "Shares are rough estimates of each part, as you confirmed them. They are not measurements." }));
+    return box;
+  }
+
+  // Small pictures for the verdict tiles.
+  var VERDICT_ICON = {
+    burned: "M12 3c1 3-1 4.5-2.5 6.5C8 11.500 7.500 13 7.500 14.500a4.500 4.500 0 0 0 9 0c0-1.500-.6-2.800-1.500-4-.4 1-1 1.600-1.800 2 .5-3-.2-6.500-1.200-9.500z",
+    went_out: "M5 12.500l4.500 4.500L19 7.500",
+    no_ignition: "M12 3l7 3v5.500c0 4.300-2.900 7.700-7 9.500-4.100-1.800-7-5.200-7-9.500V6z",
+    unrecorded: "M12 8v5M12 16.500v.01",
+    not_at_level: "M5 12h14",
+    none: "M9.500 9.500a2.500 2.500 0 1 1 3.700 2.200c-.8.500-1.200 1-1.200 1.800M12 17v.01",
+  };
+  function verdictIcon(code) {
+    return svg("svg", { width: 22, height: 22, viewBox: "0 0 24 24", fill: code === "burned" ? "currentColor" : "none", stroke: "currentColor", "stroke-width": code === "burned" ? 0 : 2, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", class: "verdict-icon" },
+      [svg("path", { d: VERDICT_ICON[code] || VERDICT_ICON.none })]);
+  }
+
   // ---------- result card (used by both pages) ----------
 
   function verdictTile(hab) {
     var look = VERDICT[hab.verdict] || VERDICT.none;
-    return el("div", { class: "verdict-tile " + look.edge }, [
-      el("p", { class: "text-[13px] font-medium", text: hab.name }),
+    return el("div", { class: "verdict-tile " + look.edge + " " + look.text, "data-verdict": VERDICT[hab.verdict] ? hab.verdict : "none" }, [
+      verdictIcon(hab.verdict),
+      el("p", { class: "text-[13px] font-medium text-fg", text: hab.name }),
       el("p", { class: "text-[12px] text-muted", text: hab.air }),
       el("p", { class: "mt-2 text-[19px] leading-6 font-semibold " + look.text, text: hab.label }),
       hab.detail ? el("p", { class: "mt-1 text-[12px] leading-4 text-muted", text: hab.detail }) : null,
@@ -174,6 +333,8 @@
       }
       section.appendChild(el("div", { class: "mt-3 grid grid-cols-2 gap-3" }, material.habitats.map(verdictTile)));
       section.appendChild(el("p", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Matched on oxygen level only. Each test’s pressure is on its line below." }));
+      var chart = oxygenChart(material);
+      if (chart) section.appendChild(chart);
       section.appendChild(evidenceList(material.evidence));
     } else {
       var why = result.data !== "ok"
@@ -351,6 +512,8 @@
         show("busy");
         prepare(file).then(function (photo) {
           state.thumb = photo.thumb;
+          if (state.preview) URL.revokeObjectURL(state.preview);
+          state.preview = URL.createObjectURL(photo.blob); // this tab's memory only, never stored
           root.querySelector("#busy-thumb").src = photo.thumb;
           return fetch("/scan/identify?mode=" + mode, { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: photo.blob });
         }).then(function (r) {
@@ -481,11 +644,18 @@
       var box = steps.result;
       clear(box);
       var title = (state.item || "").trim() || names.join(", ");
-      box.appendChild(el("div", { class: "flex items-center gap-4" }, [
-        state.thumb ? el("img", { src: state.thumb, alt: "", class: "w-16 h-16 rounded-xl object-cover bg-ink-800 shrink-0" }) : null,
-        el("h2", { class: "text-[26px] leading-8 font-semibold break-words min-w-0", text: title }),
-      ]));
+      if (state.preview || state.thumb) {
+        box.appendChild(el("div", { class: "scan-hero" }, [
+          el("img", { src: state.preview || state.thumb, alt: "" }),
+          el("span", { class: "scan-hero-sweep", "aria-hidden": "true" }),
+          el("h2", { class: "scan-hero-title", text: title }),
+        ]));
+      } else {
+        box.appendChild(el("h2", { class: "text-[26px] leading-8 font-semibold break-words min-w-0", text: title }));
+      }
       box.appendChild(summaryBlock(state.summary));
+      var made = materialsFigure(state.rows);
+      if (made) box.appendChild(made);
       box.appendChild(resultBody(result));
 
       var space = el("select", { class: "field h-11 text-[16px]", "aria-label": "Space" }, SPACES.map(function (name) { return el("option", { value: name, text: name }); }));
