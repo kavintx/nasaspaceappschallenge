@@ -5,7 +5,6 @@
 mod admin;
 mod ai;
 mod air;
-mod auth;
 mod backend;
 mod catalog;
 mod config;
@@ -68,12 +67,6 @@ async fn main() {
         .route("/experiments/{id}", get(views::detail))
         .route("/compare", get(views::compare))
         .route("/ask", get(views::ask))
-        .route("/account", get(auth::account))
-        .route("/login", get(auth::login_page))
-        .route("/signup", get(auth::signup_page))
-        .route("/account/login", post(auth::login))
-        .route("/account/signup", post(auth::signup))
-        .route("/account/logout", post(auth::logout))
         .route("/papers", get(views::papers))
         .route("/papers/{id}", get(views::paper))
         .route("/ask/stream", post(admin::chat_stream))
