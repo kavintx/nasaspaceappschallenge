@@ -101,6 +101,9 @@ def setup_wizard(env: Path) -> None:
 
     Keys go straight into web/.env, are never echoed, and never leave this machine.
     """
+    if not sys.stdin.isatty():
+        print("  (no terminal available — edit web/.env directly, see README)")
+        return
     print("\nSetup — what should identify your photos?")
     print("  1) anthropic   Claude on api.anthropic.com (needs an API key)")
     print("  2) openai      GPT-4o or any OpenAI-compatible endpoint (needs an API key)")
