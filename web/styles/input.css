@@ -73,9 +73,9 @@ html.motion-off .flame-ball, html.motion-off .flame-core { animation: none; }
 .cscroll-kicker { display: block; font-size: clamp(20px, 3vw, 34px); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
 .cscroll-title { display: block; margin-top: 0.25rem; font-size: clamp(44px, min(11vw, 13vh), 104px); line-height: 1; font-weight: 700; letter-spacing: -0.03em; background: linear-gradient(180deg, #ffffff 30%, #7fc0ff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 /* The screen is laid out at its final size, the full window, and starts scaled down. */
-.cscroll-card { position: absolute; inset: 0; padding: 0.4rem; border: 4px solid #6c6c6c; border-radius: 30px; background: #222222; transform: translate3d(0, 19vh, 0) rotateX(20deg) scale(0.66); transform-origin: 50% 50%; will-change: transform; backface-visibility: hidden;
+.cscroll-card { position: absolute; inset: 0; overflow: hidden; border-radius: 30px; background: #000; transform: translate3d(0, 19vh, 0) rotateX(20deg) scale(0.66); transform-origin: 50% 50%; will-change: transform; backface-visibility: hidden;
   box-shadow: 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003; }
-.cscroll-screen { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 1.4rem; background: #000; }
+.cscroll-screen { position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; }
 .cscroll-screen video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .cscroll-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 3rem 1rem 1.6rem; text-align: center; font-size: clamp(15px, 1.9vw, 26px); line-height: 1.4; color: #f5f5f7; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.75) 70%); }
 .cscroll-caption span { display: block; transition: opacity 0.35s ease; }
@@ -85,7 +85,7 @@ html.motion-off .flame-ball, html.motion-off .flame-core { animation: none; }
 .intro-credit { position: absolute; right: 16px; top: 12px; font-size: 10px; color: rgba(165, 168, 181, 0.7); }
 @media (min-width: 768px) {
   .cscroll { height: calc(100vh + 1500px); height: calc(100svh + 1500px); }
-  .cscroll-card { padding: 0.75rem; transform: translate3d(0, 21vh, 0) rotateX(20deg) scale(0.6); }
+  .cscroll-card { transform: translate3d(0, 21vh, 0) rotateX(20deg) scale(0.6); }
 }
 /* No scripts, or animations switched off: no pinning; the title sits above a flat screen. */
 html:not(.js) .cscroll, .cscroll.is-flat { height: auto; }
