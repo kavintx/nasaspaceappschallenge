@@ -94,7 +94,7 @@ impl Vision {
             http: reqwest::Client::new(),
             ollama_url: cfg.get_file_first("OLLAMA_BASE_URL").unwrap_or_else(|| "http://127.0.0.1:11434".into()).trim_end_matches('/').to_string(),
             ollama_model: cfg.get_file_first("OLLAMA_VISION_MODEL").unwrap_or_else(|| "llama3.2-vision".into()),
-            anthropic_key: cfg.get_file_first("ANTHROPIC_API_KEY"),
+            anthropic_key: cfg.get_file_first("ANTHROPIC_API_KEY").map(|k| k.trim().trim_matches('"').to_string()).filter(|k| !k.is_empty()),
             anthropic_model: cfg.get_file_first("ANTHROPIC_MODEL").unwrap_or_else(|| "claude-haiku-5-5".into()),
             anthropic_workspace: cfg.get_file_first("ANTHROPIC_WORKSPACE_ID"),
             openai_key: cfg.get_file_first("OPENAI_API_KEY"),
@@ -314,7 +314,9 @@ impl Vision {
             // The API's own error text describes the request; it never echoes the key.
             let detail = reply.pointer("/error/message").and_then(|m| m.as_str()).unwrap_or("no details");
             return Err(Attempt::Failed(match status {
-                401 | 403 => "Anthropic rejected the API key. Check ANTHROPIC_API_KEY in web/.env.".to_string(),
+                401 => "Anthropic rejected the API key. Check ANTHROPIC_API_KEY in web/.env.".to_string(),
+                // Allowed key, refused request: say what Anthropic said, so it can be fixed.
+                403 => format!("Anthropic refused the request (403): {detail}"),
                 404 => format!("Anthropic doesn't know the model \"{}\". Check ANTHROPIC_MODEL.", self.anthropic_model),
                 400 if detail.contains("anthropic-workspace-id") => {
                     "This Anthropic key isn't tied to a workspace. Set ANTHROPIC_WORKSPACE_ID in web/.env.".to_string()
