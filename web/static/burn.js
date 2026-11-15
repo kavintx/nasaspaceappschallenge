@@ -357,6 +357,68 @@
       [svg("path", { d: VERDICT_ICON[code] || VERDICT_ICON.none })]);
   }
 
+
+  // ---------- tests from other sources (optional layer) ----------
+
+  // The oxygen scale for a limiting oxygen index: below the mark the material goes out,
+  // above it it keeps burning. The two habitats are marked for comparison.
+  function oxygenLimitBar(limit) {
+    var W = 320, left = 10, right = 10, y = 26, h = 12;
+    function x(v) { return left + (Math.max(0, Math.min(100, v)) / 100) * (W - left - right); }
+    var kids = [
+      svg("rect", { x: x(0), y: y, width: x(limit) - x(0), height: h, rx: 4, fill: "#4fd38a", opacity: 0.85 }),
+      svg("rect", { x: x(limit) + 2, y: y, width: Math.max(0, x(100) - x(limit) - 2), height: h, rx: 4, fill: "#ff6a3d", opacity: 0.9 }),
+    ];
+    [{ v: 21, name: "ISS" }, { v: 30, name: "Moon Base" }].forEach(function (hab, i) {
+      kids.push(svg("line", { x1: x(hab.v), x2: x(hab.v), y1: y - 6, y2: y + h + 6, stroke: "#f5f5f7", "stroke-width": 1.5, "stroke-dasharray": "2 2" }));
+      kids.push(svgText(hab.name + " " + hab.v + "%", { x: x(hab.v), y: i === 0 ? 12 : y + h + 18, "text-anchor": i === 0 ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#f5f5f7" }));
+    });
+    kids.push(svgText("0%", { x: x(0), y: y + h + 18, "font-size": 9, fill: "#a5a8b5" }));
+    kids.push(svgText("100% oxygen", { x: x(100), y: 12, "text-anchor": "end", "font-size": 9, fill: "#a5a8b5" }));
+    return svg("svg", { viewBox: "0 0 " + W + " 60", class: "mt-2 w-full h-auto", role: "img",
+      "aria-label": "Oxygen scale from 0 to 100 percent. Goes out below " + limit + " percent, keeps burning above. ISS air is 21 percent, Moon Base 30 percent." }, kids);
+  }
+
+  function otherRow(row) {
+    var limit = typeof row.limit === "number" ? row.limit : null;
+    var long = /[a-z]{4}/i.test(String(row.value)) && /%/.test(String(row.value));
+    var value = String(row.value) + (row.unit && row.unit !== "rating" && !long ? (/^%/.test(row.unit) ? row.unit : " " + row.unit) : "");
+    var kids = [
+      el("div", { class: "flex flex-wrap items-baseline gap-x-2 gap-y-1" }, [
+        el("span", { class: "source-chip", text: row.publisher }),
+        el("span", { class: "text-[12px] text-muted", text: row.test + (row.standard && row.standard.toLowerCase().indexOf(row.test.toLowerCase()) !== 0 ? " · " + row.standard : "") }),
+      ]),
+      el("p", { class: long ? "mt-1.5 text-[16px] leading-6 font-semibold" : "mt-1.5 text-[20px] leading-6 font-semibold", text: value }),
+    ];
+    if (limit !== null && limit > 0 && limit <= 100) {
+      kids.push(el("p", { class: "mt-1 text-[13px] leading-5 text-muted", text: "In this test it stopped burning on its own at about " + limit + "% oxygen and below." }));
+      kids.push(oxygenLimitBar(limit));
+      kids.push(el("ul", { class: "mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted" }, [
+        legendRow("#4fd38a", "Went out"), legendRow("#ff6a3d", "Kept burning"),
+      ]));
+    }
+    var facts = [row.conditions, row.gravity === "microgravity" ? "Run in weightlessness" : row.gravity === "Earth" ? "Run on Earth" : null, row.note].filter(Boolean);
+    if (facts.length) kids.push(el("p", { class: "mt-2 text-[12px] leading-4 text-dim", text: facts.join(" · ") }));
+    kids.push(el("p", { class: "mt-2 text-[12px] leading-4" }, [
+      link(row.source_title, row.url),
+      row.page ? el("span", { class: "text-dim", text: " · " + row.page }) : null,
+    ]));
+    return el("li", { class: "other-row" }, kids);
+  }
+
+  function otherTests(material) {
+    var rows = material.other || [];
+    if (!rows.length) return null;
+    var publishers = [];
+    rows.forEach(function (r) { if (publishers.indexOf(r.publisher) < 0) publishers.push(r.publisher); });
+    return el("div", { class: "other-block" }, [
+      el("p", { class: "text-[15px] font-semibold", text: "Tests from other sources" }),
+      el("p", { class: "mt-1 text-[12px] leading-4 text-dim", text: rows.length + (rows.length === 1 ? " published result from " : " published results from ") + publishers.join(", ")
+        + ". These are not in the database above. Most were run on Earth, where flames behave differently than in weightlessness; the ones run in weightlessness say so. Samples differ in grade, thickness and shape, so results for one material can disagree." }),
+      el("ul", { class: "mt-3 space-y-3" }, rows.map(otherRow)),
+    ]);
+  }
+
   // ---------- result card (used by both pages) ----------
 
   function verdictTile(hab) {
@@ -444,6 +506,8 @@
         section.appendChild(box);
       }
     }
+    var others = otherTests(material);
+    if (others) section.appendChild(others);
     section.appendChild(gasBlock(material, result.sources));
     return section;
   }
