@@ -28,4 +28,15 @@ impl Config {
             .or_else(|| self.0.get(key).cloned())
             .filter(|v| !v.is_empty())
     }
+
+    /// Same as `get`, but the `.env` file wins over process env vars. Vision
+    /// settings use this: the settings page rewrites `.env`, and the running
+    /// process still carries the values the container was launched with.
+    pub fn get_file_first(&self, key: &str) -> Option<String> {
+        self.0
+            .get(key)
+            .cloned()
+            .or_else(|| std::env::var(key).ok())
+            .filter(|v| !v.is_empty())
+    }
 }

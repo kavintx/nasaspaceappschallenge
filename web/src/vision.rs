@@ -1,7 +1,7 @@
 //! Photo identification for Burn Scan: one prompt, one JSON shape, two providers.
 //!
-//!   VISION_PROVIDER = "backend" | "ollama" | "anthropic"   (default: ollama)
-//!   VISION_FALLBACK = "anthropic" | "none"     (default: none)
+//!   VISION_PROVIDER = "backend" | "ollama" | "anthropic" | "openai"   (default: ollama)
+//!   VISION_FALLBACK = "anthropic" | "openai" | "none"     (default: none)
 //!
 //! - backend: the research backend's POST /api/v1/ai/scan (fire-intel). Uses the same
 //!   API_BASE_URL + API_AUTH_TOKEN pair the rest of the site already calls, and the
@@ -11,6 +11,9 @@
 //! - anthropic: the Anthropic Messages API with a base64 image block. Key from
 //!   ANTHROPIC_API_KEY, model from ANTHROPIC_MODEL (default claude-haiku-5-5). A key that
 //!   isn't tied to one workspace also needs ANTHROPIC_WORKSPACE_ID.
+//! - openai: the OpenAI chat-completions API with an image data URL (any endpoint that
+//!   speaks the same protocol works — set OPENAI_BASE_URL). Key from OPENAI_API_KEY,
+//!   model from OPENAI_VISION_MODEL (default gpt-4o-mini).
 //!
 //! If the first provider errors, takes longer than 20 s, or answers with JSON that
 //! doesn't match the schema, the fallback is tried once when one is set. The reply's
@@ -34,6 +37,7 @@ const ANTHROPIC_VERSION: &str = "2026-10-21";
 enum Provider {
     Ollama,
     Anthropic,
+    OpenAI,
     Backend,
 }
 
@@ -54,6 +58,10 @@ pub struct Vision {
     anthropic_model: String,
     /// Sent as `anthropic-workspace-id` when set. Needed by keys not scoped to a workspace.
     anthropic_workspace: Option<String>,
+    openai_key: Option<String>,
+    openai_model: String,
+    /// Chat-completions root; any OpenAI-compatible server works.
+    openai_url: String,
     /// Provider::Backend target: the same base + token the rest of the site uses.
     api_base: Option<String>,
     api_token: Option<String>,
@@ -69,30 +77,35 @@ enum Attempt {
 
 impl Vision {
     pub fn from_cfg(cfg: &Config) -> Self {
-        let named = |key: &str| cfg.get(key).map(|v| v.trim().to_lowercase());
+        let named = |key: &str| cfg.get_file_first(key).map(|v| v.trim().to_lowercase());
         let primary = match named("VISION_PROVIDER").as_deref() {
             Some("anthropic") => Provider::Anthropic,
+            Some("openai") => Provider::OpenAI,
             Some("backend") => Provider::Backend,
             _ => Provider::Ollama,
         };
         let fallback = match named("VISION_FALLBACK").as_deref() {
             Some("anthropic") if primary != Provider::Anthropic => Some(Provider::Anthropic),
+            Some("openai") if primary != Provider::OpenAI => Some(Provider::OpenAI),
             _ => None,
         };
         let vision = Vision {
             primary,
             fallback,
             http: reqwest::Client::new(),
-            ollama_url: cfg.get("OLLAMA_BASE_URL").unwrap_or_else(|| "http://127.0.0.1:11434".into()).trim_end_matches('/').to_string(),
-            ollama_model: cfg.get("OLLAMA_VISION_MODEL").unwrap_or_else(|| "llama3.2-vision".into()),
-            anthropic_key: cfg.get("ANTHROPIC_API_KEY"),
-            anthropic_model: cfg.get("ANTHROPIC_MODEL").unwrap_or_else(|| "claude-haiku-5-5".into()),
-            anthropic_workspace: cfg.get("ANTHROPIC_WORKSPACE_ID"),
+            ollama_url: cfg.get_file_first("OLLAMA_BASE_URL").unwrap_or_else(|| "http://127.0.0.1:11434".into()).trim_end_matches('/').to_string(),
+            ollama_model: cfg.get_file_first("OLLAMA_VISION_MODEL").unwrap_or_else(|| "llama3.2-vision".into()),
+            anthropic_key: cfg.get_file_first("ANTHROPIC_API_KEY"),
+            anthropic_model: cfg.get_file_first("ANTHROPIC_MODEL").unwrap_or_else(|| "claude-haiku-5-5".into()),
+            anthropic_workspace: cfg.get_file_first("ANTHROPIC_WORKSPACE_ID"),
+            openai_key: cfg.get_file_first("OPENAI_API_KEY"),
+            openai_model: cfg.get_file_first("OPENAI_VISION_MODEL").unwrap_or_else(|| "gpt-4o-mini".into()),
+            openai_url: cfg.get_file_first("OPENAI_BASE_URL").unwrap_or_else(|| "https://api.openai.com/v1".into()).trim_end_matches('/').to_string(),
             // Same rule as backend.rs: the backend is enabled by the token.
-            api_token: cfg.get("API_AUTH_TOKEN"),
+            api_token: cfg.get_file_first("API_AUTH_TOKEN"),
             api_base: cfg
                 .get("API_AUTH_TOKEN")
-                .map(|_| cfg.get("API_BASE_URL").unwrap_or_else(|| "http://127.0.0.1:8080".into()).trim_end_matches('/').to_string()),
+                .map(|_| cfg.get_file_first("API_BASE_URL").unwrap_or_else(|| "http://127.0.0.1:8080".into()).trim_end_matches('/').to_string()),
         };
         // Names only. The key itself is never printed.
         println!(
@@ -102,6 +115,9 @@ impl Vision {
         );
         if (primary == Provider::Anthropic || fallback == Some(Provider::Anthropic)) && vision.anthropic_key.is_none() {
             println!("photo scanner: anthropic is not configured (ANTHROPIC_API_KEY is not set in web/.env).");
+        }
+        if (primary == Provider::OpenAI || fallback == Some(Provider::OpenAI)) && vision.openai_key.is_none() {
+            println!("photo scanner: openai is not configured (OPENAI_API_KEY is not set in web/.env).");
         }
         if (primary == Provider::Backend || fallback == Some(Provider::Backend)) && vision.api_token.is_none() {
             println!("photo scanner: research backend is not configured (API_AUTH_TOKEN is not set in web/.env).");
@@ -113,8 +129,22 @@ impl Vision {
         match p {
             Provider::Ollama => format!("ollama:{}", self.ollama_model),
             Provider::Anthropic => format!("anthropic:{}", self.anthropic_model),
+            Provider::OpenAI => format!("openai:{}", self.openai_model),
             Provider::Backend => "research backend".to_string(),
         }
+    }
+
+    /// One line for the settings page: which providers are armed. Names only.
+    pub fn status(&self) -> String {
+        match self.fallback {
+            Some(f) => format!("{} (fallback {})", self.label(self.primary), self.label(f)),
+            None => self.label(self.primary).clone(),
+        }
+    }
+
+    /// The provider names, for the settings page's summary after a save.
+    pub fn provider_name(&self) -> String {
+        self.label(self.primary)
     }
 
     /// False only when the page can already tell no provider will answer.
@@ -122,6 +152,7 @@ impl Vision {
         let usable = |p: Provider| match p {
             Provider::Ollama => true,
             Provider::Anthropic => self.anthropic_key.is_some(),
+            Provider::OpenAI => self.openai_key.is_some(),
             Provider::Backend => self.api_token.is_some(),
         };
         usable(self.primary) || self.fallback.is_some_and(usable)
@@ -163,6 +194,7 @@ impl Vision {
         let raw = match provider {
             Provider::Ollama => self.ask_ollama(data, mode).await,
             Provider::Anthropic => self.ask_anthropic(data, mime, mode).await,
+            Provider::OpenAI => self.ask_openai(data, mime, mode).await,
             Provider::Backend => self.ask_backend(data, mime, mode).await,
         };
         match raw {
@@ -260,6 +292,55 @@ impl Vision {
             .and_then(|c| c.as_str())
             .map(str::to_string)
             .ok_or_else(|| Attempt::Failed("Ollama sent an empty reply.".into()))
+    }
+
+    /// OpenAI chat completions with the photo as an image data URL, and the answer
+    /// forced into our schema via structured outputs. The same protocol covers many
+    /// other servers — OPENAI_BASE_URL points at whichever one is configured.
+    async fn ask_openai(&self, data: &str, mime: &str, mode: &str) -> Result<String, Attempt> {
+        let key = self.openai_key.as_deref().ok_or(Attempt::NotConfigured)?;
+        let body = json!({
+            "model": self.openai_model,
+            "max_tokens": 4000,
+            "response_format": { "type": "json_schema", "json_schema": { "name": "burn_scan", "schema": schema() } },
+            "messages": [{ "role": "user", "content": [
+                { "type": "text", "text": prompt(mode) },
+                { "type": "image_url", "image_url": { "url": format!("data:{mime};base64,{data}") } },
+            ] }],
+        });
+        let resp = self
+            .http
+            .post(format!("{}/chat/completions", self.openai_url))
+            .bearer_auth(key)
+            .json(&body)
+            .timeout(TIMEOUT)
+            .send()
+            .await
+            .map_err(|e| {
+                if e.is_timeout() {
+                    Attempt::Failed(format!("OpenAI took longer than {} seconds.", TIMEOUT.as_secs()))
+                } else {
+                    Attempt::Failed(format!("Couldn't reach the OpenAI endpoint at {}.", self.openai_url))
+                }
+            })?;
+        let status = resp.status();
+        let reply: Value = resp.json().await.unwrap_or(Value::Null);
+        if status.as_u16() == 401 {
+            return Err(Attempt::Failed("OpenAI rejected the API key. Check OPENAI_API_KEY in web/.env.".into()));
+        }
+        if !status.is_success() {
+            let why = reply
+                .pointer("/error/message")
+                .and_then(Value::as_str)
+                .unwrap_or("no details");
+            return Err(Attempt::Failed(format!("OpenAI returned {}: {why}.", status.as_u16())));
+        }
+        reply
+            .pointer("/choices/0/message/content")
+            .and_then(|c| c.as_str())
+            .map(str::to_string)
+            .filter(|s| !s.is_empty())
+            .ok_or_else(|| Attempt::Failed("OpenAI sent an empty reply.".into()))
     }
 
     async fn ask_anthropic(&self, data: &str, mime: &str, mode: &str) -> Result<String, Attempt> {
