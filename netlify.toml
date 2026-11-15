@@ -1,0 +1,25 @@
+# Netlify setup. The website lives in web/, so the build runs there (base).
+#
+# Netlify cannot keep a server running, so the Rust server is built as one function
+# (src/lambda.rs) and every page is sent to it. Files in static/ are served directly by
+# Netlify and never reach the function.
+#
+# Settings the function needs are added in Netlify under
+# Site configuration > Environment variables (never in this file):
+#   READ_ONLY=true          always, on a public site
+#   ANTHROPIC_API_KEY=...   turns the photo scanner on
+#   VISION_PROVIDER=anthropic
+
+[build]
+  base = "web"
+  command = "bash netlify-build.sh"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+
+# Existing files (dist/static/...) win over this rule; everything else goes to the server.
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/app"
+  status = 200

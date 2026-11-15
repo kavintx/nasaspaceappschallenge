@@ -9,6 +9,7 @@ mod auth;
 mod backend;
 mod catalog;
 mod config;
+mod lambda;
 mod scan;
 mod setup;
 mod store;
@@ -91,6 +92,12 @@ async fn main() {
         // Gzip pages, CSS and scripts. Video is already compressed and must stay seekable.
         .layer(CompressionLayer::new().compress_when(DefaultPredicate::new().and(NotForContentType::new("video/"))))
         .with_state(state);
+
+    // On a serverless host (Netlify Functions) there is no port: requests arrive as events.
+    if let Ok(runtime_api) = std::env::var("AWS_LAMBDA_RUNTIME_API") {
+        lambda::run(app, runtime_api).await;
+        return;
+    }
 
     // Use PORT if set; otherwise start at 3100 and step past ports that are taken.
     let fixed = cfg.get("PORT").and_then(|p| p.trim().parse::<u16>().ok());
