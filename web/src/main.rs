@@ -10,7 +10,6 @@ mod backend;
 mod catalog;
 mod config;
 mod scan;
-mod settings;
 mod store;
 mod views;
 mod vision;
@@ -30,8 +29,8 @@ pub struct AppState {
     pub store: store::Store,
     /// The fire-intel backend (AI, pipeline, editing). None until API_AUTH_TOKEN is set.
     pub backend: Option<backend::Backend>,
-    /// Photo identification for Burn Scan (Ollama, Anthropic, OpenAI or the backend).
-    /// Swappable at runtime: the settings page rewrites web/.env and reloads this.
+    /// Photo identification for Burn Scan (Ollama, Anthropic or OpenAI — always
+    /// the machine's own keys). Chosen at startup by `main.py --configure` or web/.env.
     pub vision: tokio::sync::RwLock<vision::Vision>,
     /// Cached experiment catalog and when it was built.
     pub catalog: tokio::sync::Mutex<Option<Arc<catalog::Catalog>>>,
@@ -73,7 +72,6 @@ async fn main() {
         .route("/account/login", post(auth::login))
         .route("/account/signup", post(auth::signup))
         .route("/account/logout", post(auth::logout))
-        .route("/settings", get(settings::page).post(settings::save))
         .route("/papers", get(views::papers))
         .route("/papers/{id}", get(views::paper))
         .route("/ask/stream", post(admin::chat_stream))

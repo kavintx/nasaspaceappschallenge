@@ -4,10 +4,12 @@
 Builds and runs the site in Docker, so nothing Rust needs to be installed
 (Windows machines with Smart App Control can't run cargo natively at all).
 
-    python main.py                    # the dashboard
-    python main.py --backend          # + the research backend (scan, accounts, AI)
+    python main.py                    # first run asks a few questions, then builds
+                                      # and starts the dashboard AND the research
+                                      # backend (cloning it if you don't have it yet)
     python main.py --stop             # stop what this script started
     python main.py --logs             # follow the dashboard's log
+    python main.py --configure        # re-run the scanner setup questions
 
 Requires Python 3.12 or newer. What gets built happens inside a
 rust:1-bookworm container; the compiled artifacts and the cargo registry
@@ -17,6 +19,7 @@ live in named Docker volumes, so the second build takes seconds, not minutes.
 import argparse
 import contextlib
 import getpass
+import secrets
 import shutil
 import socket
 import subprocess
@@ -25,6 +28,8 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+FIRESSET_URL = "https://github.com/MonsterLXW/Fireset"
 
 REPO = Path(__file__).resolve().parent
 IMAGE = "rust:1-bookworm"
@@ -101,13 +106,15 @@ def setup_wizard(env: Path) -> None:
 
     Keys go straight into web/.env, are never echoed, and never leave this machine.
     """
+    if not sys.stdin.isatty():
+        print("  (no terminal available — edit web/.env directly, see README)")
+        return
     print("\nSetup — what should identify your photos?")
     print("  1) anthropic   Claude on api.anthropic.com (needs an API key)")
     print("  2) openai      GPT-4o or any OpenAI-compatible endpoint (needs an API key)")
-    print("  3) ollama      a model running locally on this machine (free, no key)")
-    print("  4) backend     the research backend's model (needs the Fireset repo)")
-    print("  5) none        just browse for now; scanning says 'not connected'")
-    match ask("scanner provider", "5"):
+    print("  3) ollama      a model running locally on this machine (free, but you must install it)")
+    print("  4) none        just browse for now; scanning says 'not connected'")
+    match ask("scanner provider", "4"):
         case "1" | "anthropic":
             provider = "anthropic"
             key = getpass.getpass("  ANTHROPIC_API_KEY (hidden, Enter to skip): ").strip()
@@ -128,12 +135,6 @@ def setup_wizard(env: Path) -> None:
             print("  (install ollama.com and `ollama pull <model>` if you haven't)")
             rewrite_env_line(env, "OLLAMA_BASE_URL", ask("ollama address", "http://host.docker.internal:11434"))
             rewrite_env_line(env, "OLLAMA_VISION_MODEL", ask("ollama vision model", "llama3.2-vision"))
-        case "4" | "backend":
-            provider = "backend"
-            rewrite_env_line(env, "API_BASE_URL", ask("backend address", "http://host.docker.internal:8080"))
-            token = getpass.getpass("  backend API_AUTH_TOKEN (from your Fireset .env, Enter to skip): ").strip()
-            if token:
-                rewrite_env_line(env, "API_AUTH_TOKEN", token)
         case _:
             provider = ""
     if provider:
@@ -147,14 +148,61 @@ def setup_wizard(env: Path) -> None:
             rewrite_env_line(env, "VISION_FALLBACK", "anthropic")
         else:
             rewrite_env_line(env, "VISION_FALLBACK", "none")
-        # The rest of the site (Ask, habitat risk, pipeline) always wants the backend.
-        if provider != "backend" and not env_value(env, "API_AUTH_TOKEN") \
-                and ask("connect the research backend too? unlocks Ask/scan-by-model (y/N)", "n").lower().startswith("y"):
-            rewrite_env_line(env, "API_BASE_URL", ask("backend address", "http://host.docker.internal:8080"))
-            token = getpass.getpass("  backend API_AUTH_TOKEN (hidden, Enter to skip): ").strip()
-            if token:
-                rewrite_env_line(env, "API_AUTH_TOKEN", token)
-    print(f"  saved to web/.env — keys are never printed or committed.")
+        print("  saved to web/.env — keys are never printed or committed.")
+    else:
+        print("  no scanner chosen — you can pick one any time with:  python main.py --configure")
+
+
+def ensure_fireset() -> Path | None:
+    """The research backend repo, cloned next to this one when it is missing."""
+    fireset = REPO.parent / "fireset"
+    if (fireset / "Cargo.toml").is_file():
+        return fireset
+    if not sys.stdin.isatty():
+        print("  (no fireset checkout and no terminal to ask about cloning — running dashboard only)")
+        return None
+    if not shutil.which("git"):
+        print("  git is not on PATH — skipping the research backend for now.")
+        return None
+    if ask(f"clone the research backend ({FIRESSET_URL}) to ../fireset? (Y/n)", "y").lower().startswith("n"):
+        return None
+    print(f"  cloning {FIRESSET_URL} …")
+    result = subprocess.run(["git", "clone", "--", FIRESSET_URL, str(fireset)])
+    if result.returncode != 0 or not (fireset / "Cargo.toml").is_file():
+        print("  clone failed — the dashboard still runs; scan and AI answers will say 'backend not connected'.")
+        return None
+    return fireset
+
+
+def provision_backend(fireset: Path, port: int) -> str:
+    """Give the backend a working .env. The token is generated here, so teammates
+    never trade secrets — the same value goes into both .env files. DATABASE_URL
+    and the model address are optional at this stage and can be added later."""
+    env = fireset / ".env"
+    if not env.is_file():
+        env.write_text((fireset / ".env.example").read_text(encoding="utf-8"), encoding="utf-8")
+        print("\nBackend setup (Ask, AI answers, accounts, scanning by model):")
+        db = ask("  Supabase Session-pooler connection string (Enter to skip — ask a teammate for it)", "")
+        if db:
+            rewrite_env_line(env, "DATABASE_URL", db)
+        model = ask("  model server address, e.g. the vLLM/cloudflared URL (Enter to skip)", "")
+        if model:
+            rewrite_env_line(env, "VLLM_BASE_URL", model)
+    token = env_value(env, "API_AUTH_TOKEN")
+    if not token:
+        token = secrets.token_hex(24)
+        rewrite_env_line(env, "API_AUTH_TOKEN", token)
+        print("  generated a shared site token (never shown, written to both .env files)")
+    return token
+
+
+def sync_web_to_backend(env: Path, token: str, port: int) -> None:
+    """The dashboard reaches its container sibling via host.docker.internal."""
+    current = env_value(env, "API_BASE_URL", "") or ""
+    if not current or "127.0.0.1" in current or "localhost" in current:
+        rewrite_env_line(env, "API_BASE_URL", f"http://host.docker.internal:{port}")
+    if not env_value(env, "API_AUTH_TOKEN"):
+        rewrite_env_line(env, "API_AUTH_TOKEN", token)
 
 
 def configure(env: Path) -> None:
@@ -262,9 +310,6 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Build and run Flame in Freefall in Docker.")
     ap.add_argument("--port", type=int, default=None,
                     help="port for the dashboard (default: PORT in web/.env, else 3101)")
-    ap.add_argument("--backend", nargs="?", const="", metavar="FIRESET_PATH",
-                    help="also build and run the research backend; optional path to a Fireset "
-                         "checkout (default: a 'fireset' folder next to this repository)")
     ap.add_argument("--backend-port", type=int, default=8080, help="port for the backend (default 8080)")
     ap.add_argument("--no-build", action="store_true", help="skip cargo build, run existing binaries")
     ap.add_argument("--stop", action="store_true", help="stop the containers this script started")
@@ -293,37 +338,20 @@ def main() -> None:
 
     first_run = not (REPO / "web" / ".env").is_file()
     web_env = ensure_web_env()
-    if first_run and sys.stdin.isatty():
-        setup_wizard(web_env)
     port = args.port or int(env_value(web_env, "PORT", "3101"))
 
-    fireset: Path | None = None
-    match args.backend:
-        case "":
-            fireset = REPO.parent / "fireset"
-        case None:
-            pass
-        case other:
-            fireset = Path(other).resolve()
-    if fireset and not (fireset / "Cargo.toml").is_file():
-        sys.exit(
-            f"error: no Rust project at {fireset}.\n"
-            "Clone it first:  git clone https://github.com/MonsterLXW/Fireset ../fireset\n"
-            "…or drop --backend to run the dashboard alone (browsing works, scanning does not)."
-        )
+    # One command, whole stack: the backend is part of setup, not a flag.
+    fireset = ensure_fireset()
+    token = provision_backend(fireset, args.backend_port) if fireset else None
+    if first_run:
+        setup_wizard(web_env)
+    if fireset:
+        sync_web_to_backend(web_env, token, args.backend_port)
 
     if not args.no_build:
         build_web()
         if fireset:
             build_backend(fireset)
-
-    # The dashboard talks to the backend from inside its own container, where the
-    # host is reachable as host.docker.internal. Fix the usual copy-paste default.
-    if fireset:
-        current = env_value(web_env, "API_BASE_URL", "") or ""
-        if not current or "127.0.0.1" in current or "localhost" in current:
-            rewrite_env_line(web_env, "API_BASE_URL", f"http://host.docker.internal:{args.backend_port}")
-            print(f"  web/.env: API_BASE_URL set to host.docker.internal:{args.backend_port}")
 
     if fireset:
         run_backend(fireset, args.backend_port)
@@ -335,7 +363,8 @@ def main() -> None:
         if fireset:
             print(f"  research backend:   http://localhost:{args.backend_port}")
         else:
-            print("  browsing works; for scanning, accounts and AI answers re-run with:  python main.py --backend")
+            print("  browsing works; Ask, accounts and scanning-by-model need the")
+            print("  research backend — run this again next to a Fireset checkout.")
         lan_hint(port)
 
 
