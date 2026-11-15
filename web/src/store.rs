@@ -95,6 +95,11 @@ impl Store {
         self.rows("conditions", &[("select", "*".into()), ("order", "id.asc".into())]).await
     }
 
+    /// Other names for materials (alias -> the name the tests use), kept by the backend.
+    pub async fn synonyms(&self) -> StoreResult<Vec<Value>> {
+        self.rows("material_synonyms", &[("select", "alias,canonical".into())]).await
+    }
+
     pub async fn findings(&self) -> StoreResult<Vec<Value>> {
         self.rows("findings", &[("select", "*".into()), ("order", "id.asc".into())]).await
     }

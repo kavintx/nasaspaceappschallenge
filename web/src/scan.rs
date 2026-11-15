@@ -382,10 +382,11 @@ pub async fn result(State(app): AppRef, headers: HeaderMap, Json(req): Json<Resu
         Err(e) => (None, "error", Some(e)),
     };
 
-    // Material lookup is the backend's job. Without it, only a name that is
-    // exactly a tested fuel's name is found; no synonyms are guessed here.
+    // Material lookup is the backend's job. Without it, a name is found when it is exactly
+    // a tested fuel's name, or when the backend's own list of other names (the
+    // material_synonyms table) says it is one. Nothing is guessed here.
     let exact_only = "Material lookup not connected. Only exact name matches are shown.";
-    let (lookup, lookup_message, matches) = match &app.backend {
+    let (mut lookup, mut lookup_message, matches) = match &app.backend {
         None => ("not_connected", Some(exact_only.to_string()), None),
         Some(_) if names.is_empty() => ("ok", None, Some(HashMap::new())),
         Some(b) => match b.match_materials(&names).await {
@@ -394,13 +395,29 @@ pub async fn result(State(app): AppRef, headers: HeaderMap, Json(req): Json<Resu
             Err(Fail::Other(m)) => ("error", Some(format!("{m} Only exact name matches are shown.")), None),
         },
     };
+    let mut other_names: HashMap<String, Vec<String>> = HashMap::new();
+    if lookup == "not_connected" {
+        if let Ok(rows) = app.store.synonyms().await {
+            for row in &rows {
+                if let (Some(alias), Some(canonical)) = (row["alias"].as_str(), row["canonical"].as_str()) {
+                    other_names.entry(alias.trim().to_lowercase()).or_default().push(canonical.trim().to_string());
+                }
+            }
+            lookup = "synonyms";
+            lookup_message = None;
+        }
+    }
 
     let materials: Vec<Value> = names
         .iter()
         .map(|name| {
             let found = match &matches {
                 Some(map) => map.get(&name.to_lowercase()).map(|m| (m.fuels.clone(), m.closest.clone())).unwrap_or_default(),
-                None => (vec![name.clone()], None),
+                None => {
+                    let mut fuels = vec![name.clone()];
+                    fuels.extend(other_names.get(&name.to_lowercase()).cloned().unwrap_or_default());
+                    (fuels, None)
+                }
             };
             let (fuels, closest) = found;
             let tests = tests_for(cat.as_deref(), &fuels);
