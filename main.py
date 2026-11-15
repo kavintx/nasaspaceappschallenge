@@ -9,16 +9,19 @@ Builds and runs the site in Docker, so nothing Rust needs to be installed
     python main.py --stop             # stop what this script started
     python main.py --logs             # follow the dashboard's log
 
-What gets built happens inside a rust:1-bookworm container; the compiled
-artifacts and the cargo registry live in named Docker volumes, so the second
-build takes seconds, not minutes.
+Requires Python 3.12 or newer. What gets built happens inside a
+rust:1-bookworm container; the compiled artifacts and the cargo registry
+live in named Docker volumes, so the second build takes seconds, not minutes.
 """
 
 import argparse
+import contextlib
+import shutil
 import socket
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -31,12 +34,11 @@ WEB_TARGET_VOLUME = "kav-target"
 BACKEND_TARGET_VOLUME = "fireset-target"
 
 
-def docker(args, check=True, capture=False):
+def docker(args: list[str], check: bool = True, capture: bool = False) -> str:
     """Run one docker command. A plain argv list — no shell, no path mangling."""
-    cmd = ["docker"] + list(args)
-    shown = "docker " + " ".join(a for a in args if not a.startswith("--"))
-    print(f"  $ {shown if len(shown) < 100 else shown[:97] + '…'}")
-    result = subprocess.run(cmd, check=check, capture_output=capture, text=True)
+    visible = "docker " + " ".join(a for a in args if not a.startswith("--"))
+    print(f"  $ {visible if len(visible) < 100 else visible[:97] + '…'}")
+    result = subprocess.run(["docker", *args], check=check, capture_output=capture, text=True)
     return result.stdout if capture else ""
 
 
@@ -45,56 +47,48 @@ def host_path(p: Path) -> str:
     return str(p).replace("\\", "/")
 
 
-def ensure_volume(name):
+def ensure_volume(name: str) -> None:
     docker(["volume", "create", name], check=False)
 
 
-def remove_container(name):
+def remove_container(name: str) -> None:
     docker(["rm", "-f", name], check=False)
 
 
-def env_value(env_path: Path, key: str, default=None):
+def env_value(env_path: Path, key: str, default: str | None = None) -> str | None:
+    """First non-empty KEY=value in an env file, comments ignored."""
     if not env_path.is_file():
         return default
     for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
         line = line.strip()
-        if line.startswith("#") or "=" not in line:
-            continue
-        k, _, v = line.partition("=")
-        if k.strip() == key and v.strip():
-            return v.strip()
+        if line and not line.startswith("#") and line.partition("=")[0].strip() == key:
+            if value := line.partition("=")[2].strip():
+                return value
     return default
 
 
-def rewrite_env_line(env_path: Path, key: str, new_value: str):
+def rewrite_env_line(env_path: Path, key: str, new_value: str) -> None:
     """Set KEY=new_value in an env file (first match), keeping everything else."""
     lines = env_path.read_text(encoding="utf-8").splitlines()
-    done = False
     for i, line in enumerate(lines):
-        stripped = line.strip()
-        if stripped.startswith("#"):
-            continue
-        k, sep, _ = line.partition("=")
-        if sep and k.strip() == key:
+        if not line.strip().startswith("#") and line.partition("=")[0].strip() == key:
             lines[i] = f"{key}={new_value}"
-            done = True
             break
-    if not done:
+    else:
         lines.append(f"{key}={new_value}")
     env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def ensure_web_env():
+def ensure_web_env() -> Path:
     env = REPO / "web" / ".env"
     if not env.is_file():
-        example = REPO / "web" / ".env.example"
-        env.write_text(example.read_text(encoding="utf-8"), encoding="utf-8")
-        print(f"  created web/.env from the example — browse mode works as-is.")
-        print(f"  add API_AUTH_TOKEN (and VISION_PROVIDER=backend) for scanning and accounts.")
+        env.write_text((REPO / "web" / ".env.example").read_text(encoding="utf-8"), encoding="utf-8")
+        print("  created web/.env from the example — browse mode works as-is.")
+        print("  add API_AUTH_TOKEN (and VISION_PROVIDER=backend) for scanning and accounts.")
     return env
 
 
-def build_web():
+def build_web() -> None:
     ensure_volume(REGISTRY_VOLUME)
     ensure_volume(WEB_TARGET_VOLUME)
     print("Building the dashboard (first run downloads crates and takes a few minutes)…")
@@ -108,7 +102,7 @@ def build_web():
     ])
 
 
-def run_web(port):
+def run_web(port: int) -> None:
     remove_container(WEB_CONTAINER)
     docker([
         "run", "-d",
@@ -124,7 +118,7 @@ def run_web(port):
     ])
 
 
-def build_backend(fireset: Path):
+def build_backend(fireset: Path) -> None:
     ensure_volume(REGISTRY_VOLUME)
     ensure_volume(BACKEND_TARGET_VOLUME)
     print(f"Building the research backend from {fireset} (first run takes a few minutes)…")
@@ -138,7 +132,7 @@ def build_backend(fireset: Path):
     ])
 
 
-def run_backend(fireset: Path, port):
+def run_backend(fireset: Path, port: int) -> None:
     env = fireset / ".env"
     if not env.is_file():
         sys.exit(
@@ -160,11 +154,10 @@ def run_backend(fireset: Path, port):
     ])
 
 
-def wait_up(port, what, seconds=60):
-    url = f"http://127.0.0.1:{port}/"
+def wait_up(port: int, what: str, seconds: int = 60) -> bool:
     for _ in range(seconds):
         try:
-            with urllib.request.urlopen(url, timeout=2):
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=2):
                 return True
         except urllib.error.HTTPError:
             return True  # any HTTP answer means the server is listening
@@ -174,29 +167,25 @@ def wait_up(port, what, seconds=60):
     return False
 
 
-def lan_hint(port):
+def lan_hint(port: int) -> None:
     # Every non-loopback address this machine answers on — usually the Wi-Fi one
     # first, but adapters vary, so they are all listed for the phone to try.
-    try:
-        seen = []
-        for a in socket.gethostbyname_ex(socket.gethostname())[2]:
-            if not a.startswith("127.") and a not in seen:
-                seen.append(a)
+    with contextlib.suppress(OSError):
+        seen = list(dict.fromkeys(a for a in socket.gethostbyname_ex(socket.gethostname())[2]
+                                  if not a.startswith("127.")))
         if seen:
             print("Phone on the same Wi-Fi:  " + "  ".join(f"http://{a}:{port}" for a in seen[:3]))
             print("(the camera button then opens the phone's own camera app — browsers")
             print(" only hand out the webcam over HTTPS.)")
-    except OSError:
-        pass
 
 
-def stop_all():
+def stop_all() -> None:
     remove_container(WEB_CONTAINER)
     remove_container(BACKEND_CONTAINER)
     print(f"Stopped {WEB_CONTAINER} and {BACKEND_CONTAINER} (if they were running).")
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser(description="Build and run Flame in Freefall in Docker.")
     ap.add_argument("--port", type=int, default=None,
                     help="port for the dashboard (default: PORT in web/.env, else 3101)")
@@ -216,25 +205,30 @@ def main():
         subprocess.run(["docker", "logs", "-f", WEB_CONTAINER])
         return
 
-    docker(["version"], check=False)  # a friendly error below beats a stack trace
+    if shutil.which("docker") is None:
+        sys.exit("error: docker is not on PATH. Install Docker Desktop, then run this again.")
+    try:
+        docker(["ps"], capture=True, check=True)
+    except subprocess.CalledProcessError:
+        sys.exit("error: Docker is not running. Start Docker Desktop, then run this again.")
 
     web_env = ensure_web_env()
     port = args.port or int(env_value(web_env, "PORT", "3101"))
 
-    fireset = None
-    if args.backend is not None:
-        fireset = Path(args.backend).resolve() if args.backend else (REPO.parent / "fireset")
-        if not (fireset / "Cargo.toml").is_file():
-            sys.exit(
-                f"error: no Rust project at {fireset}.\n"
-                "Clone it first:  git clone https://github.com/MonsterLXW/Fireset ../fireset\n"
-                "…or drop --backend to run the dashboard alone (browsing works, scanning does not)."
-            )
-
-    try:
-        docker(["ps"], capture=True, check=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        sys.exit("error: Docker is not running. Start Docker Desktop, then run this again.")
+    fireset: Path | None = None
+    match args.backend:
+        case "":
+            fireset = REPO.parent / "fireset"
+        case None:
+            pass
+        case other:
+            fireset = Path(other).resolve()
+    if fireset and not (fireset / "Cargo.toml").is_file():
+        sys.exit(
+            f"error: no Rust project at {fireset}.\n"
+            "Clone it first:  git clone https://github.com/MonsterLXW/Fireset ../fireset\n"
+            "…or drop --backend to run the dashboard alone (browsing works, scanning does not)."
+        )
 
     if not args.no_build:
         build_web()
@@ -244,7 +238,7 @@ def main():
     # The dashboard talks to the backend from inside its own container, where the
     # host is reachable as host.docker.internal. Fix the usual copy-paste default.
     if fireset:
-        current = env_value(web_env, "API_BASE_URL", "")
+        current = env_value(web_env, "API_BASE_URL", "") or ""
         if not current or "127.0.0.1" in current or "localhost" in current:
             rewrite_env_line(web_env, "API_BASE_URL", f"http://host.docker.internal:{args.backend_port}")
             print(f"  web/.env: API_BASE_URL set to host.docker.internal:{args.backend_port}")
@@ -254,8 +248,7 @@ def main():
         wait_up(args.backend_port, "backend")
 
     run_web(port)
-    ok = wait_up(port, "dashboard")
-    if ok:
+    if wait_up(port, "dashboard"):
         print(f"\n  Flame in Freefall:  http://localhost:{port}")
         if fireset:
             print(f"  research backend:   http://localhost:{args.backend_port}")

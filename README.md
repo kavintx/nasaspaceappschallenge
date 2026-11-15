@@ -6,7 +6,7 @@ Photograph an everyday item and see how its materials did in NASA's own microgra
 
 ## Quick start — one command
 
-You need **Docker Desktop** (or any working `docker`), **Python 3.9+**, and **git**. Nothing else — no Rust installation, no cargo.
+You need **Docker Desktop** (or any working `docker`), **Python 3.12 or newer**, and **git**. Nothing else — no Rust installation, no cargo.
 
 ```sh
 git clone https://github.com/kavintx/nasaspaceappschallenge
