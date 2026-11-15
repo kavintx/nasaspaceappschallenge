@@ -86,14 +86,19 @@
   }
 
   // ---------- overview intro: a tilted screen that flattens as you scroll ----------
-  // Scroll progress through the section (0 at its top, 1 when its end reaches the bottom
-  // of the window) is written to --p; CSS turns that into the tilt, scale and title slide.
-  // On a computer the same progress also moves through the clip. On touch screens,
-  // where seeking from scroll is unreliable, the clip plays once when it comes into view.
+  // Scroll progress through the section runs from 0 (its top at the top of the window) to 1
+  // (its end at the bottom of the window). The screen does not jump to that value: every
+  // frame it glides part of the way there, so a mouse wheel's 100-pixel steps still come
+  // out as one continuous movement. The screen ends up filling the whole window. The
+  // tilt, scale and title are set directly as
+  // transforms; on a computer the same eased value also moves through the clip.
   function setUpIntro() {
     var intro = document.getElementById("intro");
     var video = document.getElementById("intro-video");
     if (!intro || !video) return;
+    var head = intro.querySelector(".cscroll-head");
+    var card = intro.querySelector(".cscroll-card");
+    var caption = intro.querySelector(".cscroll-caption");
 
     if (reduced) {
       intro.classList.add("is-flat", "is-late");
@@ -103,36 +108,75 @@
     }
 
     var touch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
-    var duration = 0, seeking = false, wanted = 0, queued = false;
-    video.addEventListener("loadedmetadata", function () { duration = video.duration || 0; update(); });
-    video.addEventListener("seeked", function () { seeking = false; seek(); });
+    var wide = window.matchMedia && window.matchMedia("(min-width: 768px)");
+    var target = 0, shown = -1, last = 0, running = false;
+    var duration = 0, seeking = false;
+    var GLIDE_MS = 110; // time constant of the glide: larger is floatier
 
-    function seek() {
-      if (touch || !duration || seeking || video.readyState < 1) return;
-      var t = wanted * Math.max(0, duration - 0.05);
-      if (Math.abs(video.currentTime - t) > 0.015) {
-        seeking = true;
-        try { video.currentTime = t; } catch (e) { seeking = false; }
+    video.addEventListener("loadedmetadata", function () { duration = video.duration || 0; kick(); });
+    video.addEventListener("seeked", function () { seeking = false; });
+
+    function ease(p) { return p * p * (3 - 2 * p); } // gentle start and finish
+
+    function paint(p) {
+      var e = ease(p);
+      // Starts small, tilted back and low enough to clear the title; ends flat at full size.
+      var big = wide && wide.matches;
+      var scale = (big ? 0.6 : 0.66) + (big ? 0.4 : 0.34) * e;
+      var drop = (big ? 21 : 19) * (1 - e); // vh
+      card.style.transform = "translate3d(0," + drop.toFixed(3) + "vh,0) rotateX(" + ((1 - e) * 20).toFixed(3) + "deg) scale(" + scale.toFixed(4) + ")";
+      card.style.borderRadius = (30 - 30 * Math.max(0, (e - 0.8) / 0.2)).toFixed(1) + "px";
+      // The title slides up and is gone by the time the screen is two thirds of the way.
+      var gone = Math.min(1, e / 0.65);
+      head.style.transform = "translate3d(0," + (-60 * gone).toFixed(2) + "px,0)";
+      head.style.opacity = (1 - gone).toFixed(3);
+      // Near the end the caption fades, as the next part of the page slides up over the screen.
+      if (caption) caption.style.opacity = (1 - Math.min(1, Math.max(0, (p - 0.9) / 0.1))).toFixed(3);
+      if (!touch) {
+        intro.classList.toggle("is-late", p > 0.55);
+        if (duration && !seeking && video.readyState >= 1) {
+          var t = p * Math.max(0, duration - 0.05);
+          if (Math.abs(video.currentTime - t) > 0.02) {
+            seeking = true;
+            try { video.currentTime = t; } catch (err) { seeking = false; }
+          }
+        }
       }
     }
-    function update() {
-      queued = false;
+
+    function measure() {
       var rect = intro.getBoundingClientRect();
       var room = rect.height - window.innerHeight;
-      var p = room > 0 ? Math.min(1, Math.max(0, -rect.top / room)) : 1;
-      intro.style.setProperty("--p", p.toFixed(4));
-      if (!touch) {
-        wanted = p;
-        intro.classList.toggle("is-late", p > 0.55);
-        seek();
-      }
+      // Finished a little before the end: the last stretch is where the next block slides over.
+      target = room > 0 ? Math.min(1, Math.max(0, -rect.top / (room * 0.8))) : 1;
     }
-    window.addEventListener("scroll", function () {
-      if (!queued) { queued = true; requestAnimationFrame(update); }
-    }, { passive: true });
-    window.addEventListener("resize", update);
-    update();
 
+    function frame(now) {
+      var dt = Math.min(64, now - last);
+      last = now;
+      if (shown < 0) shown = target; // first frame: start where the page is
+      shown += (target - shown) * (1 - Math.exp(-dt / GLIDE_MS));
+      var done = Math.abs(target - shown) < 0.0004 && !seeking;
+      if (done) shown = target;
+      paint(shown);
+      if (done) { running = false; return; }
+      requestAnimationFrame(frame);
+    }
+
+    function kick() {
+      measure();
+      if (running) return;
+      running = true;
+      last = performance.now();
+      requestAnimationFrame(frame);
+    }
+
+    window.addEventListener("scroll", kick, { passive: true });
+    window.addEventListener("resize", kick);
+    kick();
+
+    // Touch screens: seeking a video from scroll is unreliable there, so the clip
+    // plays once when it comes into view while the screen still tilts with the scroll.
     if (touch) {
       var played = false;
       var play = function () {
