@@ -179,3 +179,11 @@ html:not(.js) .after-intro, html.motion-off .after-intro { margin-top: 0; paddin
 
 html.motion-off .scan-hero-sweep { display: none; }
 html.motion-off .mat-seg, html.motion-off .o2-chart svg * { animation: none; }
+
+/* Donut charts on the scan result. */
+.donut-figure { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; border-radius: 0.75rem; border: 1px solid #2a3040; background: #090d18; padding: 1rem; }
+.donut-figure-top { margin-top: 1.25rem; background: radial-gradient(120% 140% at 0% 50%, rgba(41, 151, 255, 0.2) 0%, #101522 60%); box-shadow: 0 16px 50px -28px rgba(41, 151, 255, 0.8); }
+.donut { flex: none; filter: drop-shadow(0 0 10px rgba(41, 151, 255, 0.25)); }
+.donut-arc { stroke-linecap: butt; animation: donut-draw 0.9s cubic-bezier(0.3, 0.7, 0.2, 1) both; }
+@keyframes donut-draw { from { stroke-dasharray: 0 252; opacity: 0.2; } }
+html.motion-off .donut-arc { animation: none; }
