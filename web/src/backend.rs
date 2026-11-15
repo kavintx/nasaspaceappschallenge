@@ -57,6 +57,46 @@ impl Backend {
         Ok(body)
     }
 
+    /// Account flow (auth.rs): calls without the site token. Returns the
+    /// backend's status and body verbatim so the account page can show its
+    /// exact reply (401 "Wrong email or password.", 409, 429, …).
+    pub async fn pub_call(
+        &self,
+        path: &str,
+        body: Value,
+        token: Option<&str>,
+    ) -> Result<(u16, Value), reqwest::Error> {
+        let mut req = self
+            .http
+            .post(format!("{}/api/v1{path}", self.base))
+            .json(&body)
+            .timeout(READ_TIMEOUT);
+        if let Some(t) = token {
+            req = req.bearer_auth(t);
+        }
+        let resp = req.send().await?;
+        let status = resp.status().as_u16();
+        let v = resp.json().await.unwrap_or(Value::Null);
+        Ok((status, v))
+    }
+
+    pub async fn pub_fetch(
+        &self,
+        path: &str,
+        token: &str,
+    ) -> Result<(u16, Value), reqwest::Error> {
+        let resp = self
+            .http
+            .get(format!("{}/api/v1{path}", self.base))
+            .bearer_auth(token)
+            .timeout(READ_TIMEOUT)
+            .send()
+            .await?;
+        let status = resp.status().as_u16();
+        let v = resp.json().await.unwrap_or(Value::Null);
+        Ok((status, v))
+    }
+
     async fn get(&self, path: &str, query: &[(&str, String)]) -> ApiResult<Value> {
         let res = self
             .http
