@@ -680,7 +680,7 @@
             return openEdit();
           }
           state.item = reply.item || "";
-          state.model = reply.model || null;
+          state.model = reply.model || true; // the public site does not name the model
           state.summary = reply.unclear ? null : (reply.summary || null);
           state.rows = [];
           (reply.parts || []).forEach(function (part) {
@@ -719,7 +719,7 @@
       box.appendChild(el("p", { class: "text-[12px] text-dim", text: state.rows.length ? "A best guess from the photo. Tap to change, remove or add." : "Add each material, for example cotton or PVC." }));
       var list = el("ul", { class: "mt-3 space-y-2" });
       box.appendChild(list);
-      if (state.model && state.rows.length) box.appendChild(el("p", { class: "mt-2 text-[12px] text-dim", text: "Identified by " + state.model + ". AI can be wrong: check each material." }));
+      if (state.model && state.rows.length) box.appendChild(el("p", { class: "mt-2 text-[12px] text-dim", text: (state.model === true ? "Identified by AI" : "Identified by " + state.model) + ". AI can be wrong: check each material." }));
 
       function drawRows() {
         clear(list);

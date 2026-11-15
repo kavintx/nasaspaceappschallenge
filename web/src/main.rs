@@ -50,6 +50,18 @@ pub fn hosted() -> bool {
     std::env::var_os("AWS_LAMBDA_RUNTIME_API").is_some()
 }
 
+/// An AI service error as the visitor sees it. A copy on a computer shows the detail, which
+/// helps with setup. The public website logs the detail and shows a plain message that does
+/// not name the service or the model.
+pub fn public_error(detail: String, plain: &str) -> String {
+    if hosted() {
+        eprintln!("ai error: {detail}");
+        plain.to_string()
+    } else {
+        detail
+    }
+}
+
 #[tokio::main]
 async fn main() {
     // Pure-Rust-friendly TLS (ring): builds on Windows without CMake or NASM.
