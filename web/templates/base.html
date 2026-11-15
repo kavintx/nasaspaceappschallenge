@@ -18,7 +18,8 @@
         <img src="/static/flame.svg" alt="" class="w-5 h-5">Flame in Freefall
       </a>
       <div class="order-3 md:order-none w-full md:w-auto md:flex-1 flex md:justify-center gap-5 md:gap-7 text-[13px] md:text-[12px]">
-        <a href="/" class="py-1.5 {% if active == "scan" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Scan</a>
+        <a href="/" class="py-1.5 {% if active == "overview" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Overview</a>
+        <a href="/scan" class="py-1.5 {% if active == "scan" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Scan</a>
         <a href="/items" class="py-1.5 {% if active == "items" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">My items</a>
         <a href="/ask" class="py-1.5 {% if active == "ask" %}text-fg{% else %}text-muted hover:text-fg{% endif %}">Ask</a>
       </div>

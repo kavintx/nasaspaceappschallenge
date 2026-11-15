@@ -1,4 +1,4 @@
-// Burn Scan: the scan flow on "/" and the saved items on "/items".
+// Burn Scan: the scan flow on "/scan" and the saved items on "/items".
 // Everything shown comes from the server's replies; this file adds no data of its own.
 // Text is always set with textContent, never innerHTML.
 (function () {
@@ -558,7 +558,7 @@
       ]));
 
       if (!shown.length) {
-        root.appendChild(el("p", { class: "mt-8 text-[16px] text-muted" }, [current === "All" ? "Nothing saved yet. " : "Nothing in " + current + " yet. ", link("Scan an item", "/")]));
+        root.appendChild(el("p", { class: "mt-8 text-[16px] text-muted" }, [current === "All" ? "Nothing saved yet. " : "Nothing in " + current + " yet. ", link("Scan an item", "/scan")]));
       }
 
       var list = el("ul", { class: "mt-6 space-y-3" });

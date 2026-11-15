@@ -45,33 +45,61 @@ const NOT_CONNECTED: &str = "Scanner not connected. You can still type the mater
 
 // ---------- pages ----------
 
+pub struct Stat {
+    pub value: String,
+    pub label: &'static str,
+    pub href: &'static str,
+}
+
+/// The home page: what the site is, and live counts from the research database.
 #[derive(Template)]
-#[template(path = "scan.html")]
-pub struct ScanPage {
+#[template(path = "overview.html")]
+pub struct OverviewPage {
     pub active: &'static str,
     pub page_title: String,
     pub context_line: String,
-    pub scanner_on: bool,
+    pub stats: Vec<Stat>,
+    /// The most-tested fuels: name, number of test conditions, and a search link.
+    pub materials: Vec<(String, usize, String)>,
+    pub data_error: Option<String>,
 }
 
-pub async fn home(State(app): AppRef) -> Response {
-    render(ScanPage {
-        active: "scan",
-        page_title: "Burn Scan".into(),
-        context_line: "NASA spacecraft fire tests".into(),
-        scanner_on: app.vision.may_work(),
+pub async fn overview(State(app): AppRef) -> Response {
+    let (stats, materials, data_error) = match load_catalog(&app, false).await {
+        Ok(cat) => {
+            let tests: usize = cat.materials.iter().map(|m| m.tests.len()).sum();
+            (
+                vec![
+                    Stat { value: cat.exps.len().to_string(), label: "NASA experiments", href: "/explorer" },
+                    Stat { value: cat.paper_count.to_string(), label: "papers from NTRS", href: "/papers" },
+                    Stat { value: tests.to_string(), label: "test conditions that name a fuel", href: "/explorer" },
+                    Stat { value: cat.materials.len().to_string(), label: "fuels and materials named", href: "/scan" },
+                ],
+                cat.materials.iter().take(12).map(|m| (m.name.clone(), m.tests.len(), format!("/explorer?q={}", urlencoding::encode(&m.name)))).collect(),
+                None,
+            )
+        }
+        Err(e) => (vec![], vec![], Some(e)),
+    };
+    render(OverviewPage {
+        active: "overview",
+        page_title: "Overview".into(),
+        context_line: "NASA microgravity fire research".into(),
+        stats,
+        materials,
+        data_error,
     })
 }
 
-/// The redesigned scan screen, on its own page so the original stays as it is.
+/// The scan screen.
 #[derive(Template)]
-#[template(path = "scan_v2.html")]
-pub struct ScanV2Page {
+#[template(path = "scan.html")]
+pub struct ScanPage {
     pub scanner_on: bool,
 }
 
-pub async fn home_v2(State(app): AppRef) -> Response {
-    render(ScanV2Page { scanner_on: app.vision.may_work() })
+pub async fn scan_page(State(app): AppRef) -> Response {
+    render(ScanPage { scanner_on: app.vision.may_work() })
 }
 
 #[derive(Template)]
