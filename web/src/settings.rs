@@ -75,14 +75,15 @@ fn read_env_lines() -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// (name, is-set) pairs for the non-secret inputs, so the form shows truth.
-fn build_page(cfg: &Config, status: String, connected: bool, note: String) -> SettingsPage {
+/// The form shows truth: the provider the scanner ACTUALLY uses (it may be
+/// auto-picked from the keys present, not named in the file).
+fn build_page(cfg: &Config, provider: &str, status: String, connected: bool, note: String) -> SettingsPage {
     let get = |k: &str, d: &str| cfg.get(k).unwrap_or_else(|| d.into());
     SettingsPage {
         active: "settings",
         page_title: "Settings".into(),
         context_line: "Scanner provider and keys".into(),
-        provider: cfg.get("VISION_PROVIDER").unwrap_or_else(|| "ollama".into()),
+        provider: provider.into(),
         fallback: cfg.get("VISION_FALLBACK").unwrap_or_else(|| "none".into()),
         ollama_url: get("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
         ollama_model: get("OLLAMA_VISION_MODEL", "llama3.2-vision"),
@@ -111,11 +112,11 @@ fn render(page: SettingsPage) -> Response {
 
 pub async fn page(State(app): State<Arc<AppState>>) -> Response {
     let cfg = Config::load();
-    let (status, connected) = {
+    let (status, connected, provider) = {
         let v = app.vision.read().await;
-        (v.status(), v.may_work())
+        (v.status(), v.may_work(), v.provider_id().to_string())
     };
-    render(build_page(&cfg, status, connected, String::new()))
+    render(build_page(&cfg, &provider, status, connected, String::new()))
 }
 
 pub async fn save(State(app): State<Arc<AppState>>, form: Form<SettingsForm>) -> Response {
@@ -157,11 +158,11 @@ pub async fn save(State(app): State<Arc<AppState>>, form: Form<SettingsForm>) ->
 
     if let Err(e) = std::fs::write(ENV_PATH, lines.join("\n") + "\n") {
         let cfg = Config::load();
-        let (status, connected) = {
+        let (status, connected, provider) = {
             let v = app.vision.read().await;
-            (v.status(), v.may_work())
+            (v.status(), v.may_work(), v.provider_id().to_string())
         };
-        return render(build_page(&cfg, status, connected, format!("Couldn’t save: {e}")));
+        return render(build_page(&cfg, &provider, status, connected, format!("Couldn’t save: {e}")));
     }
 
     // Re-arm the scanner from the file we just wrote. It reads .env file-first,
@@ -172,8 +173,10 @@ pub async fn save(State(app): State<Arc<AppState>>, form: Form<SettingsForm>) ->
         let mut v = app.vision.write().await;
         *v = fresh;
     }
-    let connected = app.vision.read().await.may_work();
     let cfg = Config::load();
-    let status = app.vision.read().await.status();
-    render(build_page(&cfg, status, connected, note))
+    let (status, connected, provider) = {
+        let v = app.vision.read().await;
+        (v.status(), v.may_work(), v.provider_id().to_string())
+    };
+    render(build_page(&cfg, &provider, status, connected, note))
 }

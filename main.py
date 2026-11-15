@@ -104,7 +104,7 @@ def setup_wizard(env: Path) -> None:
     print("\nSetup — what should identify your photos?")
     print("  1) anthropic   Claude on api.anthropic.com (needs an API key)")
     print("  2) openai      GPT-4o or any OpenAI-compatible endpoint (needs an API key)")
-    print("  3) ollama      a model running locally on this machine (free, no key)")
+    print("  3) ollama      a model running locally on this machine (free, but you must install it)")
     print("  4) backend     the research backend's model (needs the Fireset repo)")
     print("  5) none        just browse for now; scanning says 'not connected'")
     match ask("scanner provider", "5"):

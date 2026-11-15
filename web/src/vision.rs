@@ -78,11 +78,24 @@ enum Attempt {
 impl Vision {
     pub fn from_cfg(cfg: &Config) -> Self {
         let named = |key: &str| cfg.get_file_first(key).map(|v| v.trim().to_lowercase());
+        // Auto-pick so nobody has to run ollama just to scan: whichever key is
+        // present becomes the scanner. Set VISION_PROVIDER to override.
+        let auto = || match (
+            cfg.get_file_first("ANTHROPIC_API_KEY"),
+            cfg.get_file_first("OPENAI_API_KEY"),
+            cfg.get_file_first("API_AUTH_TOKEN"),
+        ) {
+            (Some(_), _, _) => Provider::Anthropic,
+            (None, Some(_), _) => Provider::OpenAI,
+            (None, None, Some(_)) => Provider::Backend,
+            _ => Provider::Ollama,
+        };
         let primary = match named("VISION_PROVIDER").as_deref() {
             Some("anthropic") => Provider::Anthropic,
             Some("openai") => Provider::OpenAI,
             Some("backend") => Provider::Backend,
-            _ => Provider::Ollama,
+            Some("ollama") => Provider::Ollama,
+            _ => auto(),
         };
         let fallback = match named("VISION_FALLBACK").as_deref() {
             Some("anthropic") if primary != Provider::Anthropic => Some(Provider::Anthropic),
@@ -131,6 +144,16 @@ impl Vision {
             Provider::Anthropic => format!("anthropic:{}", self.anthropic_model),
             Provider::OpenAI => format!("openai:{}", self.openai_model),
             Provider::Backend => "research backend".to_string(),
+        }
+    }
+
+    /// The provider as its settings-form value ("ollama" | "anthropic" | "openai" | "backend").
+    pub fn provider_id(&self) -> &'static str {
+        match self.primary {
+            Provider::Ollama => "ollama",
+            Provider::Anthropic => "anthropic",
+            Provider::OpenAI => "openai",
+            Provider::Backend => "backend",
         }
     }
 

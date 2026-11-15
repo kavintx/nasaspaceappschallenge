@@ -77,8 +77,8 @@ The dashboard reads `web/.env` (`main.py` creates one from `web/.env.example` on
 | `PORT` | Dashboard port (default 3101; it steps past busy ports if unset) |
 | `API_BASE_URL` | Where the dashboard reaches the backend. From inside its Docker container that is `http://host.docker.internal:8080`; from a plain `cargo run`, `http://127.0.0.1:8080` |
 | `API_AUTH_TOKEN` | The backend's site token. Server-side only, never sent to a browser |
-| `VISION_PROVIDER` | `ollama` (default), `anthropic`, or `backend` — `backend` sends photos to the research backend's `/ai/scan` instead of running a model here |
-| `VISION_FALLBACK` | `anthropic` or `none`: tried once if the provider fails |
+| `VISION_PROVIDER` | `anthropic`, `openai`, `ollama` or `backend`. **Leave it unset** and the scanner picks itself by whichever key is present (anthropic → openai → backend → ollama) — no ollama install needed unless you want it |
+| `VISION_FALLBACK` | `anthropic`, `openai` or `none`: tried once if the provider fails |
 | `OLLAMA_BASE_URL`, `OLLAMA_VISION_MODEL` | Local vision model for scanning |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Only for the anthropic provider |
 | `READ_ONLY=true` | **Set this on any public deployment**: turns off ingest, extraction and editing. Browsing, AI answers and chat still work |
