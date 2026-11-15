@@ -98,6 +98,7 @@
     if (!intro || !video) return;
     var head = intro.querySelector(".cscroll-head");
     var card = intro.querySelector(".cscroll-card");
+    var caption = intro.querySelector(".cscroll-caption");
 
     if (reduced) {
       intro.classList.add("is-flat", "is-late");
@@ -129,6 +130,8 @@
       var gone = Math.min(1, e / 0.65);
       head.style.transform = "translate3d(0," + (-60 * gone).toFixed(2) + "px,0)";
       head.style.opacity = (1 - gone).toFixed(3);
+      // Near the end the caption fades, as the next part of the page slides up over the screen.
+      if (caption) caption.style.opacity = (1 - Math.min(1, Math.max(0, (p - 0.9) / 0.1))).toFixed(3);
       if (!touch) {
         intro.classList.toggle("is-late", p > 0.55);
         if (duration && !seeking && video.readyState >= 1) {
@@ -144,7 +147,8 @@
     function measure() {
       var rect = intro.getBoundingClientRect();
       var room = rect.height - window.innerHeight;
-      target = room > 0 ? Math.min(1, Math.max(0, -rect.top / room)) : 1;
+      // Finished a little before the end: the last stretch is where the next block slides over.
+      target = room > 0 ? Math.min(1, Math.max(0, -rect.top / (room * 0.8))) : 1;
     }
 
     function frame(now) {

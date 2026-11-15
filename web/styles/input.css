@@ -135,3 +135,20 @@ html.motion-off .scan2-shutter::after { display: none; }
 html.motion-off::view-transition-old(root), html.motion-off::view-transition-new(root) { animation: none; }
 .motion-switch { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .motion-switch:hover { color: #f5f5f7; }
+
+/* The block after the intro starts a third of a screen early and fades in from clear to
+   the page colour, so it rises over the pinned screen instead of meeting it at an edge. */
+.after-intro { position: relative; z-index: 2; margin-top: -42vh; padding-top: 30vh; background: linear-gradient(180deg, rgba(2, 4, 13, 0) 0, rgba(2, 4, 13, 0.6) 12vh, rgba(2, 4, 13, 0.92) 22vh, #02040d 32vh); }
+html:not(.js) .after-intro, html.motion-off .after-intro { margin-top: 0; padding-top: 0; background: none; }
+
+/* Scan screen on a computer: words and actions on the left, the viewfinder on the right. */
+@media (min-width: 1024px) {
+  .scan2-grid:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 560px); grid-template-areas: "intro view" "actions view"; column-gap: 5rem; row-gap: 1.75rem; align-content: center; min-height: calc(100vh - 150px); }
+  .scan2-intro { grid-area: intro; align-self: end; padding: 0; }
+  .scan2-actions { grid-area: actions; align-self: start; max-width: 30rem; }
+  .scan2-grid .scan2-viewfinder { grid-area: view; align-self: center; height: min(620px, 72vh); max-height: none; }
+  .scan2-grid .scan2-shutter { width: 7.5rem; height: 7.5rem; }
+  .scan2-grid .scan2-shutter svg { width: 48px; height: 48px; }
+  .scan2-step { max-width: 44rem; margin-left: auto; margin-right: auto; }
+  .scan2-glow { left: 72%; top: 50%; width: 760px; height: 760px; transform: translate(-50%, -50%); }
+}
