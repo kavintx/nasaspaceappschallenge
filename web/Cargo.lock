@@ -282,6 +282,7 @@ dependencies = [
  "askama",
  "axum",
  "base64",
+ "futures-util",
  "reqwest",
  "rustls",
  "serde",
