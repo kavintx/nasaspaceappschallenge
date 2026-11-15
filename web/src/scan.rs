@@ -263,7 +263,10 @@ fn chart(tests: &[&Test]) -> Value {
     };
     let mut points: Vec<Value> = vec![];
     let mut no_level = 0;
+    let mut outcomes = serde_json::Map::new();
     for t in tests {
+        let n = outcomes.get(code(t.outcome)).and_then(Value::as_u64).unwrap_or(0);
+        outcomes.insert(code(t.outcome).to_string(), json!(n + 1));
         let levels: Vec<f64> = t.o2.iter().cloned().filter(|v| v.is_finite() && (0.0..=100.0).contains(v)).collect();
         if levels.is_empty() {
             no_level += 1;
@@ -272,7 +275,7 @@ fn chart(tests: &[&Test]) -> Value {
             points.push(json!({ "o2": v, "outcome": code(t.outcome) }));
         }
     }
-    json!({ "points": points, "no_level": no_level })
+    json!({ "points": points, "no_level": no_level, "outcomes": outcomes, "tests": tests.len() })
 }
 
 fn severity(o: Outcome) -> u8 {

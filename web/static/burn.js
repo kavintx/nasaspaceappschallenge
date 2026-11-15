@@ -153,6 +153,85 @@
     return mark;
   }
 
+
+  // A ring split into coloured arcs. slices: [{ label, value, color }]. The number in the
+  // middle is the total; arcs draw themselves in clockwise from the top.
+  function donut(slices, size, centre, under) {
+    slices = slices.filter(function (s) { return s.value > 0; });
+    var total = slices.reduce(function (sum, s) { return sum + s.value; }, 0);
+    if (!total) return null;
+    var r = 40, width = 13, around = 2 * Math.PI * r, gap = slices.length > 1 ? 2.5 : 0, at = 0;
+    var kids = [svg("circle", { cx: 50, cy: 50, r: r, fill: "none", stroke: "#1a2030", "stroke-width": width })];
+    slices.forEach(function (s, i) {
+      var length = (s.value / total) * around;
+      var arc = svg("circle", {
+        cx: 50, cy: 50, r: r, fill: "none", stroke: s.color, "stroke-width": width,
+        "stroke-dasharray": Math.max(0.5, length - gap) + " " + around, "stroke-dashoffset": -at,
+        transform: "rotate(-90 50 50)", class: "donut-arc",
+      });
+      arc.style.animationDelay = (0.15 + i * 0.12) + "s";
+      var tip = svg("title", {});
+      tip.textContent = s.label + ": " + s.value + " of " + total;
+      arc.appendChild(tip);
+      kids.push(arc);
+      at += length;
+    });
+    kids.push(svgText(String(centre), { x: 50, y: under ? 51 : 56, "text-anchor": "middle", "font-size": 22, "font-weight": 700, fill: "#f5f5f7" }));
+    if (under) kids.push(svgText(under, { x: 50, y: 64, "text-anchor": "middle", "font-size": 9, fill: "#a5a8b5" }));
+    return svg("svg", { viewBox: "0 0 100 100", width: size, height: size, class: "donut", role: "img",
+      "aria-label": slices.map(function (s) { return s.label + " " + s.value; }).join(", ") + ", of " + total + "." }, kids);
+  }
+
+  function legendRow(color, text) {
+    var dot = el("span", { class: "mat-dot" });
+    dot.style.background = color;
+    return el("li", { class: "flex items-center gap-2" }, [dot, el("span", { text: text })]);
+  }
+
+  // How NASA's tests of this material ended, as a ring. Counts every test, including the
+  // ones with no oxygen level, so it can show more tests than the oxygen chart below it.
+  function outcomeDonut(material) {
+    var data = material.chart;
+    if (!data || !data.outcomes || !data.tests) return null;
+    var slices = OUTCOMES.map(function (o) { return { label: o.label, value: data.outcomes[o.key] || 0, color: o.color }; });
+    var ring = donut(slices, 112, data.tests, data.tests === 1 ? "test" : "tests");
+    if (!ring) return null;
+    return el("figure", { class: "donut-figure" }, [
+      ring,
+      el("div", { class: "min-w-0" }, [
+        el("figcaption", { class: "text-[13px] font-medium", text: "How NASA’s tests of it ended" }),
+        el("ul", { class: "mt-2 space-y-1 text-[13px] text-muted" }, slices.filter(function (s) { return s.value > 0; }).map(function (s) {
+          return legendRow(s.color, s.label + " · " + s.value);
+        })),
+        el("p", { class: "mt-2 text-[11px] leading-4 text-dim", text: "All tests in the database, at any oxygen level." }),
+      ]),
+    ]);
+  }
+
+  // How much of the item NASA's data covers: materials with at least one test, out of all of them.
+  function coverageDonut(result) {
+    var all = result.materials || [];
+    if (all.length < 1 || result.data !== "ok") return null;
+    var tested = all.filter(function (m) { return m.tested; }).length;
+    var ring = donut([
+      { label: "Has NASA tests", value: tested, color: "#2997ff" },
+      { label: "No NASA test", value: all.length - tested, color: "#3a4256" },
+    ], 112, tested + "/" + all.length, "tested");
+    if (!ring) return null;
+    return el("figure", { class: "donut-figure donut-figure-top" }, [
+      ring,
+      el("div", { class: "min-w-0" }, [
+        el("figcaption", { class: "text-[17px] leading-6 font-semibold", text: tested === all.length
+          ? (all.length === 1 ? "NASA has tested this material." : "NASA has tested all " + all.length + " of its materials.")
+          : tested === 0 ? "None of its materials are in NASA’s tests."
+          : "NASA has tested " + tested + " of its " + all.length + " materials." }),
+        el("ul", { class: "mt-2 space-y-1 text-[13px] text-muted" }, all.map(function (m) {
+          return legendRow(m.tested ? "#2997ff" : "#3a4256", m.query + (m.tested ? "" : " · no test"));
+        })),
+      ]),
+    ]);
+  }
+
   // Every NASA test of this material placed on an oxygen scale, with the two habitats marked.
   function oxygenChart(material) {
     var data = material.chart;
@@ -258,7 +337,9 @@
       })));
       box.appendChild(line);
     });
-    box.appendChild(el("p", { class: "mt-3 text-[11px] leading-4 text-dim", text: "Shares are rough estimates of each part, as you confirmed them. They are not measurements." }));
+    if (box.querySelector(".mat-bar")) {
+      box.appendChild(el("p", { class: "mt-3 text-[11px] leading-4 text-dim", text: "Shares are rough estimates of each part, as you confirmed them. They are not measurements." }));
+    }
     return box;
   }
 
@@ -333,6 +414,8 @@
       }
       section.appendChild(el("div", { class: "mt-3 grid grid-cols-2 gap-3" }, material.habitats.map(verdictTile)));
       section.appendChild(el("p", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Matched on oxygen level only. Each test’s pressure is on its line below." }));
+      var ring = outcomeDonut(material);
+      if (ring) section.appendChild(ring);
       var chart = oxygenChart(material);
       if (chart) section.appendChild(chart);
       section.appendChild(evidenceList(material.evidence));
@@ -389,6 +472,8 @@
     [result.data_message, result.lookup_message].forEach(function (message) {
       if (message) box.appendChild(el("p", { class: "notice mt-4", role: "status", text: message }));
     });
+    var coverage = coverageDonut(result);
+    if (coverage) box.appendChild(coverage);
     box.appendChild(flameFigure());
     if (!result.materials.length) {
       box.appendChild(el("p", { class: "mt-6 text-[16px] text-muted", text: "No materials to check." }));
