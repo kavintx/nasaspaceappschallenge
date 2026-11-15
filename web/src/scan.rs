@@ -97,7 +97,7 @@ pub struct ScanPage {
 }
 
 pub async fn scan_page(State(app): AppRef) -> Response {
-    render(ScanPage { scanner_on: app.vision.may_work() })
+    render(ScanPage { scanner_on: app.vision.read().await.may_work() })
 }
 
 #[derive(Template)]
@@ -136,7 +136,8 @@ pub async fn identify(State(app): AppRef, headers: HeaderMap, Query(q): Query<Id
     }
     let mode = if q.mode.as_deref() == Some("label") { "label" } else { "item" };
     // `body` is dropped when this function returns: the photo is not kept.
-    match app.vision.scan(&body, mime, mode).await {
+    let outcome = { app.vision.read().await.scan(&body, mime, mode).await };
+    match outcome {
         Ok(reply) => Json(read_scan(&reply)).into_response(),
         Err(VisionError::NotConnected) => refused("not_connected", NOT_CONNECTED),
         Err(VisionError::Failed(message)) => refused("error", &message),

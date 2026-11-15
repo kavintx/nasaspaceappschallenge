@@ -10,6 +10,7 @@ mod backend;
 mod catalog;
 mod config;
 mod scan;
+mod settings;
 mod store;
 mod views;
 mod vision;
@@ -29,8 +30,9 @@ pub struct AppState {
     pub store: store::Store,
     /// The fire-intel backend (AI, pipeline, editing). None until API_AUTH_TOKEN is set.
     pub backend: Option<backend::Backend>,
-    /// Photo identification for Burn Scan (Ollama or Anthropic).
-    pub vision: vision::Vision,
+    /// Photo identification for Burn Scan (Ollama, Anthropic, OpenAI or the backend).
+    /// Swappable at runtime: the settings page rewrites web/.env and reloads this.
+    pub vision: tokio::sync::RwLock<vision::Vision>,
     /// Cached experiment catalog and when it was built.
     pub catalog: tokio::sync::Mutex<Option<Arc<catalog::Catalog>>>,
     /// When true (READ_ONLY=true), nothing that changes the database is allowed.
@@ -45,7 +47,7 @@ async fn main() {
     let state = Arc::new(AppState {
         store: store::Store::from_cfg(&cfg),
         backend: backend::Backend::from_cfg(&cfg),
-        vision: vision::Vision::from_cfg(&cfg),
+        vision: tokio::sync::RwLock::new(vision::Vision::from_cfg(&cfg)),
         catalog: tokio::sync::Mutex::new(None),
         read_only: cfg.get("READ_ONLY").is_some_and(|v| v.eq_ignore_ascii_case("true") || v == "1"),
     });
@@ -71,6 +73,7 @@ async fn main() {
         .route("/account/login", post(auth::login))
         .route("/account/signup", post(auth::signup))
         .route("/account/logout", post(auth::logout))
+        .route("/settings", get(settings::page).post(settings::save))
         .route("/papers", get(views::papers))
         .route("/papers/{id}", get(views::paper))
         .route("/ask/stream", post(admin::chat_stream))

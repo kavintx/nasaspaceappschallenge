@@ -16,6 +16,7 @@ live in named Docker volumes, so the second build takes seconds, not minutes.
 
 import argparse
 import contextlib
+import getpass
 import shutil
 import socket
 import subprocess
@@ -83,9 +84,81 @@ def ensure_web_env() -> Path:
     env = REPO / "web" / ".env"
     if not env.is_file():
         env.write_text((REPO / "web" / ".env.example").read_text(encoding="utf-8"), encoding="utf-8")
-        print("  created web/.env from the example — browse mode works as-is.")
-        print("  add API_AUTH_TOKEN (and VISION_PROVIDER=backend) for scanning and accounts.")
     return env
+
+
+def ask(prompt: str, default: str = "") -> str:
+    """Plain line input with an optional default; empty input takes the default."""
+    try:
+        answer = input(f"  {prompt}{f' [{default}]' if default else ''}: ").strip()
+    except EOFError:
+        answer = ""
+    return answer or default
+
+
+def setup_wizard(env: Path) -> None:
+    """First-run (or --configure) setup: pick the photo scanner and arm its keys.
+
+    Keys go straight into web/.env, are never echoed, and never leave this machine.
+    """
+    print("\nSetup — what should identify your photos?")
+    print("  1) anthropic   Claude on api.anthropic.com (needs an API key)")
+    print("  2) openai      GPT-4o or any OpenAI-compatible endpoint (needs an API key)")
+    print("  3) ollama      a model running locally on this machine (free, no key)")
+    print("  4) backend     the research backend's model (needs the Fireset repo)")
+    print("  5) none        just browse for now; scanning says 'not connected'")
+    match ask("scanner provider", "5"):
+        case "1" | "anthropic":
+            provider = "anthropic"
+            key = getpass.getpass("  ANTHROPIC_API_KEY (hidden, Enter to skip): ").strip()
+            if key:
+                rewrite_env_line(env, "ANTHROPIC_API_KEY", key)
+            rewrite_env_line(env, "ANTHROPIC_MODEL", ask("anthropic model", "claude-haiku-5-5"))
+        case "2" | "openai":
+            provider = "openai"
+            key = getpass.getpass("  OPENAI_API_KEY (hidden, Enter to skip): ").strip()
+            if key:
+                rewrite_env_line(env, "OPENAI_API_KEY", key)
+            rewrite_env_line(env, "OPENAI_VISION_MODEL", ask("OpenAI vision model", "gpt-4o-mini"))
+            base = ask("OpenAI endpoint (leave as-is unless self-hosting)", "https://api.openai.com/v1")
+            if base != "https://api.openai.com/v1":
+                rewrite_env_line(env, "OPENAI_BASE_URL", base)
+        case "3" | "ollama":
+            provider = "ollama"
+            print("  (install ollama.com and `ollama pull <model>` if you haven't)")
+            rewrite_env_line(env, "OLLAMA_BASE_URL", ask("ollama address", "http://host.docker.internal:11434"))
+            rewrite_env_line(env, "OLLAMA_VISION_MODEL", ask("ollama vision model", "llama3.2-vision"))
+        case "4" | "backend":
+            provider = "backend"
+            rewrite_env_line(env, "API_BASE_URL", ask("backend address", "http://host.docker.internal:8080"))
+            token = getpass.getpass("  backend API_AUTH_TOKEN (from your Fireset .env, Enter to skip): ").strip()
+            if token:
+                rewrite_env_line(env, "API_AUTH_TOKEN", token)
+        case _:
+            provider = ""
+    if provider:
+        rewrite_env_line(env, "VISION_PROVIDER", provider)
+        # A second brain when the first is unreachable — anthropic is the usual safety net.
+        if provider != "anthropic" and ask("use Claude (anthropic) as a fallback if that fails? (y/N)", "n").lower().startswith("y"):
+            if not env_value(env, "ANTHROPIC_API_KEY"):
+                key = getpass.getpass("  ANTHROPIC_API_KEY for the fallback (hidden, Enter to skip): ").strip()
+                if key:
+                    rewrite_env_line(env, "ANTHROPIC_API_KEY", key)
+            rewrite_env_line(env, "VISION_FALLBACK", "anthropic")
+        else:
+            rewrite_env_line(env, "VISION_FALLBACK", "none")
+        # The rest of the site (Ask, habitat risk, pipeline) always wants the backend.
+        if provider != "backend" and not env_value(env, "API_AUTH_TOKEN") \
+                and ask("connect the research backend too? unlocks Ask/scan-by-model (y/N)", "n").lower().startswith("y"):
+            rewrite_env_line(env, "API_BASE_URL", ask("backend address", "http://host.docker.internal:8080"))
+            token = getpass.getpass("  backend API_AUTH_TOKEN (hidden, Enter to skip): ").strip()
+            if token:
+                rewrite_env_line(env, "API_AUTH_TOKEN", token)
+    print(f"  saved to web/.env — keys are never printed or committed.")
+
+
+def configure(env: Path) -> None:
+    setup_wizard(env)
 
 
 def build_web() -> None:
@@ -196,7 +269,13 @@ def main() -> None:
     ap.add_argument("--no-build", action="store_true", help="skip cargo build, run existing binaries")
     ap.add_argument("--stop", action="store_true", help="stop the containers this script started")
     ap.add_argument("--logs", action="store_true", help="follow the dashboard's log and exit on Ctrl-C")
+    ap.add_argument("--configure", action="store_true",
+                    help="run the setup wizard again (scanner provider and keys) and exit")
     args = ap.parse_args()
+
+    if args.configure:
+        setup_wizard(ensure_web_env())
+        return
 
     if args.stop:
         stop_all()
@@ -212,7 +291,10 @@ def main() -> None:
     except subprocess.CalledProcessError:
         sys.exit("error: Docker is not running. Start Docker Desktop, then run this again.")
 
+    first_run = not (REPO / "web" / ".env").is_file()
     web_env = ensure_web_env()
+    if first_run and sys.stdin.isatty():
+        setup_wizard(web_env)
     port = args.port or int(env_value(web_env, "PORT", "3101"))
 
     fireset: Path | None = None
