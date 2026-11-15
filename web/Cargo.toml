@@ -13,4 +13,5 @@ serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
 tokio = { version = "1.54.1", features = ["full"] }
 tower-http = { version = "0.7.1", features = ["fs", "compression-gzip"] }
+tower = { version = "0.5", features = ["util"] }
 urlencoding = "2.1.3"

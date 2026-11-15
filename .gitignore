@@ -6,3 +6,8 @@ target/
 /data
 *.pdf
 __pycache__/
+
+# Netlify build output
+web/dist/
+web/netlify/functions/
+.netlify/
