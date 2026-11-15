@@ -174,26 +174,28 @@ def ensure_fireset() -> Path | None:
     return fireset
 
 
-def provision_backend(fireset: Path, port: int) -> str:
-    """Give the backend a working .env. The token is generated here, so teammates
-    never trade secrets — the same value goes into both .env files. DATABASE_URL
-    and the model address are optional at this stage and can be added later."""
+def provision_backend(fireset: Path) -> str:
+    """Set up the backend quietly — a first-time runner types nothing here.
+    The research database and model server addresses come with the project in
+    .env.example; the shared token is generated here so teammates never trade
+    secrets. Returns the token."""
     env = fireset / ".env"
     if not env.is_file():
         env.write_text((fireset / ".env.example").read_text(encoding="utf-8"), encoding="utf-8")
-        print("\nBackend setup (Ask, AI answers, accounts, scanning by model):")
-        db = ask("  Supabase Session-pooler connection string (Enter to skip — ask a teammate for it)", "")
-        if db:
-            rewrite_env_line(env, "DATABASE_URL", db)
-        model = ask("  model server address, e.g. the vLLM/cloudflared URL (Enter to skip)", "")
-        if model:
-            rewrite_env_line(env, "VLLM_BASE_URL", model)
+        print("  research backend: set up quietly — nothing to answer")
     token = env_value(env, "API_AUTH_TOKEN")
     if not token:
         token = secrets.token_hex(24)
         rewrite_env_line(env, "API_AUTH_TOKEN", token)
-        print("  generated a shared site token (never shown, written to both .env files)")
     return token
+
+
+def backend_is_live(fireset: Path) -> bool:
+    """The one thing this machine can't guess: the research database address,
+    which the team fills into the backend's .env. Placeholder text with <angle
+    brackets> in it doesn't count."""
+    url = env_value(fireset / ".env", "DATABASE_URL", "") or ""
+    return bool(url) and "<" not in url
 
 
 def sync_web_to_backend(env: Path, token: str, port: int) -> None:
@@ -341,12 +343,18 @@ def main() -> None:
     port = args.port or int(env_value(web_env, "PORT", "3101"))
 
     # One command, whole stack: the backend is part of setup, not a flag.
+    # It only starts once the team's research-database address is present —
+    # the user is never asked for it and never needs to know about it.
     fireset = ensure_fireset()
-    token = provision_backend(fireset, args.backend_port) if fireset else None
-    if first_run:
-        setup_wizard(web_env)
+    token = provision_backend(fireset) if fireset else None
+    if fireset and not backend_is_live(fireset):
+        print("  the research database address isn't filled in on this machine yet,")
+        print("  so Ask and accounts stay off. Browsing and Burn Scan work regardless.")
+        fireset = None
     if fireset:
         sync_web_to_backend(web_env, token, args.backend_port)
+    if first_run:
+        setup_wizard(web_env)
 
     if not args.no_build:
         build_web()
@@ -362,9 +370,6 @@ def main() -> None:
         print(f"\n  Flame in Freefall:  http://localhost:{port}")
         if fireset:
             print(f"  research backend:   http://localhost:{args.backend_port}")
-        else:
-            print("  browsing works; Ask, accounts and scanning-by-model need the")
-            print("  research backend — run this again next to a Fireset checkout.")
         lan_hint(port)
 
 
