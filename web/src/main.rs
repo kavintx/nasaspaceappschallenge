@@ -20,6 +20,8 @@ use axum::{
     Router,
 };
 use std::sync::Arc;
+use tower_http::compression::predicate::{DefaultPredicate, NotForContentType, Predicate};
+use tower_http::compression::CompressionLayer;
 use tower_http::services::ServeDir;
 
 pub struct AppState {
@@ -83,6 +85,8 @@ async fn main() {
         .route("/healthz", get(|| async { "ok" }))
         .nest_service("/static", ServeDir::new(static_dir))
         .fallback(views::not_found)
+        // Gzip pages, CSS and scripts. Video is already compressed and must stay seekable.
+        .layer(CompressionLayer::new().compress_when(DefaultPredicate::new().and(NotForContentType::new("video/"))))
         .with_state(state);
 
     // Use PORT if set; otherwise start at 3100 and step past ports that are taken.

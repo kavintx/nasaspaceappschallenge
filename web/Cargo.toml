@@ -12,5 +12,5 @@ rustls = { version = "0.23.46", default-features = false, features = ["ring", "s
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
 tokio = { version = "1.54.1", features = ["full"] }
-tower-http = { version = "0.7.1", features = ["fs"] }
+tower-http = { version = "0.7.1", features = ["fs", "compression-gzip"] }
 urlencoding = "2.1.3"

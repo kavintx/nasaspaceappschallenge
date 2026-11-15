@@ -11,6 +11,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
+  <script>
+    // "js" lets CSS hide things that scripts will reveal. Animations are on for everyone;
+    // "motion-off" is a visitor's own choice to switch them off (footer link, remembered here).
+    (function (d) { d.classList.add("js"); try { if (localStorage.getItem("motion") === "off") d.classList.add("motion-off"); } catch (e) {} })(document.documentElement);
+  </script>
+  <script src="/static/motion.js" defer></script>
 </head>
 <!-- The scan screen. Design: Figma file "Burn Scan – scan screen redesign". Driven by static/burn.js. -->
 <body class="bg-ink-950 text-fg font-sans antialiased min-h-screen">
@@ -107,6 +113,6 @@
     </div>
   </nav>
 
-  <script src="/static/burn.js"></script>
+  <script src="/static/burn.js" defer></script>
 </body>
 </html>

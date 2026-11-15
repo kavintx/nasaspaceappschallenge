@@ -10,6 +10,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
+  <script>
+    // "js" lets CSS hide things that scripts will reveal. Animations are on for everyone;
+    // "motion-off" is a visitor's own choice to switch them off (footer link, remembered here).
+    (function (d) { d.classList.add("js"); try { if (localStorage.getItem("motion") === "off") d.classList.add("motion-off"); } catch (e) {} })(document.documentElement);
+  </script>
+  <script src="/static/motion.js" defer></script>
 </head>
 <body class="bg-ink-950 text-fg font-sans antialiased min-h-screen flex flex-col">
   <header class="bg-ink-900 border-b border-line/60 no-print">
@@ -32,12 +38,14 @@
       </form>
     </nav>
   </header>
+  {% block titlebar %}
   <div class="bg-ink-950 border-b border-line">
     <div class="mx-auto max-w-page px-4 sm:px-6 lg:px-24 min-h-16 py-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
       <h1 class="text-[21px] leading-7 font-semibold tracking-tight">{{ page_title }}</h1>
       <p class="text-[12px] text-muted" id="context-line">{{ context_line }}</p>
     </div>
   </div>
+  {% endblock %}
 
   <main class="flex-1">
     {% block content %}{% endblock %}
@@ -49,6 +57,7 @@
       <span>More: <a href="/habitat" class="hover:text-fg underline underline-offset-2">Habitat risk</a> · <a href="/explorer" class="hover:text-fg underline underline-offset-2">Explorer</a> · <a href="/compare" class="hover:text-fg underline underline-offset-2">Compare</a> · <a href="/papers" class="hover:text-fg underline underline-offset-2">Papers</a> · <a href="/pipeline" class="hover:text-fg underline underline-offset-2">Pipeline</a></span>
       <span class="hidden sm:inline">Built for NASA Space Apps 2026</span>
       <span>Research preview · v0.1</span>
+      <span id="motion-note">Animations are <span id="motion-state">on</span>. <button type="button" class="motion-switch" id="motion-switch">Turn off</button></span>
     </div>
   </footer>
   <script>
