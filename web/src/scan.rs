@@ -155,7 +155,7 @@ pub async fn identify(State(app): AppRef, headers: HeaderMap, Query(q): Query<Id
     match outcome {
         Ok(reply) => Json(read_scan(&reply)).into_response(),
         Err(VisionError::NotConnected) => refused("not_connected", if crate::hosted() { NOT_CONNECTED_HOSTED } else { NOT_CONNECTED }),
-        Err(VisionError::Failed(message)) => refused("error", &message),
+        Err(VisionError::Failed(message)) => refused("error", &crate::public_error(message, "The scanner couldn’t read this photo just now. Try again in a moment, or type the materials in.")),
     }
 }
 
@@ -199,7 +199,8 @@ fn read_scan(v: &Value) -> Value {
         "confidence": confidence(v),
         "unclear": flag(v, "unclear") || parts.is_empty(),
         "message": s(v, "message"),
-        "model": s(v, "model"),
+        // The public site says a photo was read by AI without naming the model.
+        "model": if crate::hosted() { None } else { s(v, "model") },
         "summary": s(v, "summary"),
         "parts": parts,
     })

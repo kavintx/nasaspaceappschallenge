@@ -142,7 +142,7 @@ async fn run_chat(
         Err(why) => {
             let msg = match why {
                 ChatOpenError::NotConnected => "No AI key is set on this machine yet. Paste an Anthropic or OpenAI key on the Scan page to switch the AI on.".to_string(),
-                ChatOpenError::Failed(m) => m,
+                ChatOpenError::Failed(m) => crate::public_error(m, "Ask couldn’t answer just now. Try again in a moment."),
             };
             ev(&tx, json!({ "type": "error", "error": msg })).await;
             ev(&tx, json!({ "type": "done", "conversation_id": conv_id })).await;
@@ -196,14 +196,14 @@ async fn run_chat(
                 }
             }
             if text.trim().is_empty() {
-                ev(&tx, json!({ "type": "error", "error": err.unwrap_or_else(|| "The AI service returned an empty answer.".to_string()) }))
+                ev(&tx, json!({ "type": "error", "error": err.map(|m| crate::public_error(m, "Ask couldn’t answer just now. Try again in a moment.")).unwrap_or_else(|| "The AI service returned an empty answer.".to_string()) }))
                     .await;
                 ev(&tx, json!({ "type": "done", "conversation_id": conv_id })).await;
                 return;
             }
             if let Some(m) = err {
                 // partial answer streamed already; still report the problem.
-                ev(&tx, json!({ "type": "error", "error": m })).await;
+                ev(&tx, json!({ "type": "error", "error": crate::public_error(m, "Ask couldn’t answer just now. Try again in a moment.") })).await;
             }
             let citations = citations_for(&text, &paper_titles);
             ev(&tx, json!({ "type": "meta", "conversation_id": conv_id, "citations": citations })).await;
