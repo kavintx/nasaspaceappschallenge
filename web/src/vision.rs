@@ -124,6 +124,12 @@ impl Vision {
         }
     }
 
+    /// True when a key on this machine can drive the scanner — the Scan page
+    /// shows its unlock box when this is false.
+    pub fn has_own_key(&self) -> bool {
+        self.anthropic_key.is_some() || self.openai_key.is_some()
+    }
+
     /// False only when the page can already tell no provider will answer.
     pub fn may_work(&self) -> bool {
         let usable = |p: Provider| match p {

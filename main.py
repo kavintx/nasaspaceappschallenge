@@ -4,12 +4,12 @@
 Builds and runs the site in Docker, so nothing Rust needs to be installed
 (Windows machines with Smart App Control can't run cargo natively at all).
 
-    python main.py                    # first run asks a few questions, then builds
-                                      # and starts the dashboard AND the research
-                                      # backend (cloning it if you don't have it yet)
+    python main.py                    # build and start everything in one go,
+                                      # no questions — then open the site and paste
+                                      # your AI key on the Scan page to start scanning
     python main.py --stop             # stop what this script started
     python main.py --logs             # follow the dashboard's log
-    python main.py --configure        # re-run the scanner setup questions
+    python main.py --configure        # set the scanner from the terminal instead
 
 Requires Python 3.12 or newer. What gets built happens inside a
 rust:1-bookworm container; the compiled artifacts and the cargo registry
@@ -338,7 +338,6 @@ def main() -> None:
     except subprocess.CalledProcessError:
         sys.exit("error: Docker is not running. Start Docker Desktop, then run this again.")
 
-    first_run = not (REPO / "web" / ".env").is_file()
     web_env = ensure_web_env()
     port = args.port or int(env_value(web_env, "PORT", "3101"))
 
@@ -353,8 +352,6 @@ def main() -> None:
         fireset = None
     if fireset:
         sync_web_to_backend(web_env, token, args.backend_port)
-    if first_run:
-        setup_wizard(web_env)
 
     if not args.no_build:
         build_web()
@@ -370,6 +367,8 @@ def main() -> None:
         print(f"\n  Flame in Freefall:  http://localhost:{port}")
         if fireset:
             print(f"  research backend:   http://localhost:{args.backend_port}")
+        print(f"\n  Open http://localhost:{port}/scan and paste your AI key to")
+        print("  unlock photo scanning. No restart needed — it starts working right away.")
         lan_hint(port)
 
 
