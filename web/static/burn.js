@@ -205,7 +205,7 @@
   function flameFigure() {
     // A short silent loop. It plays by itself, except for people who ask their device for
     // reduced motion: they get the still frame and a play button.
-    var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var still = document.documentElement.classList.contains("motion-off");
     function stage(name, caption) {
       var picture = el("video", {
         src: "/static/img/" + name + ".mp4", poster: "/static/img/" + name + ".webp",

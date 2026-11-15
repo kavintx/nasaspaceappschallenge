@@ -57,7 +57,6 @@ pub struct Stat {
 pub struct OverviewPage {
     pub active: &'static str,
     pub page_title: String,
-    pub context_line: String,
     pub stats: Vec<Stat>,
     /// The most-tested fuels: name, number of test conditions, and a search link.
     pub materials: Vec<(String, usize, String)>,
@@ -84,7 +83,6 @@ pub async fn overview(State(app): AppRef) -> Response {
     render(OverviewPage {
         active: "overview",
         page_title: "Overview".into(),
-        context_line: "NASA microgravity fire research".into(),
         stats,
         materials,
         data_error,
