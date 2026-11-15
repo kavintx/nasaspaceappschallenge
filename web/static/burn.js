@@ -341,6 +341,7 @@
       });
     }
 
+    // One photo (file or camera frame), one path: busy screen → /scan/identify → edit step.
     function handle(file, mode) {
         errorLine.hidden = true;
         root.querySelector("#busy-text").textContent = mode === "label" ? "Reading the label…" : "Looking…";

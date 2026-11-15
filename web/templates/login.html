@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "account_style.html" %}
+
+<div class="ac-zone">
+  <div class="ac-glow"></div>
+  <div class="ac-col">
+    <section class="ac-card">
+      <p class="ac-eyebrow">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 8 4 4-4 4"/><path d="M14 12H3"/></svg>
+        Welcome back
+      </p>
+      <h2>Log in</h2>
+      <p class="ac-sub">Pick up where you left off.</p>
+
+      {% if !backend_on %}
+        <p class="ac-off">Accounts need the research backend connected (API_AUTH_TOKEN in web/.env).</p>
+      {% endif %}
+      {% if !error.is_empty() %}<p class="ac-err" role="alert">{{ error }}</p>{% endif %}
+
+      <form method="post" action="/account/login">
+        <div class="ac-field">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+          <input type="email" name="email" placeholder="Email" required autocomplete="email" autofocus>
+        </div>
+        <div class="ac-field">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="ac-btn ac-btn-sky">Log in</button>
+      </form>
+      <p class="ac-alt">No account yet? <a href="/signup">Join the crew</a></p>
+    </section>
+  </div>
+</div>
+{% endblock %}

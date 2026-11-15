@@ -1,8 +1,11 @@
 //! Photo identification for Burn Scan: one prompt, one JSON shape, two providers.
 //!
-//!   VISION_PROVIDER = "ollama" | "anthropic"   (default: ollama)
+//!   VISION_PROVIDER = "backend" | "ollama" | "anthropic"   (default: ollama)
 //!   VISION_FALLBACK = "anthropic" | "none"     (default: none)
 //!
+//! - backend: the research backend's POST /api/v1/ai/scan (fire-intel). Uses the same
+//!   API_BASE_URL + API_AUTH_TOKEN pair the rest of the site already calls, and the
+//!   backend's own vision model. The reply already matches the /ai/scan shape below.
 //! - ollama: a local vision model. OLLAMA_BASE_URL (default http://127.0.0.1:11434),
 //!   OLLAMA_VISION_MODEL (default llama3.2-vision).
 //! - anthropic: the Anthropic Messages API with a base64 image block. Key from
@@ -22,6 +25,8 @@ use serde_json::{json, Value};
 use std::time::Duration;
 
 const TIMEOUT: Duration = Duration::from_secs(20);
+/// The backend queues a bigger model than the local one; give it room.
+const SCAN_TIMEOUT: Duration = Duration::from_secs(90);
 const ANTHROPIC_URL: &str = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION: &str = "2026-10-21";
 
@@ -29,6 +34,7 @@ const ANTHROPIC_VERSION: &str = "2026-10-21";
 enum Provider {
     Ollama,
     Anthropic,
+    Backend,
 }
 
 pub enum VisionError {
@@ -48,6 +54,9 @@ pub struct Vision {
     anthropic_model: String,
     /// Sent as `anthropic-workspace-id` when set. Needed by keys not scoped to a workspace.
     anthropic_workspace: Option<String>,
+    /// Provider::Backend target: the same base + token the rest of the site uses.
+    api_base: Option<String>,
+    api_token: Option<String>,
 }
 
 /// What one provider attempt came to.
@@ -63,6 +72,7 @@ impl Vision {
         let named = |key: &str| cfg.get(key).map(|v| v.trim().to_lowercase());
         let primary = match named("VISION_PROVIDER").as_deref() {
             Some("anthropic") => Provider::Anthropic,
+            Some("backend") => Provider::Backend,
             _ => Provider::Ollama,
         };
         let fallback = match named("VISION_FALLBACK").as_deref() {
@@ -78,6 +88,11 @@ impl Vision {
             anthropic_key: cfg.get("ANTHROPIC_API_KEY"),
             anthropic_model: cfg.get("ANTHROPIC_MODEL").unwrap_or_else(|| "claude-haiku-5-5".into()),
             anthropic_workspace: cfg.get("ANTHROPIC_WORKSPACE_ID"),
+            // Same rule as backend.rs: the backend is enabled by the token.
+            api_token: cfg.get("API_AUTH_TOKEN"),
+            api_base: cfg
+                .get("API_AUTH_TOKEN")
+                .map(|_| cfg.get("API_BASE_URL").unwrap_or_else(|| "http://127.0.0.1:8080".into()).trim_end_matches('/').to_string()),
         };
         // Names only. The key itself is never printed.
         println!(
@@ -88,6 +103,9 @@ impl Vision {
         if (primary == Provider::Anthropic || fallback == Some(Provider::Anthropic)) && vision.anthropic_key.is_none() {
             println!("photo scanner: anthropic is not configured (ANTHROPIC_API_KEY is not set in web/.env).");
         }
+        if (primary == Provider::Backend || fallback == Some(Provider::Backend)) && vision.api_token.is_none() {
+            println!("photo scanner: research backend is not configured (API_AUTH_TOKEN is not set in web/.env).");
+        }
         vision
     }
 
@@ -95,12 +113,17 @@ impl Vision {
         match p {
             Provider::Ollama => format!("ollama:{}", self.ollama_model),
             Provider::Anthropic => format!("anthropic:{}", self.anthropic_model),
+            Provider::Backend => "research backend".to_string(),
         }
     }
 
     /// False only when the page can already tell no provider will answer.
     pub fn may_work(&self) -> bool {
-        let usable = |p: Provider| p == Provider::Ollama || self.anthropic_key.is_some();
+        let usable = |p: Provider| match p {
+            Provider::Ollama => true,
+            Provider::Anthropic => self.anthropic_key.is_some(),
+            Provider::Backend => self.api_token.is_some(),
+        };
         usable(self.primary) || self.fallback.is_some_and(usable)
     }
 
@@ -125,7 +148,10 @@ impl Vision {
         };
         match outcome {
             Attempt::Ok(mut v) => {
-                v["model"] = json!(self.label(provider));
+                // The backend already names the model that answered ("vllm:…"); keep it.
+                if provider != Provider::Backend || v.get("model").and_then(Value::as_str).is_none() {
+                    v["model"] = json!(self.label(provider));
+                }
                 Ok(v)
             }
             Attempt::NotConfigured => Err(VisionError::NotConnected),
@@ -137,6 +163,7 @@ impl Vision {
         let raw = match provider {
             Provider::Ollama => self.ask_ollama(data, mode).await,
             Provider::Anthropic => self.ask_anthropic(data, mime, mode).await,
+            Provider::Backend => self.ask_backend(data, mime, mode).await,
         };
         match raw {
             Ok(text) => match parse(&text) {
@@ -145,6 +172,53 @@ impl Vision {
             },
             Err(attempt) => attempt,
         }
+    }
+
+    /// The research backend's /api/v1/ai/scan, called server-to-server: raw photo
+    /// bytes with an image content type, bearer token like every other backend call.
+    /// Its reply is already schema JSON, so it only passes through `parse`'s checks.
+    async fn ask_backend(&self, data: &str, mime: &str, mode: &str) -> Result<String, Attempt> {
+        let base = self.api_base.as_deref().ok_or(Attempt::NotConfigured)?;
+        let token = self.api_token.as_deref().ok_or(Attempt::NotConfigured)?;
+        let image = base64::engine::general_purpose::STANDARD
+            .decode(data)
+            .map_err(|_| Attempt::Failed("The scanner could not read the photo.".into()))?;
+        let resp = self
+            .http
+            .post(format!("{base}/api/v1/ai/scan?mode={mode}"))
+            .bearer_auth(token)
+            .header(reqwest::header::CONTENT_TYPE, mime)
+            .body(image)
+            .timeout(SCAN_TIMEOUT)
+            .send()
+            .await
+            .map_err(|e| {
+                if e.is_timeout() {
+                    Attempt::Failed(format!(
+                        "The research backend took longer than {} seconds to read the photo.",
+                        SCAN_TIMEOUT.as_secs()
+                    ))
+                } else {
+                    Attempt::Failed(format!("Couldn't reach the research backend at {base} for photo scanning."))
+                }
+            })?;
+        let status = resp.status();
+        let reply: Value = resp.json().await.unwrap_or(Value::Null);
+        if status.as_u16() == 401 {
+            return Err(Attempt::Failed("The research backend rejected the access token. Check API_AUTH_TOKEN.".into()));
+        }
+        if !status.is_success() {
+            let why = reply
+                .get("error")
+                .or_else(|| reply.get("message"))
+                .and_then(Value::as_str)
+                .unwrap_or("no details");
+            return Err(Attempt::Failed(format!(
+                "The research backend refused the photo ({}): {why}.",
+                status.as_u16()
+            )));
+        }
+        Ok(reply.to_string())
     }
 
     async fn ask_ollama(&self, data: &str, mode: &str) -> Result<String, Attempt> {
