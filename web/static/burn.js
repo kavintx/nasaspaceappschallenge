@@ -203,15 +203,15 @@
   }
 
   function flameFigure() {
-    function stage(heat, caption) {
+    function stage(file, caption) {
       return el("div", {}, [
-        el("div", { class: "flame-stage", style: "--heat: " + heat }, [el("div", { class: "flame-ball" }, [el("div", { class: "flame-core" })])]),
+        el("img", { src: "/static/img/" + file, alt: "", width: "900", height: "678", loading: "lazy", class: "w-full aspect-[4/3] object-cover rounded-xl bg-black" }),
         el("p", { class: "mt-2 text-[12px] text-muted text-center", text: caption }),
       ]);
     }
-    return el("figure", { class: "mt-5", role: "img", "aria-label": "Drawing of two round blue flames. The one at 30% oxygen is larger and brighter than the one at 21%." }, [
-      el("div", { class: "grid grid-cols-2 gap-3" }, [stage(1, "Moon Base · 30% O₂"), stage(0, "ISS · 21% O₂")]),
-      el("figcaption", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Illustration. Flames in weightlessness are round and blue; more oxygen makes them bigger and brighter. Not a measurement." }),
+    return el("figure", { class: "mt-5", role: "img", "aria-label": "Two pictures of a round blue flame on a wick. The one at 30% oxygen is larger and brighter than the one at 21%." }, [
+      el("div", { class: "grid grid-cols-2 gap-3" }, [stage("flame-o2-30.webp", "Moon Base · 30% O₂"), stage("flame-o2-21.webp", "ISS · 21% O₂")]),
+      el("figcaption", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Illustration, made with AI. Not a NASA photo and not a measurement. Flames in weightlessness are round and blue; more oxygen makes them bigger and brighter." }),
     ]);
   }
 
