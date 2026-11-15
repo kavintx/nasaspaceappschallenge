@@ -130,6 +130,41 @@ impl Vision {
         self.anthropic_key.is_some() || self.openai_key.is_some()
     }
 
+    /// The live provider plan for the research chat: primary, then fallback.
+    pub fn chat_cfg(&self) -> ChatCfg {
+        let mut providers = vec![self.chat_provider(self.primary)];
+        if let Some(f) = self.fallback.filter(|f| *f != self.primary) {
+            providers.push(self.chat_provider(f));
+        }
+        ChatCfg { http: self.http.clone(), providers }
+    }
+
+    fn chat_provider(&self, p: Provider) -> ChatProvider {
+        match p {
+            Provider::Ollama => ChatProvider {
+                kind: ChatKind::Ollama,
+                url: self.ollama_url.clone(),
+                model: self.ollama_model.clone(),
+                key: None,
+                workspace: None,
+            },
+            Provider::Anthropic => ChatProvider {
+                kind: ChatKind::Anthropic,
+                url: String::new(),
+                model: self.anthropic_model.clone(),
+                key: self.anthropic_key.clone(),
+                workspace: self.anthropic_workspace.clone(),
+            },
+            Provider::OpenAI => ChatProvider {
+                kind: ChatKind::OpenAI,
+                url: self.openai_url.clone(),
+                model: self.openai_model.clone(),
+                key: self.openai_key.clone(),
+                workspace: None,
+            },
+        }
+    }
+
     /// False only when the page can already tell no provider will answer.
     pub fn may_work(&self) -> bool {
         let usable = |p: Provider| match p {
@@ -341,6 +376,191 @@ impl Vision {
     }
 }
 
+// ---------- text chat (Ask the Data) ----------
+//
+// The same providers and keys that read photos also drive the research chat.
+// This snapshot hands an owned, cheap-to-move plan to the chat streaming task.
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum ChatKind {
+    Anthropic,
+    OpenAI,
+    Ollama,
+}
+
+/// One parsed line from a provider's stream.
+pub enum ChatPiece {
+    Delta(String),
+    Done,
+    Err(String),
+    Skip,
+}
+
+impl ChatKind {
+    /// Turn one raw line of the provider's stream into a chat event.
+    pub fn piece(self, line: &str) -> ChatPiece {
+        match self {
+            ChatKind::Ollama => {
+                let Ok(v) = serde_json::from_str::<Value>(line) else { return ChatPiece::Skip };
+                if v.get("done").and_then(Value::as_bool).unwrap_or(false) {
+                    return ChatPiece::Done;
+                }
+                match v.pointer("/message/content").and_then(Value::as_str) {
+                    Some(t) if !t.is_empty() => ChatPiece::Delta(t.to_string()),
+                    _ => ChatPiece::Skip,
+                }
+            }
+            ChatKind::Anthropic | ChatKind::OpenAI => {
+                let Some(data) = line.trim().strip_prefix("data:").map(str::trim) else { return ChatPiece::Skip };
+                if data.is_empty() {
+                    return ChatPiece::Skip;
+                }
+                if data == "[DONE]" {
+                    return ChatPiece::Done;
+                }
+                let Ok(v) = serde_json::from_str::<Value>(data) else { return ChatPiece::Skip };
+                match self {
+                    ChatKind::Anthropic => match v.get("type").and_then(Value::as_str) {
+                        Some("content_block_delta") => v
+                            .pointer("/delta/text")
+                            .and_then(Value::as_str)
+                            .filter(|t| !t.is_empty())
+                            .map(|t| ChatPiece::Delta(t.to_string()))
+                            .unwrap_or(ChatPiece::Skip),
+                        Some("message_stop") => ChatPiece::Done,
+                        Some("error") => ChatPiece::Err(
+                            v.pointer("/error/message").and_then(Value::as_str).unwrap_or("the AI service reported an error").to_string(),
+                        ),
+                        _ => ChatPiece::Skip,
+                    },
+                    _ => v
+                        .pointer("/choices/0/delta/content")
+                        .and_then(Value::as_str)
+                        .filter(|t| !t.is_empty())
+                        .map(|t| ChatPiece::Delta(t.to_string()))
+                        .unwrap_or(ChatPiece::Skip),
+                }
+            }
+        }
+    }
+}
+
+pub enum ChatOpenError {
+    /// No provider on this machine can answer — the Scan page's box is the fix.
+    NotConnected,
+    /// A provider was reached but refused or answered badly. Safe to show.
+    Failed(String),
+}
+
+struct ChatProvider {
+    kind: ChatKind,
+    url: String,
+    model: String,
+    key: Option<String>,
+    workspace: Option<String>,
+}
+
+/// Owned, clone-cheap chat plan taken from the live Vision config.
+pub struct ChatCfg {
+    http: reqwest::Client,
+    providers: Vec<ChatProvider>,
+}
+
+impl ChatCfg {
+    /// Opens a streaming chat completion, trying the primary provider then the fallback.
+    pub async fn open(&self, system: &str, messages: &[(String, String)]) -> Result<(reqwest::Response, ChatKind), ChatOpenError> {
+        let msgs: Vec<Value> = messages.iter().map(|(r, c)| json!({ "role": r, "content": c })).collect();
+        let mut last = ChatOpenError::NotConnected;
+        for p in &self.providers {
+            let body = match p.kind {
+                ChatKind::Anthropic => json!({
+                    "model": p.model, "max_tokens": 2000, "stream": true, "system": system, "messages": msgs,
+                }),
+                kind => {
+                    let mut all = vec![json!({ "role": "system", "content": system })];
+                    all.extend(msgs.iter().cloned());
+                    match kind {
+                        ChatKind::OpenAI => json!({ "model": p.model, "max_tokens": 2000, "stream": true, "messages": all }),
+                        _ => json!({ "model": p.model, "stream": true, "messages": all }),
+                    }
+                }
+            };
+            let request = match p.kind {
+                ChatKind::Anthropic => match &p.key {
+                    Some(k) => {
+                        let mut r = self.http.post(ANTHROPIC_URL).header("x-api-key", k).header("anthropic-version", ANTHROPIC_VERSION);
+                        if let Some(w) = &p.workspace {
+                            r = r.header("anthropic-workspace-id", w);
+                        }
+                        r
+                    }
+                    None => {
+                        last = ChatOpenError::Failed("This machine has no Anthropic key set.".into());
+                        continue;
+                    }
+                },
+                ChatKind::OpenAI => match &p.key {
+                    Some(k) => self.http.post(format!("{}/chat/completions", p.url)).bearer_auth(k),
+                    None => {
+                        last = ChatOpenError::Failed("This machine has no OpenAI key set.".into());
+                        continue;
+                    }
+                },
+                ChatKind::Ollama => self.http.post(format!("{}/api/chat", p.url)),
+            };
+            let opened = tokio::time::timeout(Duration::from_secs(15), request.json(&body).send()).await;
+            let resp = match opened {
+                Err(_) => {
+                    last = ChatOpenError::Failed(format!("{} did not answer in time.", self.name(p.kind)));
+                    continue;
+                }
+                Ok(Err(e)) => {
+                    last = if e.is_connect() {
+                        ChatOpenError::Failed(match p.kind {
+                            ChatKind::Ollama => "Nothing is listening for Ollama on this machine.".to_string(),
+                            _ => format!("Couldn't reach {}.", self.name(p.kind)),
+                        })
+                    } else {
+                        ChatOpenError::Failed(format!("Couldn't reach {}.", self.name(p.kind)))
+                    };
+                    continue;
+                }
+                Ok(Ok(r)) => r,
+            };
+            let status = resp.status().as_u16();
+            if (200..300).contains(&status) {
+                return Ok((resp, p.kind));
+            }
+            let reply: Value = resp.json().await.unwrap_or(Value::Null);
+            let detail = reply
+                .pointer("/error/message")
+                .and_then(Value::as_str)
+                .or_else(|| reply.get("error").and_then(Value::as_str))
+                .unwrap_or("no details");
+            last = ChatOpenError::Failed(match (p.kind, status) {
+                (ChatKind::Anthropic, 401) | (ChatKind::Anthropic, 403) | (ChatKind::OpenAI, 401) => {
+                    format!("{} rejected the API key. Check the key in web/.env.", self.name(p.kind))
+                }
+                (_, 404) if p.kind == ChatKind::Ollama => format!(
+                    "The model \"{}\" isn't installed in Ollama. Run: ollama pull {}",
+                    p.model, p.model
+                ),
+                (_, 404) => format!("{} doesn't know the model \"{}\".", self.name(p.kind), p.model),
+                (_, 429) => format!("{} is rate-limiting this key. Try again in a moment.", self.name(p.kind)),
+                _ => format!("{} returned {status}: {detail}", self.name(p.kind)),
+            });
+        }
+        Err(last)
+    }
+
+    fn name(&self, kind: ChatKind) -> &'static str {
+        match kind {
+            ChatKind::Anthropic => "Anthropic",
+            ChatKind::OpenAI => "OpenAI",
+            ChatKind::Ollama => "Ollama",
+        }
+    }
+}
 /// The same instructions for both providers.
 fn prompt(mode: &str) -> String {
     let task = if mode == "label" {

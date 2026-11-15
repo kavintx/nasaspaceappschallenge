@@ -7,6 +7,7 @@ mod ai;
 mod air;
 mod backend;
 mod catalog;
+mod chat;
 mod config;
 mod lambda;
 mod scan;
@@ -35,6 +36,8 @@ pub struct AppState {
     pub vision: tokio::sync::RwLock<vision::Vision>,
     /// Cached experiment catalog and when it was built.
     pub catalog: tokio::sync::Mutex<Option<Arc<catalog::Catalog>>>,
+    /// Ask-the-Data conversations, in memory (role, text); cleared on restart.
+    pub chat: tokio::sync::RwLock<std::collections::HashMap<String, Vec<(String, String)>>>,
     /// When true (READ_ONLY=true), nothing that changes the database is allowed.
     pub read_only: bool,
 }
@@ -54,6 +57,7 @@ async fn main() {
         backend: backend::Backend::from_cfg(&cfg),
         vision: tokio::sync::RwLock::new(vision::Vision::from_cfg(&cfg)),
         catalog: tokio::sync::Mutex::new(None),
+        chat: tokio::sync::RwLock::new(std::collections::HashMap::new()),
         read_only: cfg.get("READ_ONLY").is_some_and(|v| v.eq_ignore_ascii_case("true") || v == "1"),
     });
     if state.backend.is_none() {
@@ -75,7 +79,7 @@ async fn main() {
         .route("/ask", get(views::ask))
         .route("/papers", get(views::papers))
         .route("/papers/{id}", get(views::paper))
-        .route("/ask/stream", post(admin::chat_stream))
+        .route("/ask/stream", post(chat::chat_stream))
         .route("/pipeline", get(admin::pipeline))
         .route("/pipeline/test", post(admin::test_model))
         .route("/pipeline/ingest", post(admin::ingest))

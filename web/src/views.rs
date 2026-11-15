@@ -743,9 +743,7 @@ pub struct AskQuery {
 }
 
 pub async fn ask(State(app): AppRef, Query(q): Query<AskQuery>) -> Response {
-    if let Err(page) = backend(&app) {
-        return page;
-    }
+    // Runs on this machine's own AI key and the Supabase data — no backend needed.
     let experiments = app
         .store
         .experiments()

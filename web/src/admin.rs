@@ -6,11 +6,10 @@ use crate::views::{backend, message_page, render};
 use crate::AppState;
 use askama::Template;
 use axum::{
-    body::Body,
     extract::{Path, State},
     http::{header, HeaderMap, StatusCode},
     response::{IntoResponse, Redirect, Response},
-    Form, Json,
+    Form,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -24,12 +23,28 @@ pub const PROGRAMS: [&str; 13] = [
 ];
 
 /// Refuse form posts that come from another website.
+///
+/// Works behind a proxy (a Cloudflare tunnel, for instance): the browser's Origin is
+/// checked against every name the server is reached under — the direct Host header or
+/// the proxy's X-Forwarded-Host — so a tunnel rewriting Host doesn't break its own
+/// visitors. A page on some other site still can't forge either value.
 pub(crate) fn same_origin(headers: &HeaderMap) -> bool {
-    let host = headers.get(header::HOST).and_then(|h| h.to_str().ok()).unwrap_or("");
-    match headers.get(header::ORIGIN).and_then(|o| o.to_str().ok()) {
-        Some(origin) => origin.split("://").nth(1) == Some(host),
-        None => true,
+    let Some(origin) = headers.get(header::ORIGIN).and_then(|o| o.to_str().ok()) else {
+        return true; // plain same-site form posts from browsers all carry Origin; anything without it is a non-browser client
+    };
+    let want = trim_host(origin);
+    let matches = |name: &str| headers.get(name).and_then(|h| h.to_str().ok()).is_some_and(|v| trim_host(v) == want);
+    matches("host") || matches("x-forwarded-host")
+}
+
+/// "https://abc.trycloudflare.com" or "localhost:3101:443"-style values down to the host[:port].
+fn trim_host(value: &str) -> &str {
+    let rest = value.split("://").nth(1).unwrap_or(value);
+    let rest = rest.trim_end_matches('/');
+    if let Some(stripped) = rest.strip_suffix(":443") {
+        return stripped;
     }
+    rest
 }
 
 /// Checks shared by every action that writes: same site, not read-only, backend connected.
@@ -429,40 +444,6 @@ pub async fn edit_finding(State(app): AppRef, headers: HeaderMap, Path(id): Path
     save_row(&app, b, "findings", &id, &form.paper, checked.map(|_| body)).await
 }
 
-// ---------- chat relay ----------
-
-#[derive(Deserialize)]
-pub struct ChatRequest {
-    message: String,
-    conversation_id: Option<String>,
-    experiment: Option<String>,
-}
-
-/// Relays the backend's event stream to the browser, adding the token on the way.
-pub async fn chat_stream(State(app): AppRef, headers: HeaderMap, Json(req): Json<ChatRequest>) -> Response {
-    if !same_origin(&headers) {
-        return (StatusCode::FORBIDDEN, "Cross-site request refused.").into_response();
-    }
-    let Some(b) = app.backend.as_ref() else {
-        return (StatusCode::SERVICE_UNAVAILABLE, "The research backend isn't connected.").into_response();
-    };
-    let message = req.message.trim();
-    if message.is_empty() || message.chars().count() > 4000 {
-        return (StatusCode::BAD_REQUEST, "Write a question of up to 4,000 characters.").into_response();
-    }
-    let body = json!({
-        "message": message,
-        "conversation_id": req.conversation_id.filter(|c| !c.is_empty()),
-        "experiment": req.experiment.filter(|e| !e.is_empty()),
-        "stream": true,
-    });
-    match b.chat_stream(body).await {
-        Err(e) => (StatusCode::BAD_GATEWAY, e).into_response(),
-        Ok(upstream) => Response::builder()
-            .header(header::CONTENT_TYPE, "text/event-stream")
-            .header(header::CACHE_CONTROL, "no-cache")
-            .body(Body::from_stream(upstream.bytes_stream()))
-            .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response()),
-    }
-}
+// (The chat used to relay the backend's /ai/chat stream. Ask the Data now runs
+//  on this machine's own key straight from the Supabase data — see chat.rs.)
 

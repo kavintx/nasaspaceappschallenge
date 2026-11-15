@@ -223,23 +223,6 @@ impl Backend {
         self.finish(&path, res).await
     }
 
-    /// Opens the streaming chat. The caller relays the event stream to the browser.
-    pub async fn chat_stream(&self, body: Value) -> ApiResult<reqwest::Response> {
-        let resp = self
-            .http
-            .post(format!("{}/api/v1/ai/chat", self.base))
-            .bearer_auth(&self.token)
-            .json(&body)
-            .timeout(AI_TIMEOUT)
-            .send()
-            .await
-            .map_err(|_| format!("Couldn't reach the research backend at {}.", self.base))?;
-        match resp.status().as_u16() {
-            200..=299 => Ok(resp),
-            401 => Err("The research backend rejected the access token. Check API_AUTH_TOKEN.".into()),
-            code => Err(format!("The research backend returned {code} for the chat.")),
-        }
-    }
 }
 
 // ---------- lenient JSON helpers ----------
