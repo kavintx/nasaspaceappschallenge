@@ -8,7 +8,7 @@
 //! - ollama: a local vision model. OLLAMA_BASE_URL (default http://127.0.0.1:11434),
 //!   OLLAMA_VISION_MODEL (default llama3.2-vision).
 //! - anthropic: the Anthropic Messages API with a base64 image block. Key from
-//!   ANTHROPIC_API_KEY, model from ANTHROPIC_MODEL (default claude-haiku-5-5). A key that
+//!   ANTHROPIC_API_KEY, model from ANTHROPIC_MODEL (default claude-sonnet-5-5). A key that
 //!   isn't tied to one workspace also needs ANTHROPIC_WORKSPACE_ID.
 //! - openai: the OpenAI chat-completions API with an image data URL (any endpoint that
 //!   speaks the same protocol works — set OPENAI_BASE_URL). Key from OPENAI_API_KEY,
@@ -25,7 +25,7 @@ use base64::Engine;
 use serde_json::{json, Value};
 use std::time::Duration;
 
-const TIMEOUT: Duration = Duration::from_secs(20);
+const TIMEOUT: Duration = Duration::from_secs(40);
 const ANTHROPIC_URL: &str = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION: &str = "2026-10-21";
 
@@ -95,7 +95,7 @@ impl Vision {
             ollama_url: cfg.get_file_first("OLLAMA_BASE_URL").unwrap_or_else(|| "http://127.0.0.1:11434".into()).trim_end_matches('/').to_string(),
             ollama_model: cfg.get_file_first("OLLAMA_VISION_MODEL").unwrap_or_else(|| "llama3.2-vision".into()),
             anthropic_key: cfg.get_file_first("ANTHROPIC_API_KEY").map(|k| k.trim().trim_matches('"').to_string()).filter(|k| !k.is_empty()),
-            anthropic_model: cfg.get_file_first("ANTHROPIC_MODEL").unwrap_or_else(|| "claude-haiku-5-5".into()),
+            anthropic_model: cfg.get_file_first("ANTHROPIC_MODEL").unwrap_or_else(|| "claude-sonnet-5-5".into()),
             anthropic_workspace: cfg.get_file_first("ANTHROPIC_WORKSPACE_ID"),
             openai_key: cfg.get_file_first("OPENAI_API_KEY"),
             openai_model: cfg.get_file_first("OPENAI_VISION_MODEL").unwrap_or_else(|| "gpt-4o-mini".into()),
@@ -316,7 +316,7 @@ impl Vision {
             "model": self.anthropic_model,
             "max_tokens": 4000,
             "output_config": {
-                "effort": "low",
+                "effort": "medium",
                 "format": { "type": "json_schema", "schema": schema() },
             },
             "messages": [{
@@ -568,9 +568,10 @@ fn prompt(mode: &str) -> String {
          material content and report only what the label states, with the stated percentages as shares. \
          Use one part named \"label\". If no material text is readable, set unclear to true."
     } else {
-        "The photo should show one everyday item. Name the item, list its visible parts, and give the most \
-         likely material or materials of each part with a rough percentage share of that part (null if you \
-         can't estimate one)."
+        "The photo shows an everyday item. If several things are in view, pick the main one: the largest, \
+         most central or most in focus, and ignore the background, hands and surfaces it rests on. Name the \
+         item, list its main parts (at most six), and give the most likely material or materials of each \
+         part with a rough percentage share of that part (null if you can't estimate one)."
     };
     format!(
         "You identify what a photographed item is made of, for a tool that compares materials with NASA \
@@ -588,9 +589,15 @@ fn prompt(mode: &str) -> String {
          - confidence is a number from 0 to 1 for how sure you are from this photo alone. A photo rarely proves \
          a material: plastics and synthetic fabrics that look alike get 0.5 or lower. Do not guess high.\n\
          - The top-level confidence is how sure you are about what the item is.\n\
-         - If the photo is too blurry, too dark or too far away to tell what anything is made of, set unclear \
-         to true, say why in message in one short sentence, and return an empty parts list. A close-up that \
-         shows only part of an item is fine: name what you can see and report its material.\n\
+         - Always give your best reading. Once you recognise what the item is, use what you know about how \
+         such items are normally made, including parts you cannot see (a phone has a glass screen, an \
+         aluminium or plastic body and a lithium-ion battery; a sneaker has a rubber sole and a polyester \
+         or leather upper). A material you infer rather than see gets a lower confidence, not an empty answer.\n\
+         - unclear is a last resort. Set it to true only when you cannot tell what the item is at all: the \
+         frame is black, blank or so blurred that nothing is recognisable. Then say why in message in one \
+         short sentence and return an empty parts list. An odd angle, a cluttered background, a partial \
+         view, a reflection or an unfamiliar brand is not unclear: name what you can see and report its \
+         materials.\n\
          - summary is one or two plain sentences, at most 40 words, saying what the photo shows and what it \
          appears to be made of, with your uncertainty in plain words (\"looks like\", \"probably\"). Describe \
          only what is visible. Say nothing about fire, burning, safety or NASA: you have no test data. \

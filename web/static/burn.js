@@ -6,7 +6,7 @@
 
   var STORE_KEY = "burnscan.v1";
   var SPACES = ["My room", "Cargo", "Habitat"];
-  var LONG_EDGE = 1280; // px, before upload
+  var LONG_EDGE = 1568; // px, before upload
   var THUMB_EDGE = 160; // px, kept in the browser with a saved item
   var UNSURE = 0.6; // below this the model's guess is flagged
 
@@ -377,9 +377,13 @@
             });
           });
           var unsure = reply.unclear || (typeof reply.confidence === "number" && reply.confidence < UNSURE);
-          state.notice = unsure
-            ? (reply.message || "This photo is hard to read.") + " Take another photo, or correct the materials below."
-            : null;
+          // "Couldn't read it" is only said when the model really could not; a low-confidence
+          // reading is still a reading, shown with a request to check it.
+          state.notice = reply.unclear
+            ? (reply.message || "This photo is hard to read.") + " Take another photo, or type the materials below."
+            : unsure
+              ? "This is a best guess. Check the item and materials below and correct anything that’s off."
+              : null;
           openEdit();
         }).catch(function () {
           fail("That photo couldn’t be read or sent. Try again.");
