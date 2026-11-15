@@ -251,6 +251,30 @@ fn tests_for<'a>(cat: Option<&'a Catalog>, fuels: &[String]) -> Vec<&'a Test> {
         .collect()
 }
 
+/// Every test as a point for the chart: its oxygen level (percent) and how it ended.
+/// A test that names several oxygen levels gives one point per level; a test with no
+/// oxygen level recorded is counted separately, never placed on the axis.
+fn chart(tests: &[&Test]) -> Value {
+    let code = |o: Outcome| match o {
+        Outcome::Burned => "burned",
+        Outcome::WentOut => "went_out",
+        Outcome::NoIgnition => "no_ignition",
+        Outcome::Unknown => "unrecorded",
+    };
+    let mut points: Vec<Value> = vec![];
+    let mut no_level = 0;
+    for t in tests {
+        let levels: Vec<f64> = t.o2.iter().cloned().filter(|v| v.is_finite() && (0.0..=100.0).contains(v)).collect();
+        if levels.is_empty() {
+            no_level += 1;
+        }
+        for v in levels {
+            points.push(json!({ "o2": v, "outcome": code(t.outcome) }));
+        }
+    }
+    json!({ "points": points, "no_level": no_level })
+}
+
 fn severity(o: Outcome) -> u8 {
     match o {
         Outcome::Burned => 3,
@@ -439,6 +463,7 @@ pub async fn result(State(app): AppRef, headers: HeaderMap, Json(req): Json<Resu
                 "fuels": fuels,
                 "habitats": verdicts(&tests),
                 "evidence": evidence(&tests),
+                "chart": chart(&tests),
                 "closest": closest,
                 "gases": gases(&gas_names),
             })

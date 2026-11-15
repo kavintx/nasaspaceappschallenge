@@ -152,3 +152,30 @@ html:not(.js) .after-intro, html.motion-off .after-intro { margin-top: 0; paddin
   .scan2-step { max-width: 44rem; margin-left: auto; margin-right: auto; }
   .scan2-glow { left: 72%; top: 50%; width: 760px; height: 760px; transform: translate(-50%, -50%); }
 }
+
+/* Scan result visuals: the photo as a banner, materials bars, the tests-by-oxygen chart,
+   and verdict tiles tinted by how the test ended. */
+.scan-hero { position: relative; overflow: hidden; border-radius: 1.25rem; background: #000; border: 1px solid #2a3040; box-shadow: 0 0 0 1px rgba(41, 151, 255, 0.25), 0 18px 60px -20px rgba(41, 151, 255, 0.55); }
+.scan-hero img { display: block; width: 100%; height: clamp(180px, 34vh, 320px); object-fit: cover; }
+.scan-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2, 4, 13, 0) 45%, rgba(2, 4, 13, 0.88) 100%); pointer-events: none; }
+.scan-hero-title { position: absolute; left: 1rem; right: 1rem; bottom: 0.85rem; z-index: 1; font-size: 26px; line-height: 32px; font-weight: 600; overflow-wrap: anywhere; }
+.scan-hero-sweep { position: absolute; left: 0; right: 0; top: 0; height: 28%; z-index: 1; background: linear-gradient(180deg, rgba(41, 151, 255, 0) 0%, rgba(41, 151, 255, 0.35) 85%, rgba(145, 199, 212, 0.9) 100%); transform: translateY(-110%); animation: hero-sweep 1.1s cubic-bezier(0.3, 0.6, 0.3, 1) 0.15s 1 both; pointer-events: none; }
+@keyframes hero-sweep { from { transform: translateY(-110%); opacity: 1; } to { transform: translateY(380%); opacity: 0; } }
+
+.mat-figure, .o2-chart { margin-top: 1rem; border-radius: 0.75rem; border: 1px solid #2a3040; background: #101522; padding: 1rem; }
+.o2-chart { background: #090d18; }
+.mat-bar { display: flex; gap: 2px; height: 14px; margin-top: 0.4rem; border-radius: 7px; overflow: hidden; background: #2a3040; }
+.mat-seg { display: block; height: 100%; min-width: 3px; transform-origin: left center; animation: bar-grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.mat-dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+@keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.o2-chart svg circle, .o2-chart svg rect[transform], .o2-chart svg path { animation: mark-in 0.4s ease-out both; }
+@keyframes mark-in { from { opacity: 0; } to { opacity: 1; } }
+
+.verdict-tile { position: relative; padding-right: 2.25rem; }
+.verdict-icon { position: absolute; right: 0.6rem; top: 0.6rem; opacity: 0.95; }
+.verdict-tile[data-verdict="burned"] { background: linear-gradient(135deg, rgba(255, 106, 61, 0.26), #101522 70%); box-shadow: 0 10px 34px -18px rgba(255, 106, 61, 0.9); }
+.verdict-tile[data-verdict="went_out"] { background: linear-gradient(135deg, rgba(229, 182, 122, 0.22), #101522 70%); box-shadow: 0 10px 34px -20px rgba(229, 182, 122, 0.8); }
+.verdict-tile[data-verdict="no_ignition"] { background: linear-gradient(135deg, rgba(79, 211, 138, 0.22), #101522 70%); box-shadow: 0 10px 34px -20px rgba(79, 211, 138, 0.8); }
+
+html.motion-off .scan-hero-sweep { display: none; }
+html.motion-off .mat-seg, html.motion-off .o2-chart svg * { animation: none; }
