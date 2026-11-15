@@ -178,6 +178,8 @@
     } else {
       var why = result.data !== "ok"
         ? "No NASA test data to check this against yet."
+        : result.lookup === "synonyms"
+          ? "No test in NASA’s data under this name or its listed other names."
         : result.lookup !== "ok"
           ? "No test in NASA’s data under exactly this name."
           : material.query + " isn’t in NASA’s tests.";
