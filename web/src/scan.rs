@@ -467,6 +467,7 @@ pub async fn result(State(app): AppRef, headers: HeaderMap, Json(req): Json<Resu
                 "habitats": verdicts(&tests),
                 "evidence": evidence(&tests),
                 "chart": chart(&tests),
+                "other": if app.more_sources { crate::extra::for_names(&gas_names) } else { vec![] },
                 "closest": closest,
                 "gases": gases(&gas_names),
             })

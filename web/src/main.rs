@@ -9,6 +9,7 @@ mod backend;
 mod catalog;
 mod chat;
 mod config;
+mod extra;
 mod lambda;
 mod scan;
 mod setup;
@@ -40,6 +41,8 @@ pub struct AppState {
     pub chat: tokio::sync::RwLock<std::collections::HashMap<String, Vec<(String, String)>>>,
     /// When true (READ_ONLY=true), nothing that changes the database is allowed.
     pub read_only: bool,
+    /// When true (MORE_SOURCES=on), results also show published tests from outside the database.
+    pub more_sources: bool,
 }
 
 /// True on the public website (a serverless function), false for a copy run on a computer.
@@ -58,6 +61,7 @@ async fn main() {
         vision: tokio::sync::RwLock::new(vision::Vision::from_cfg(&cfg)),
         catalog: tokio::sync::Mutex::new(None),
         chat: tokio::sync::RwLock::new(std::collections::HashMap::new()),
+        more_sources: cfg.get("MORE_SOURCES").is_some_and(|v| matches!(v.trim().to_lowercase().as_str(), "on" | "true" | "1")),
         read_only: cfg.get("READ_ONLY").is_some_and(|v| v.eq_ignore_ascii_case("true") || v == "1"),
     });
     if state.backend.is_none() {
