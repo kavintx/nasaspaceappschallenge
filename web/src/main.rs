@@ -5,10 +5,10 @@
 mod admin;
 mod ai;
 mod air;
-mod auth;
 mod backend;
 mod catalog;
 mod config;
+mod lambda;
 mod scan;
 mod setup;
 mod store;
@@ -68,12 +68,6 @@ async fn main() {
         .route("/experiments/{id}", get(views::detail))
         .route("/compare", get(views::compare))
         .route("/ask", get(views::ask))
-        .route("/account", get(auth::account))
-        .route("/login", get(auth::login_page))
-        .route("/signup", get(auth::signup_page))
-        .route("/account/login", post(auth::login))
-        .route("/account/signup", post(auth::signup))
-        .route("/account/logout", post(auth::logout))
         .route("/papers", get(views::papers))
         .route("/papers/{id}", get(views::paper))
         .route("/ask/stream", post(admin::chat_stream))
@@ -91,6 +85,12 @@ async fn main() {
         // Gzip pages, CSS and scripts. Video is already compressed and must stay seekable.
         .layer(CompressionLayer::new().compress_when(DefaultPredicate::new().and(NotForContentType::new("video/"))))
         .with_state(state);
+
+    // On a serverless host (Netlify Functions) there is no port: requests arrive as events.
+    if let Ok(runtime_api) = std::env::var("AWS_LAMBDA_RUNTIME_API") {
+        lambda::run(app, runtime_api).await;
+        return;
+    }
 
     // Use PORT if set; otherwise start at 3100 and step past ports that are taken.
     let fixed = cfg.get("PORT").and_then(|p| p.trim().parse::<u16>().ok());
