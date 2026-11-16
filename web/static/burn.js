@@ -219,7 +219,7 @@
     { names: ["rubber", "synthetic rubber"], word: "Rubber",
       options: ["natural rubber", "silicone rubber", "neoprene", "butyl rubber"] },
     { names: ["metal", "metals", "metal alloy"], word: "Metal",
-      options: ["stainless steel", "aluminium", "copper"] },
+      options: ["stainless steel", "carbon steel", "aluminium", "copper", "brass", "zinc"] },
     { names: ["foam", "padding", "foam padding"], word: "Foam",
       options: ["polyurethane foam", "melamine foam", "polyimide foam"] },
   ];
