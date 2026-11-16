@@ -44,6 +44,78 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "acetal (pom)",
+  "aliases": [
+   "acetal",
+   "pom",
+   "polyoxymethylene",
+   "delrin"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 15,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "POM 162 ±30 6 ±1 15 HB 398",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": null,
+  "limit": 15.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acetal (pom)",
+  "aliases": [
+   "acetal",
+   "pom",
+   "polyoxymethylene",
+   "delrin"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "HB",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "POM 162 ±30 6 ±1 15 HB 398",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "HB = horizontal burning, the least demanding class.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acetal (pom)",
+  "aliases": [
+   "acetal",
+   "pom",
+   "polyoxymethylene",
+   "delrin"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 344,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyoxymethylene POM 323 361 344",
+  "page": "Table A-1, p. A-2",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "acrylic (pmma)",
   "aliases": [
    "acrylic",
@@ -200,6 +272,48 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "butyl rubber",
+  "aliases": [
+   "polyisobutylene"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 330,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyisobutylene (butyl rubber) BR 340 395 330",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cellulose acetate",
+  "aliases": [
+   "acetate"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 348,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Cellulose Acetate  CA 250 310 348",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "cotton",
   "aliases": [],
   "test": "Limiting oxygen index",
@@ -234,6 +348,72 @@
   "page": "Table 1",
   "confidence": "medium",
   "note": "Industry source; method not stated.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cpvc",
+  "aliases": [
+   "chlorinated pvc",
+   "chlorinated polyvinyl chloride"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 52,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "CPVC -34 ±9 3 ±0 52 V0 −",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": null,
+  "limit": 52.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cpvc",
+  "aliases": [
+   "chlorinated pvc",
+   "chlorinated polyvinyl chloride"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V0",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "CPVC -34 ±9 3 ±0 52 V0 −",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": "V0 = went out fastest in the vertical test, the most demanding of the V classes.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cpvc",
+  "aliases": [
+   "chlorinated pvc",
+   "chlorinated polyvinyl chloride"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 643,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyvinylchloride (chlorinated) CPVC − − 643",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": null,
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -328,6 +508,244 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "etfe",
+  "aliases": [
+   "tefzel",
+   "ethylene tetrafluoroethylene"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 30,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "ETFE 44 ±31 6 ±0 30 V0 198",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": null,
+  "limit": 30.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "etfe",
+  "aliases": [
+   "tefzel",
+   "ethylene tetrafluoroethylene"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V0",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "ETFE 44 ±31 6 ±0 30 V0 198",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "V0 = went out fastest in the vertical test, the most demanding of the V classes.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "etfe",
+  "aliases": [
+   "tefzel",
+   "ethylene tetrafluoroethylene"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 540,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Poly(ethylene-tetrafluoroethylene) ETFE 490 520 540",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "fep",
+  "aliases": [
+   "fluorinated ethylene propylene"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 95,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "FEP − 2 95 V0 57",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": null,
+  "limit": 95.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "fep",
+  "aliases": [
+   "fluorinated ethylene propylene"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V0",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "FEP − 2 95 V0 57",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": "V0 = went out fastest in the vertical test, the most demanding of the V classes.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "fep",
+  "aliases": [
+   "fluorinated ethylene propylene"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 630,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Fluorinated ethylene propylene  FEP − − 630",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "flexible pvc",
+  "aliases": [
+   "plasticized pvc",
+   "plasticised pvc",
+   "soft pvc"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V2",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PVC (flex) 91 ±19 4 ±0 − V2 −",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "V2 = went out in the vertical test but dripped burning drops. PVC softened with 50% plasticiser; rigid PVC is listed separately.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "flexible pvc",
+  "aliases": [
+   "plasticized pvc",
+   "plasticised pvc",
+   "soft pvc"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 318,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyvinylchloride (50% DOP) PVC (flex) 249 307 318",
+  "page": "Table A-1, p. A-3",
+  "confidence": "high",
+  "note": "PVC softened with 50% plasticiser; rigid PVC is listed separately.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "high-impact polystyrene",
+  "aliases": [
+   "hips"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 18,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "HIPS 510 ±77 14 ±2 18 HB 893",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": null,
+  "limit": 18.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "high-impact polystyrene",
+  "aliases": [
+   "hips"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "HB",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "HIPS 510 ±77 14 ±2 18 HB 893",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "HB = horizontal burning, the least demanding class.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "high-impact polystyrene",
+  "aliases": [
+   "hips"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 413,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Poly(styrene-butadiene) HIPS 327 430 413",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "kapton",
   "aliases": [
    "polyimide"
@@ -349,6 +767,50 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "kevlar",
+  "aliases": [
+   "para-aramid",
+   "poly(p-phenylene terephthalamide)"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 32,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "KEVLAR −  32 V0 302",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": null,
+  "limit": 32.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "kevlar",
+  "aliases": [
+   "para-aramid",
+   "poly(p-phenylene terephthalamide)"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V0",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "KEVLAR −  32 V0 302",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "V0 = went out fastest in the vertical test, the most demanding of the V classes.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "leather",
   "aliases": [],
   "test": "Limiting oxygen index",
@@ -365,6 +827,28 @@
   "confidence": "medium",
   "note": "One specific leather (the study's control sample), not a general value for all leather.",
   "limit": 24.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "melamine",
+  "aliases": [
+   "melamine formaldehyde",
+   "melamine resin"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 350,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Melamine formaldehyde  MF 350 375 350",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -409,6 +893,75 @@
   "confidence": "medium",
   "note": "Secondary: the review attributes the figure to earlier tests (its references 4 to 6).",
   "limit": 18.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "neoprene",
+  "aliases": [
+   "polychloroprene",
+   "chloroprene rubber",
+   "neoprene rubber"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 40,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "CR − 9 40 V0 188",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": null,
+  "limit": 40.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "neoprene",
+  "aliases": [
+   "polychloroprene",
+   "chloroprene rubber",
+   "neoprene rubber"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V0",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "CR − 9 40 V0 188",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "V0 = went out fastest in the vertical test, the most demanding of the V classes.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "neoprene",
+  "aliases": [
+   "polychloroprene",
+   "chloroprene rubber",
+   "neoprene rubber"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 406,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polychloroprene rubber CR 345 375 406",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -658,6 +1211,354 @@
   "confidence": "medium",
   "note": null,
   "limit": 20.1,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pbt",
+  "aliases": [
+   "polybutylene terephthalate"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 23,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PBT 341 ±106 15 ±3 23 HB 474",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": null,
+  "limit": 23.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pbt",
+  "aliases": [
+   "polybutylene terephthalate"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "HB",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PBT 341 ±106 15 ±3 23 HB 474",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "HB = horizontal burning, the least demanding class.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pbt",
+  "aliases": [
+   "polybutylene terephthalate"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 382,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polybutyleneterephthlate PBT 382 407 382",
+  "page": "Table A-1, p. A-2",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pc/abs",
+  "aliases": [
+   "pc-abs",
+   "polycarbonate/abs",
+   "polycarbonate abs blend"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "HB",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PC/ABS 259 ±43 11 ±1 − HB −",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "HB = horizontal burning, the least demanding class. The ignition temperature is for a 70/30 blend.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pc/abs",
+  "aliases": [
+   "pc-abs",
+   "polycarbonate/abs",
+   "polycarbonate abs blend"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 440,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polycarbonate/ABS (70/30) PC/ABS 421 475 440",
+  "page": "Table A-1, p. A-2",
+  "confidence": "high",
+  "note": "The ignition temperature is for a 70/30 blend.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "peek",
+  "aliases": [
+   "polyetheretherketone",
+   "polyether ether ketone"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 35,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PEEK -94 ±20 3 ±0 35 V0 155",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": null,
+  "limit": 35.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "peek",
+  "aliases": [
+   "polyetheretherketone",
+   "polyether ether ketone"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V0",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PEEK -94 ±20 3 ±0 35 V0 155",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": "V0 = went out fastest in the vertical test, the most demanding of the V classes.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "peek",
+  "aliases": [
+   "polyetheretherketone",
+   "polyether ether ketone"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 570,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyetheretherketone PEEK 570 600 570",
+  "page": "Table A-1, p. A-2",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pei",
+  "aliases": [
+   "polyetherimide",
+   "ultem"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 47,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PEI -113 ±19 3 ±0 47 V0 121",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": null,
+  "limit": 47.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pei",
+  "aliases": [
+   "polyetherimide",
+   "ultem"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V0",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PEI -113 ±19 3 ±0 47 V0 121",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": "V0 = went out fastest in the vertical test, the most demanding of the V classes.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pei",
+  "aliases": [
+   "polyetherimide",
+   "ultem"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 528,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyetherimide PEI 527 555 528",
+  "page": "Table A-1, p. A-2",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pen",
+  "aliases": [
+   "polyethylene naphthalate"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 32,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PEN 57 ±13 5 ±0 32 V2 309",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": null,
+  "limit": 32.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pen",
+  "aliases": [
+   "polyethylene naphthalate"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V2",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PEN 57 ±13 5 ±0 32 V2 309",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "V2 = went out in the vertical test but dripped burning drops.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pen",
+  "aliases": [
+   "polyethylene naphthalate"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 479,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyethylenenaphthalate PEN 455 495 479",
+  "page": "Table A-1, p. A-2",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "phenolic",
+  "aliases": [
+   "phenol formaldehyde",
+   "phenolic resin",
+   "bakelite"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 429,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Phenol formaldehyde PF 256 329 429",
+  "page": "Table A-1, p. A-2",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyacrylonitrile",
+  "aliases": [
+   "pan"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 460,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyacrylonitrile PAN 293 296 460",
+  "page": "Table A-1, p. A-1",
+  "confidence": "high",
+  "note": "The polymer acrylic clothing fibre is made from; not the same as acrylic sheet (PMMA).",
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -918,6 +1819,72 @@
   "confidence": "medium",
   "note": "Industry source; test standard not stated.",
   "limit": 20.6,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethersulfone",
+  "aliases": [
+   "pesu",
+   "pes"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 36,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PESU 168 ±23 4 ±0 36 V1 345",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": null,
+  "limit": 36.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethersulfone",
+  "aliases": [
+   "pesu",
+   "pes"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V1",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PESU 168 ±23 4 ±0 36 V1 345",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "V1 = went out in the vertical test, slower than V0.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethersulfone",
+  "aliases": [
+   "pesu",
+   "pes"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 502,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyethersulfone PESU 533 572 502",
+  "page": "Table A-1, p. A-2",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -1212,6 +2179,27 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "polysulfone",
+  "aliases": [
+   "psu"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 510,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polysulfone PSU 481 545 510",
+  "page": "Table A-1, p. A-3",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "polyurethane foam",
   "aliases": [
    "polyurethane",
@@ -1256,6 +2244,72 @@
   "page": "Section 3.2.2",
   "confidence": "medium",
   "note": "Secondary: the paper is summarising other studies (its references 12 and 13).",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pps",
+  "aliases": [
+   "polyphenylene sulfide",
+   "polyphenylene sulphide"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 44,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PPS -147 ±30 6 ±1 44 V0 164",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": null,
+  "limit": 44.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pps",
+  "aliases": [
+   "polyphenylene sulfide",
+   "polyphenylene sulphide"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V0",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "PPS -147 ±30 6 ±1 44 V0 164",
+  "page": "Table A-6, p. A-12",
+  "confidence": "high",
+  "note": "V0 = went out fastest in the vertical test, the most demanding of the V classes.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pps",
+  "aliases": [
+   "polyphenylene sulfide",
+   "polyphenylene sulphide"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 575,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyphenylenesulfide PPS 504 545 575",
+  "page": "Table A-1, p. A-3",
+  "confidence": "high",
+  "note": null,
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -1502,6 +2556,28 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "pvdf",
+  "aliases": [
+   "polyvinylidene fluoride",
+   "kynar"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 643,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyvinylidenefluoride PVDF 440 490 643",
+  "page": "Table A-1, p. A-3",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "rigid polyurethane foam",
   "aliases": [
    "rigid polyurethane"
@@ -1519,6 +2595,28 @@
   "page": "Table A-1, p. A-3",
   "confidence": "high",
   "note": "Rigid PU, not flexible cushion foam.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "san",
+  "aliases": [
+   "styrene-acrylonitrile",
+   "styrene acrylonitrile"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 368,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Poly(styrene-acrylonitrile) SAN 389 412 368",
+  "page": "Table A-1, p. A-3",
+  "confidence": "high",
+  "note": null,
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -1664,6 +2762,94 @@
   "page": "Section 3.1.1 and Table 1",
   "confidence": "medium",
   "note": "A pressure threshold, not an oxygen percentage; metals are rated differently from plastics.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "thermoplastic polyurethane",
+  "aliases": [
+   "tpu",
+   "polyurethane thermoplastic"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 271,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Polyurethane thermoplastic TPU 314 337 271",
+  "page": "Table A-1, p. A-3",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "unsaturated polyester resin",
+  "aliases": [
+   "unsaturated polyester",
+   "polyester resin"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 20,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "UPT 261 ±105 11 ±2 20 HB −",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "The resin used in fibreglass, not polyester fabric.",
+  "limit": 20.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "unsaturated polyester resin",
+  "aliases": [
+   "unsaturated polyester",
+   "polyester resin"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "HB",
+  "unit": "rating",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "UPT 261 ±105 11 ±2 20 HB −",
+  "page": "Table A-6, p. A-11",
+  "confidence": "high",
+  "note": "HB = horizontal burning, the least demanding class. The resin used in fibreglass, not polyester fabric.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "unsaturated polyester resin",
+  "aliases": [
+   "unsaturated polyester",
+   "polyester resin"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 380,
+  "unit": "°C",
+  "conditions": "average value ±10 °C",
+  "gravity": "Earth",
+  "source_title": "Polymer Flammability, DOT/FAA/AR-05/14",
+  "publisher": "FAA",
+  "url": "https://rosap.ntl.bts.gov/view/dot/16407/dot_16407_DS1.pdf",
+  "quote": "Unsaturated Polyester UPT 330 375 380",
+  "page": "Table A-1, p. A-3",
+  "confidence": "high",
+  "note": "The resin used in fibreglass, not polyester fabric.",
   "limit": null,
   "checked": "2026-11-15"
  },
