@@ -44,6 +44,28 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "abs",
+  "aliases": [
+   "acrylonitrile butadiene styrene",
+   "acrylonitrile-butadiene-styrene"
+  ],
+  "test": "UL 94 horizontal burning rate",
+  "standard": "EN 60695-11-10 (UL 94 HB)",
+  "value": 36.89,
+  "unit": "mm/min",
+  "conditions": "3D-printed ABS bar with no flame retardant, burned over the full 75 mm",
+  "gravity": "Earth",
+  "source_title": "Thermal Degradation and Flame Resistance Mechanism of Phosphorous-Based Flame Retardant of ABS Composites Used in 3D Printing Technology, Oliwa et al., Materials 18(13):3202 (2025)",
+  "publisher": "Materials journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12251474/",
+  "quote": "The ABS sample gave a result of 36.89 mm/min.",
+  "page": "Results, UL-94",
+  "confidence": "high",
+  "note": "Classified HB40 (below 40 mm/min).",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "acetal (pom)",
   "aliases": [
    "acetal",
@@ -350,6 +372,110 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Flame spread rate, upward, in simulated lunar gravity (spinning sounding rocket)",
+  "standard": null,
+  "value": 1.5,
+  "unit": "mm/s",
+  "conditions": "4 mm diameter rod, air at normal pressure, oxygen fell from 20% to 14.3%; flame tip",
+  "gravity": "lunar gravity",
+  "source_title": "Lunar Combustion Investigation: Flammability Results from a Rotating Sounding Rocket, Ferkul, Johnston, Kralik, Liao, NASA NTRS 20250010653 (ASGSR 2025)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20250010653/downloads/ASGSR%202025-LUCI-Ferkul-Presentation-v2-20250010653.pdf",
+  "quote": "• Flame tip spread is approximately linear. • Flame spread rate = 1.5 mm/s.",
+  "page": "slide 21",
+  "confidence": "high",
+  "note": "This is the flame tip. The flame base moved more slowly and never reached a steady rate.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Flame spread rate, opposed flow, in a narrow channel that suppresses buoyancy",
+  "standard": null,
+  "value": 0.216,
+  "unit": "cm/s",
+  "conditions": "sheet 75 µm thick, 1 atm, 10 mm gap height, 21% oxygen, 7 cm/s opposed flow",
+  "gravity": "Earth",
+  "source_title": "Opposed-Flow Flame Spread in a Narrow Channel Apparatus over Thin PMMA Sheets, Bornand, Miller, Pepper, Olson, Wichman, 8th U.S. National Combustion Meeting, NASA NTRS 20140004923 (2013)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20140004923/downloads/20140004923.pdf",
+  "quote": "In Figure 3 this leads to a flame spread rate of 0.216 cm/s",
+  "page": "section 3, Figure 3",
+  "confidence": "high",
+  "note": "Ground test in a Narrow Channel Apparatus, which is designed to mimic weightless flame spread; it is not a flight result.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 832,
+  "unit": "kW/m2",
+  "conditions": "plain PMMA, 100 x 100 x 6 mm, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Flammability and Thermal Kinetic Analysis of UiO-66-Based PMMA Polymer Composites, Shen et al., Polymers 13(23):4113 (2021)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8659153/",
+  "quote": "The pHRR of neat PMMA is 832 kW/m2.",
+  "page": "Results, cone calorimeter",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Mass loss rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": "around 22.5",
+  "unit": "g/m2/s",
+  "conditions": "plain PMMA, 100 x 100 x 6 mm, heat flux 50 kW/m2; average over 10% to 90% mass loss",
+  "gravity": "Earth",
+  "source_title": "Flammability and Thermal Kinetic Analysis of UiO-66-Based PMMA Polymer Composites, Shen et al., Polymers 13(23):4113 (2021)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8659153/",
+  "quote": "which is even slightly higher than that of neat PMMA, around 22.5 g/sm2.",
+  "page": "Results, cone calorimeter",
+  "confidence": "high",
+  "note": "The paper writes the unit as g/sm2.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "aluminium",
   "aliases": [
    "aluminum",
@@ -472,6 +598,159 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "cotton",
+  "aliases": [],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 143,
+  "unit": "kW/m2",
+  "conditions": "plain-weave cotton fabric, 270 g/m2, 0.4 mm thick, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Fire Behavior of Thermally Thin Materials in Cone Calorimeter, El Gazi et al., Polymers 13(8):1297 (2021)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8071363/",
+  "quote": "| Cotton Fabric (T1) | 270 | 2.6 | 121 | 143 | 169 | 207 |",
+  "page": "Table 4",
+  "confidence": "high",
+  "note": "Table row; the ' | ' cell separators come from converting the web page's table to text. Cells: area density, sample weight, then peak at 25, 35, 50 and 75 kW/m2. Lighter cotton fabrics in the same table peaked lower (65 kW/m2 at 110 g/m2).",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cotton",
+  "aliases": [],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": "68 ± 13",
+  "unit": "kW/m2",
+  "conditions": "cotton backing fabric, 115 g/m2, heat flux 25 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Phosphorous-Based, Halogen-Free Flame Retardants for Thin, Flexible Polyurethane Artificial Leathers, Bader et al., Polymers 17(7):841 (2025)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11991176/",
+  "quote": "The cotton as a textile carrier on its own already had a PHRR of 68 ± 13 kW m−2.",
+  "page": "Results, cone calorimetry",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cotton/fiberglass fabric",
+  "aliases": [
+   "sibal fabric",
+   "cotton-fiberglass",
+   "cotton/fiberglass blend"
+  ],
+  "test": "Flame spread rate, concurrent flow (Saffire-1, in orbit)",
+  "standard": null,
+  "value": 1.8,
+  "unit": "mm/s",
+  "conditions": "cotton-fiberglass (SIBAL) fabric 40.6 cm wide x 94 cm, 0.37 mm thick, air flow 20 cm/s with the flame, about 21.7% oxygen",
+  "gravity": "microgravity",
+  "source_title": "Results of Large-Scale Spacecraft Flammability Tests, Ferkul, Olson, Urban, Ruff et al., NASA NTRS 20170008805 (2017)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20170008805/downloads/20170008805.pdf",
+  "quote": "The average concurrent-flow flame spread rate is 1.8 mm/s. The opposed-flow flame average spread rate 1.3 mm/s.",
+  "page": "slide 21 and Table I",
+  "confidence": "high",
+  "note": "Blend of cotton and fiberglass, not pure cotton. On Earth the same sample burned upward at an accelerating rate.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cotton/fiberglass fabric",
+  "aliases": [
+   "sibal fabric",
+   "cotton-fiberglass",
+   "cotton/fiberglass blend"
+  ],
+  "test": "Flame spread rate, opposed flow (Saffire-1, in orbit)",
+  "standard": null,
+  "value": 1.3,
+  "unit": "mm/s",
+  "conditions": "cotton-fiberglass (SIBAL) fabric 40.6 cm wide, 0.37 mm thick, air flow 20 cm/s against the flame, about 21.5% oxygen",
+  "gravity": "microgravity",
+  "source_title": "Results of Large-Scale Spacecraft Flammability Tests, Ferkul, Olson, Urban, Ruff et al., NASA NTRS 20170008805 (2017)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20170008805/downloads/20170008805.pdf",
+  "quote": "The average concurrent-flow flame spread rate is 1.8 mm/s. The opposed-flow flame average spread rate 1.3 mm/s.",
+  "page": "slide 21 and Table I",
+  "confidence": "high",
+  "note": "Blend of cotton and fiberglass, not pure cotton. Only about 10 cm of fabric was left for this test.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cotton/fiberglass fabric",
+  "aliases": [
+   "sibal fabric",
+   "cotton-fiberglass",
+   "cotton/fiberglass blend"
+  ],
+  "test": "Flame spread rate, concurrent flow (Saffire-2, in orbit)",
+  "standard": null,
+  "value": 2.1,
+  "unit": "mm/s",
+  "conditions": "cotton-fiberglass fabric 5 cm wide x 29 cm, 0.37 mm thick, air flow 20 cm/s with the flame, about 22.1% oxygen",
+  "gravity": "microgravity",
+  "source_title": "Results of Large-Scale Spacecraft Flammability Tests, Ferkul, Olson, Urban, Ruff et al., NASA NTRS 20170008805 (2017)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20170008805/downloads/20170008805.pdf",
+  "quote": "2-5 80 W 9.2 s 145 s 29 cm 2.1 mm/s Complete Acceleratory",
+  "page": "Table I (continued), sample 2-5",
+  "confidence": "high",
+  "note": "Table row: columns are ignition power, ignition time, burn duration, burn length and spread rate in orbit, then burn length and spread rate on Earth.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cotton/fiberglass fabric",
+  "aliases": [
+   "sibal fabric",
+   "cotton-fiberglass",
+   "cotton/fiberglass blend"
+  ],
+  "test": "Flame spread rate, concurrent flow (Saffire-2, in orbit)",
+  "standard": null,
+  "value": 2.6,
+  "unit": "mm/s",
+  "conditions": "cotton-fiberglass fabric 5 cm wide x 29 cm, 0.37 mm thick, air flow 25 cm/s with the flame, about 22.1% oxygen",
+  "gravity": "microgravity",
+  "source_title": "Results of Large-Scale Spacecraft Flammability Tests, Ferkul, Olson, Urban, Ruff et al., NASA NTRS 20170008805 (2017)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20170008805/downloads/20170008805.pdf",
+  "quote": "2-6 80 W 9.2 s 115 s 29 cm 2.6 mm/s Complete Acceleratory",
+  "page": "Table I (continued), sample 2-6",
+  "confidence": "high",
+  "note": "Same fabric as sample 2-5 but with faster air flow.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "cotton/fiberglass fabric",
+  "aliases": [
+   "sibal fabric",
+   "cotton-fiberglass",
+   "cotton/fiberglass blend"
+  ],
+  "test": "Flame spread rate, downward, in simulated lunar gravity (spinning sounding rocket)",
+  "standard": null,
+  "value": 0.92,
+  "unit": "mm/s",
+  "conditions": "cotton-fiberglass (SIBAL) fabric 5 cm wide x 30 cm, air at normal pressure, oxygen fell from about 20% to about 18%; flame base",
+  "gravity": "lunar gravity",
+  "source_title": "Lunar Combustion Investigation: Flammability Results from a Rotating Sounding Rocket, Ferkul, Johnston, Kralik, Liao, NASA NTRS 20250010653 (ASGSR 2025)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20250010653/downloads/ASGSR%202025-LUCI-Ferkul-Presentation-v2-20250010653.pdf",
+  "quote": "• Flame base spread rate = .92 mm/s.",
+  "page": "slide 19",
+  "confidence": "high",
+  "note": "Lunar gravity was simulated by spinning a Blue Origin New Shepard capsule. The source writes the value as .92.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "cpvc",
   "aliases": [
    "chlorinated pvc",
@@ -580,6 +859,27 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "epoxy",
+  "aliases": [
+   "epoxy resin"
+  ],
+  "test": "UL 94 HB horizontal burning rate",
+  "standard": "EN 60695-11-10 (UL 94 HB)",
+  "value": 35,
+  "unit": "mm/min",
+  "conditions": "cured epoxy resin bar 125 x 10 x 4 mm, no flame retardant",
+  "gravity": "Earth",
+  "source_title": "Flame Retardant from Eugenol as Green Modifier for Epoxy Resins, Matykiewicz et al., Int J Mol Sci 26(12):5861 (2025)",
+  "publisher": "Int. J. Molecular Sciences",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12193531/",
+  "quote": "| EP | 35 | HB40 | yes |",
+  "page": "Table 2",
+  "confidence": "high",
+  "note": "Table row; the ' | ' cell separators come from converting the web page's table to text. The last cell records that burning drops fell.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "epoxy/fiberglass laminate",
   "aliases": [
    "glass epoxy",
@@ -625,6 +925,30 @@
   "confidence": "high",
   "note": null,
   "limit": 23.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "epoxy/fiberglass laminate",
+  "aliases": [
+   "glass epoxy",
+   "epoxy fiberglass",
+   "g-11",
+   "g11"
+  ],
+  "test": "Flame spread rate, downward",
+  "standard": null,
+  "value": 0.87,
+  "unit": "mm/s",
+  "conditions": "glass-fibre-reinforced epoxy slab 0.3 mm thick, vertical, 25% oxygen in an opposed nitrogen/oxygen flow",
+  "gravity": "Earth",
+  "source_title": "Experimental and Numerical Study of Downward Flame Spread over Glass-Fiber-Reinforced Epoxy Resin, Korobeinichev et al., Polymers 14(5):911 (2022)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8912476/",
+  "quote": "As the oxygen concentration increased from 25% to 40%, the ROS increased from 0.87 mm/s to 1.95 mm/s",
+  "page": "section 4.2",
+  "confidence": "high",
+  "note": "ROS is rate of spread. At 40% oxygen the rate was 1.95 mm/s.",
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -735,6 +1059,29 @@
   "confidence": "high",
   "note": "About 42% with no air flow.",
   "limit": 37.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "expanded polystyrene foam",
+  "aliases": [
+   "eps",
+   "styrofoam",
+   "polystyrene foam"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ISO 5660",
+  "value": 295.5,
+  "unit": "kW/m2",
+  "conditions": "plain expanded polystyrene foam, 100 x 100 x 50 mm, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Expanded Polystyrene Beads Coated with Intumescent Flame Retardant Material to Achieve Fire Safety Standards, Bhoite et al., Polymers 13(16):2662 (2021)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8398555/",
+  "quote": "the neat EPS quickly burned after ignition with a high PHRR of 295.5 kW/m2",
+  "page": "Results, cone calorimetry",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -906,6 +1253,27 @@
   "page": "Table A-1, p. A-1",
   "confidence": "high",
   "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "high-impact polystyrene",
+  "aliases": [
+   "hips"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 1307,
+  "unit": "kW/m2",
+  "conditions": "commercial resin with no flame retardant, 3.2 mm thick, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Bench-Scale Flammability Measures for Electronic Equipment, Bundy and Ohlemiller, NISTIR 7031 (2003)",
+  "publisher": "NIST",
+  "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7031.pdf",
+  "quote": "3-HIPS-NFR white 3.2 1307 17 245 122.3 1.5 40 6.8 113 3",
+  "page": "Table 3a",
+  "confidence": "high",
+  "note": "The 1.6 mm sample of the same resin peaked at 723 kW/m2.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -1165,6 +1533,28 @@
   "confidence": "medium",
   "note": "Secondary: the review attributes the figure to earlier tests (its references 4 to 6).",
   "limit": 18.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "natural rubber",
+  "aliases": [
+   "latex",
+   "polyisoprene"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ISO 5660",
+  "value": 675,
+  "unit": "kW/m2",
+  "conditions": "vulcanised natural rubber with no flame retardant, 100 x 100 x 4 mm, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Synergistic Effect of Graphene Oxide and Mesoporous Structure on Flame Retardancy of Nature Rubber/IFR Composites, Wang et al., Materials 11(6):1005 (2018)",
+  "publisher": "Materials journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6025052/",
+  "quote": "| NR | 675 | 128 |",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "Table row; the ' | ' cell separators come from converting the web page's table to text. The cells are sample, peak heat release rate and total heat release.",
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -1570,6 +1960,30 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "nylon",
+  "aliases": [
+   "polyamide",
+   "nylon 6,6",
+   "nylon 66",
+   "nylon 6"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 750,
+  "unit": "kW/m2",
+  "conditions": "plain nylon 6, 100 x 100 x 2.7 mm, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Improvement of Flame Retardancy on Polyamide 6 Composites via Melamine Polyphosphate-Modified Carbon Nanotubes, Shi et al., Polymers 18(5):643 (2026)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12987075/",
+  "quote": "the peak heat release rates (PHRR) of neat PA6, PA6/CNT10, and PA6/CNTM10 were determined to be 750 kW/m2, 579 kW/m2, and 614 kW/m2, respectively",
+  "page": "Results, Figure 5a",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "paper",
   "aliases": [
    "newspaper",
@@ -1719,6 +2133,29 @@
   "page": "Table A-1, p. A-2",
   "confidence": "high",
   "note": "The ignition temperature is for a 70/30 blend.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pc/abs",
+  "aliases": [
+   "pc-abs",
+   "polycarbonate/abs",
+   "polycarbonate abs blend"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 741,
+  "unit": "kW/m2",
+  "conditions": "commercial resin with no flame retardant, 3.2 mm thick, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Bench-Scale Flammability Measures for Electronic Equipment, Bundy and Ohlemiller, NISTIR 7031 (2003)",
+  "publisher": "NIST",
+  "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7031.pdf",
+  "quote": "6-PC/ABS-NFR black 3.2 741 38 165 87.5 3.3 42 2.7 81 3",
+  "page": "Table 3a",
+  "confidence": "high",
+  "note": "The 1.6 mm sample of the same resin peaked at 543 kW/m2.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -2157,6 +2594,28 @@
   "confidence": "medium",
   "note": null,
   "limit": 26.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polycarbonate",
+  "aliases": [
+   "pc",
+   "lexan"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 628,
+  "unit": "kW/m2",
+  "conditions": "commercial resin with no flame retardant, 3.2 mm thick, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Bench-Scale Flammability Measures for Electronic Equipment, Bundy and Ohlemiller, NISTIR 7031 (2003)",
+  "publisher": "NIST",
+  "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7031.pdf",
+  "quote": "4-PC-NFR clear 3.2 628 53 149 72.8 2.7 101 7.2 145 3",
+  "page": "Table 3a",
+  "confidence": "high",
+  "note": "The 1.6 mm sample of the same resin peaked at 885 kW/m2.",
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -2651,6 +3110,131 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "Flame spread rate along a wire, opposed flow (Space Shuttle glovebox)",
+  "standard": null,
+  "value": "0.070 and 0.066",
+  "unit": "cm/s",
+  "conditions": "polyethylene insulation 1.5 mm in diameter on nichrome wire, air flowing at about 10 cm/s against the flame",
+  "gravity": "microgravity",
+  "source_title": "Wire Insulation Flammability Experiment: USML-1 One Year Post Mission Summary, Greenberg, Sacksteder, Kashiwagi, NASA NTRS 20030075805",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20030075805/downloads/20030075805.pdf",
+  "quote": "0.070 and 0.066 cm/sec for WIF-B and WIF-D respectively",
+  "page": "section F",
+  "confidence": "high",
+  "note": "Two tests. The text extracted from this scanned report has small character-recognition errors elsewhere.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "Flame spread rate along a wire, concurrent flow (Space Shuttle glovebox)",
+  "standard": null,
+  "value": 0.16,
+  "unit": "cm/s",
+  "conditions": "polyethylene insulation 1.5 mm in diameter on nichrome wire, air flowing at about 10 cm/s with the flame; flame tip",
+  "gravity": "microgravity",
+  "source_title": "Wire Insulation Flammability Experiment: USML-1 One Year Post Mission Summary, Greenberg, Sacksteder, Kashiwagi, NASA NTRS 20030075805",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20030075805/downloads/20030075805.pdf",
+  "quote": "In concurrent flow, WIF-A, the visible downstream tip of the flame spread at 0.16 cm/sec",
+  "page": "section G",
+  "confidence": "high",
+  "note": "The flame base moved at 0.12 cm/s, so the flame was still lengthening.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "Flame spread rate along a wire, downward",
+  "standard": null,
+  "value": 0.24,
+  "unit": "cm/s",
+  "conditions": "polyethylene insulation 1.5 mm in diameter on nichrome wire, air, normal gravity",
+  "gravity": "Earth",
+  "source_title": "Wire Insulation Flammability Experiment: USML-1 One Year Post Mission Summary, Greenberg, Sacksteder, Kashiwagi, NASA NTRS 20030075805",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20030075805/downloads/20030075805.pdf",
+  "quote": "much slower than the normal-gravity spread rate of 0.24 cm/sec.",
+  "page": "section J",
+  "confidence": "high",
+  "note": "Earth comparison for the Shuttle test: about 0.07 cm/s in weightlessness with a slow opposed flow.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354",
+  "value": 2286,
+  "unit": "kW/m2",
+  "conditions": "plain low-density polyethylene, 100 x 100 x 3 mm, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Sustainable Hybrid Flame-Retardant Architectures for LDPE: Effects of Waste-Derived Cellulose, SiO2, and APP/ADA, Ruiz-Martínez et al., Polymers 18(20):2566 (2026)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13708837/",
+  "quote": "neat PE exhibited a peak heat release rate (PHRR) of 2286 kW/m2",
+  "page": "Results, cone calorimetry (Table 4)",
+  "confidence": "high",
+  "note": "Much higher than the polypropylene and polystyrene rows; resin grade and sample set-up differ between labs.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "UL 94 HB horizontal burning rate",
+  "standard": "UL 94 HB (ASTM D635)",
+  "value": 27.1,
+  "unit": "mm/min",
+  "conditions": "plain low-density polyethylene bar 125 x 13 x 3 mm",
+  "gravity": "Earth",
+  "source_title": "Sustainable Hybrid Flame-Retardant Architectures for LDPE: Effects of Waste-Derived Cellulose, SiO2, and APP/ADA, Ruiz-Martínez et al., Polymers 18(20):2566 (2026)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13708837/",
+  "quote": "| PE | 27.1 | HB |",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "Table row; the ' | ' cell separators come from converting the web page's table to text.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "polyimide foam",
   "aliases": [],
   "test": "NASA upward flammability",
@@ -2754,6 +3338,48 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "polypropylene",
+  "aliases": [
+   "pp"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ISO 5660-1",
+  "value": 1197,
+  "unit": "kW/m2",
+  "conditions": "plain polypropylene, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Synergistic Effect of Activated Carbon, NiO and Al2O3 on Improving the Thermal Stability and Flame Retardancy of Polypropylene Composites, Shao et al., Polymers 15(9):2135 (2023)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10180888/",
+  "quote": "the PHRR value reaches 1197 kW/m2",
+  "page": "Results, cone calorimeter",
+  "confidence": "high",
+  "note": "Sample thickness not checked.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polypropylene",
+  "aliases": [
+   "pp"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 932.7,
+  "unit": "kW/m2",
+  "conditions": "plain polypropylene, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Synthesis of Zinc Oxide Doped Magnesium Hydrate and Its Effect on the Flame Retardant and Mechanical Properties of Polypropylene, Li et al., Polymers 15(21):4248 (2023)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10648635/",
+  "quote": "with the peak and average values of HRR (pHRR and avHRR) reaching 932.7 and 174.5 kW/m2, respectively",
+  "page": "Results, Table 2",
+  "confidence": "high",
+  "note": "A second lab and resin; compare 1197 kW/m2 in the other polypropylene row.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "polystyrene",
   "aliases": [
    "ps"
@@ -2814,6 +3440,27 @@
   "confidence": "medium",
   "note": "Manufacturer whitepaper; agrees with FAA.",
   "limit": 18.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polystyrene",
+  "aliases": [
+   "ps"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ISO 5660-1",
+  "value": 716.4,
+  "unit": "kW/m2",
+  "conditions": "plain polystyrene, 100 x 100 x 3 mm, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "A Green P–N–Al Synergistic System for Eco-Friendly Flame-Retardant Polystyrene, Li et al., Materials 19(5):941 (2026)",
+  "publisher": "Materials journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12986116/",
+  "quote": "Neat PS exhibited high fire risk, with a peak heat release rate (PHRR) of 716.4 kW·m−2.",
+  "page": "Results, Table 4",
+  "confidence": "high",
+  "note": null,
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -2882,6 +3529,30 @@
   "page": "Section 3.2.2",
   "confidence": "medium",
   "note": "Secondary: the paper is summarising other studies (its references 12 and 13).",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyurethane foam",
+  "aliases": [
+   "polyurethane",
+   "pu foam",
+   "memory foam",
+   "flexible polyurethane foam"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 356,
+  "unit": "kW/m2",
+  "conditions": "plain flexible polyurethane foam, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Novel MoS2–DOPO Hybrid for Effective Enhancements on Flame Retardancy and Smoke Suppression of Flexible Polyurethane Foams, Zhi et al., ACS Omega 5(6):2734–2746 (2020)",
+  "publisher": "ACS Omega journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7033980/",
+  "quote": "a high peak HRR (pHRR) value of 356 kW/m2 is achieved at 35 s",
+  "page": "Results, Table 3",
+  "confidence": "high",
+  "note": "Peak reached 35 seconds into the test.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -3194,6 +3865,28 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "pvc",
+  "aliases": [
+   "polyvinyl chloride",
+   "vinyl"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354 / ISO 5660",
+  "value": 223,
+  "unit": "kW/m2",
+  "conditions": "commercial resin with no added flame retardant, 3.2 mm thick, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Bench-Scale Flammability Measures for Electronic Equipment, Bundy and Ohlemiller, NISTIR 7031 (2003)",
+  "publisher": "NIST",
+  "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7031.pdf",
+  "quote": "17-PVC-NFR black 3.2 223 12 92 48.8 2.3 25 1.9 35 6",
+  "page": "Table 3a",
+  "confidence": "high",
+  "note": "The 1.6 mm sample of the same resin peaked at 206 kW/m2.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "pvdf",
   "aliases": [
    "polyvinylidene fluoride",
@@ -3302,6 +3995,27 @@
   "page": "Table A-1, p. A-3",
   "confidence": "high",
   "note": "Rigid PU, not flexible cushion foam.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "rigid polyurethane foam",
+  "aliases": [
+   "rigid polyurethane"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ISO 5660",
+  "value": 84.32,
+  "unit": "kW/m2",
+  "conditions": "plain rigid polyurethane foam, density about 65 kg/m3, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Study on the Flame Retardancy of Rigid Polyurethane Foam with Phytic Acid-Functionalized Graphene Oxide, Zhou et al., Molecules 28(17):6267 (2023)",
+  "publisher": "Molecules journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10488967/",
+  "quote": "the PHRR of the pure RPUF was 84.32 kW/m2 at 107 s",
+  "page": "Results, Figure 4",
+  "confidence": "high",
+  "note": "Other papers report higher peaks for plain rigid foam (about 155 to 280 kW/m2), so this varies with the foam recipe.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -3450,6 +4164,48 @@
   "page": "Table A-1, p. A-3",
   "confidence": "high",
   "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "silicone rubber",
+  "aliases": [
+   "silicone"
+  ],
+  "test": "Flame spread rate, upward (Earth comparison for Saffire-2)",
+  "standard": null,
+  "value": 1.2,
+  "unit": "mm/s",
+  "conditions": "silicone sheet 5 cm wide, 0.61 mm thick, about 22.1% oxygen, burn length 7.6 cm",
+  "gravity": "Earth",
+  "source_title": "Results of Large-Scale Spacecraft Flammability Tests, Ferkul, Olson, Urban, Ruff et al., NASA NTRS 20170008805 (2017)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20170008805/downloads/20170008805.pdf",
+  "quote": "2-2 80 W 9.2 s Insignificant ~ 0 n/a 7.6 cm 1.2 mm/s",
+  "page": "Table I (continued), sample 2-2",
+  "confidence": "high",
+  "note": "The same sample did not spread flame in orbit (burn length about 0) with 20 cm/s concurrent air flow.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "silicone rubber",
+  "aliases": [
+   "silicone"
+  ],
+  "test": "Flame spread rate, downward (Earth comparison for Saffire-2)",
+  "standard": null,
+  "value": 0.6,
+  "unit": "mm/s",
+  "conditions": "silicone sheet 5 cm wide, 0.37 mm thick, about 22.1% oxygen, burned completely",
+  "gravity": "Earth",
+  "source_title": "Results of Large-Scale Spacecraft Flammability Tests, Ferkul, Olson, Urban, Ruff et al., NASA NTRS 20170008805 (2017)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20170008805/downloads/20170008805.pdf",
+  "quote": "2-4 80 W 9.2 s Insignificant ~ 0 n/a Complete 0.6 mm/s",
+  "page": "Table I (continued), sample 2-4",
+  "confidence": "high",
+  "note": "The same sample did not spread flame in orbit (burn length about 0) with 20 cm/s opposed air flow.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -3683,6 +4439,98 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "wood",
+  "aliases": [
+   "plywood",
+   "pine",
+   "timber"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ASTM E1354",
+  "value": "154 to 329 (mean 239)",
+  "unit": "kW/m2",
+  "conditions": "untreated commercial wood composites (particleboard, MDF, high-density fiberboard, plywood, oriented strand board), 3 to 38 mm thick, heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Cone Calorimeter Tests of Wood Composites, White (USDA Forest Products Laboratory) and Sumathipala (American Wood Council)",
+  "publisher": "USDA Forest Products Laboratory",
+  "url": "https://research.fs.usda.gov/download/treesearch/44266.pdf",
+  "quote": "ranged from 154 to 329 kW/m2 (mean of 239 kW/m2, st. dev.= 36 kW/m2)",
+  "page": "Results, Heat Release Rate and Ignition",
+  "confidence": "high",
+  "note": "Range across the untreated products; fire-retardant-treated particleboards were lower.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "wood",
+  "aliases": [
+   "plywood",
+   "pine",
+   "timber"
+  ],
+  "test": "Mass loss rate, cone calorimeter",
+  "standard": "ASTM E1354",
+  "value": 12.2,
+  "unit": "g/m2/s",
+  "conditions": "untreated commercial wood composites, heat flux 50 kW/m2; average over 10% to 90% mass loss",
+  "gravity": "Earth",
+  "source_title": "Cone Calorimeter Tests of Wood Composites, White (USDA Forest Products Laboratory) and Sumathipala (American Wood Council)",
+  "publisher": "USDA Forest Products Laboratory",
+  "url": "https://research.fs.usda.gov/download/treesearch/44266.pdf",
+  "quote": "untreated mean of 12.2 g/m2 s",
+  "page": "Results, Mass Loss and Effective Heat of Combustion",
+  "confidence": "high",
+  "note": "Mean across the untreated products; fire-retardant-treated products averaged 7.6.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "wood",
+  "aliases": [
+   "plywood",
+   "pine",
+   "timber"
+  ],
+  "test": "Mass loss rate, cone calorimeter",
+  "standard": "ASTM E1354",
+  "value": "10.8 and 16.1",
+  "unit": "g/m2/s",
+  "conditions": "two untreated plywoods 9 mm thick (white fir and southern yellow pine), heat flux 50 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Cone Calorimeter Tests of Wood Composites, White (USDA Forest Products Laboratory) and Sumathipala (American Wood Council)",
+  "publisher": "USDA Forest Products Laboratory",
+  "url": "https://research.fs.usda.gov/download/treesearch/44266.pdf",
+  "quote": "(10.8 vs. 16.1 g/m2s while their AEHOC were similar",
+  "page": "Results, Mass Loss and Effective Heat of Combustion",
+  "confidence": "high",
+  "note": "Two products; the text does not say which value belongs to which plywood.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "wood",
+  "aliases": [
+   "plywood",
+   "pine",
+   "timber"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ISO 5660-1",
+  "value": 187.2,
+  "unit": "kW/m2",
+  "conditions": "untreated Taeda (loblolly) pine, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Passive Fire Protection of Taeda pine Wood by Using Starch-Based Surface Coatings, Tretsiakova-McNally et al., Polymers 13(21):3841 (2021)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8587060/",
+  "quote": "| Untreated | 187.2 | 89.8 | 116.7 | 11.5 | 79.8 | 7.1 |",
+  "page": "Table 1",
+  "confidence": "high",
+  "note": "Table row; the ' | ' cell separators come from converting the web page's table to text. Cells: peak heat release rate, total heat release, average heat release rate, peak mass loss rate x100 (g/s), mass loss %, average mass loss rate x100 (g/s).",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "wool",
   "aliases": [
    "merino wool"
@@ -3721,6 +4569,27 @@
   "page": "Table 1",
   "confidence": "medium",
   "note": "Industry source; method not stated.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "wool",
+  "aliases": [
+   "merino wool"
+  ],
+  "test": "Peak heat release rate, cone calorimeter",
+  "standard": "ISO 5660",
+  "value": 305.9,
+  "unit": "kW/m2",
+  "conditions": "untreated wool fabric wrapped in foil, heat flux 35 kW/m2",
+  "gravity": "Earth",
+  "source_title": "Flame Retardancy and Thermal Behavior of Wool Fabric Treated with a Phosphorus-Containing Polycarboxylic Acid, Wang et al., Polymers 13(23):4111 (2021)",
+  "publisher": "Polymers journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8659226/",
+  "quote": "which are much less than those values of the control wool (305.9 kW/m2 and 10.8 MJ/m2)",
+  "page": "Results, Table 1",
+  "confidence": "high",
+  "note": null,
   "limit": null,
   "checked": "2026-11-15"
  },
