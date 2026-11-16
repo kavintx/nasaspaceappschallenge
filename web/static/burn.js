@@ -208,35 +208,63 @@
     ]);
   }
 
-  // How much of the item NASA's data covers: materials with at least one test, out of all of them.
+  // How much of the item has published tests: in NASA's database, from other sources only, or none.
+  // Names that cover many materials. Tests are filed per material, so these never match:
+  // the person is asked which one it is. Every option has tests in the data.
+  var FAMILIES = [
+    { names: ["plastic", "plastics", "hard plastic", "soft plastic", "rigid plastic", "moulded plastic", "molded plastic"], word: "Plastic",
+      options: ["ABS", "polypropylene", "polyethylene", "PVC", "polystyrene", "polycarbonate", "PET", "acrylic", "nylon"] },
+    { names: ["fabric", "textile", "cloth", "synthetic fabric", "woven fabric", "knit fabric"], word: "Fabric",
+      options: ["cotton", "polyester", "polyester/cotton blend", "nylon", "wool", "silk", "rayon", "linen"] },
+    { names: ["rubber", "synthetic rubber"], word: "Rubber",
+      options: ["natural rubber", "silicone rubber", "neoprene", "butyl rubber"] },
+    { names: ["metal", "metals", "metal alloy"], word: "Metal",
+      options: ["stainless steel", "aluminium", "copper"] },
+    { names: ["foam", "padding", "foam padding"], word: "Foam",
+      options: ["polyurethane foam", "melamine foam", "polyimide foam"] },
+  ];
+  function family(name) {
+    var key = String(name || "").trim().toLowerCase();
+    for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].names.indexOf(key) >= 0) return FAMILIES[i];
+    return null;
+  }
+
   function coverageDonut(result) {
     var all = result.materials || [];
     if (all.length < 1 || result.data !== "ok") return null;
     var tested = all.filter(function (m) { return m.tested; }).length;
-    var elsewhere = all.some(function (m) { return !m.tested && (m.other || []).length; });
+    var elsewhere = all.filter(function (m) { return !m.tested && (m.other || []).length; }).length;
+    var none = all.length - tested - elsewhere;
+    var BLUE = "#2997ff", TEAL = "#34c0b8", GREY = "#3a4256";
     var ring = donut([
-      { label: "Has NASA tests", value: tested, color: "#2997ff" },
-      { label: "No NASA test", value: all.length - tested, color: "#3a4256" },
-    ], 112, tested + "/" + all.length, "tested");
+      { label: "In NASA’s microgravity database", value: tested, color: BLUE },
+      { label: "Tests from other sources only", value: elsewhere, color: TEAL },
+      { label: "No test found", value: none, color: GREY },
+    ], 112, (tested + elsewhere) + "/" + all.length, "with tests");
     if (!ring) return null;
+    var headline;
+    if (tested === all.length) {
+      headline = all.length === 1 ? "NASA has tested this material." : "NASA has tested all " + all.length + " of its materials.";
+    } else if (!elsewhere) {
+      headline = tested === 0 ? "None of its materials are in NASA’s tests." : "NASA has tested " + tested + " of its " + all.length + " materials.";
+    } else {
+      headline = (tested + elsewhere) + " of its " + all.length + (all.length === 1 ? " material" : " materials") + (tested + elsewhere === 1 ? " has" : " have") + " published tests: "
+        + tested + " in NASA’s microgravity database, " + elsewhere + " from other sources only.";
+    }
     return el("figure", { class: "donut-figure donut-figure-top" }, [
       ring,
       el("div", { class: "min-w-0" }, [
-        el("figcaption", { class: "text-[17px] leading-6 font-semibold", text: tested === all.length
-          ? (all.length === 1 ? "NASA has tested this material." : "NASA has tested all " + all.length + " of its materials.")
-          : tested === 0 ? (elsewhere ? "None of its materials are in NASA’s microgravity database. Tests from other sources are below." : "None of its materials are in NASA’s tests.")
-          : "NASA has tested " + tested + " of its " + all.length + " materials." }),
+        el("figcaption", { class: "text-[17px] leading-6 font-semibold", text: headline }),
         el("ul", { class: "mt-2 space-y-1 text-[13px] text-muted" }, all.map(function (m) {
-          // A material missing from the database can still have published tests from other sources.
           var others = (m.other || []).length;
-          var gap = others ? " · not in the database, " + others + (others === 1 ? " test" : " tests") + " from other sources" : " · no test";
-          return legendRow(m.tested ? "#2997ff" : "#3a4256", m.query + (m.tested ? "" : gap));
+          if (m.tested) return legendRow(BLUE, m.query + " · in NASA’s database");
+          if (others) return legendRow(TEAL, m.query + " · " + others + (others === 1 ? " test" : " tests") + " from other sources");
+          return legendRow(GREY, m.query + (family(m.query) ? " · a family of materials, pick the exact one" : " · no test found"));
         })),
       ]),
     ]);
   }
 
-  // Every NASA test of this material placed on an oxygen scale, with the two habitats marked.
   function oxygenChart(material) {
     var data = material.chart;
     if (!data || !data.points || !data.points.length) return null;
@@ -493,7 +521,14 @@
         : result.lookup !== "ok"
           ? "No test in NASA’s data under exactly this name."
           : material.query + " isn’t in NASA’s tests.";
+      var kind = family(material.query);
+      if (kind && !(material.other || []).length) {
+        why = kind.word + " is a family of materials that burn differently, so no test is filed under that name.";
+      }
       section.appendChild(el("p", { class: "mt-2 text-[17px] leading-6 font-semibold text-muted", text: why }));
+      if (kind && !(material.other || []).length) {
+        section.appendChild(el("p", { class: "mt-2 text-[13px] leading-5 text-muted", text: "Tested materials in this family: " + kind.options.join(", ") + ". If you know which one this is, change the material to see its tests." }));
+      }
       var near = material.closest;
       if (near) {
         var box = el("div", { class: "mt-4 rounded-xl border border-dashed border-line p-4" }, [
@@ -740,6 +775,24 @@
             row.share = n > 0 && n <= 100 ? n : null;
           });
           var flag = el("span", { class: "text-[12px] text-amber", text: "Not sure about this one" });
+          var pick = el("div", { class: "mt-2" });
+          function drawPick() {
+            clear(pick);
+            var kind = family(material.value);
+            if (!kind) return;
+            pick.appendChild(el("p", { class: "text-[12px] leading-4 text-muted", text: kind.word + " covers materials that burn differently. Pick the exact one if you know it:" }));
+            pick.appendChild(el("div", { class: "mt-1.5 flex flex-wrap gap-2" }, kind.options.map(function (option) {
+              return el("button", { type: "button", class: "rounded-full border border-line px-3 h-9 text-[13px] text-fg", text: option, onclick: function () {
+                material.value = option;
+                row.material = option;
+                row.confidence = null;
+                if (flag.parentNode) flag.parentNode.removeChild(flag);
+                drawPick();
+              } });
+            })));
+          }
+          material.addEventListener("input", drawPick);
+          drawPick();
           var unsure = typeof row.confidence === "number" && row.confidence < UNSURE;
           list.appendChild(el("li", {}, [
             row.part ? el("p", { class: "text-[12px] text-muted mb-1", text: row.part }) : null,
@@ -749,6 +802,7 @@
               el("button", { type: "button", class: "w-11 h-11 shrink-0 rounded-md border border-line text-muted text-[20px] leading-none", "aria-label": "Remove " + (row.material || "material"), text: "×", onclick: function () { state.rows.splice(i, 1); drawRows(); } }),
             ]),
             unsure ? flag : null,
+            pick,
           ]));
         });
       }

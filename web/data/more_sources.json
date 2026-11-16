@@ -350,6 +350,29 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "aluminium",
+  "aliases": [
+   "aluminum",
+   "aluminium alloy",
+   "aluminum alloy"
+  ],
+  "test": "NASA promoted combustion (lowest burn pressure)",
+  "standard": "NASA-STD-6001 Test 17 / ASTM G124",
+  "value": 100,
+  "unit": "psia",
+  "conditions": "pure oxygen; alloy 1100 rod 0.32 cm in diameter, ignited at the bottom",
+  "gravity": "Earth",
+  "source_title": "Promoted Combustion Test Data Re-Examined (Lewis, Jeffers, Stoltzfus)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20100021068/downloads/20100021068.pdf",
+  "quote": "Aluminum 1100 0.7 100 6 0-5 0.3 50 3 0-0.9 12 WSTF 88-21971",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "A pressure in pure oxygen, not an oxygen percentage; metals are rated differently from plastics. It did not burn at 50 psia.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "butyl rubber",
   "aliases": [
    "polyisobutylene"
@@ -388,6 +411,25 @@
   "page": "Table A-1, p. A-1",
   "confidence": "high",
   "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "copper",
+  "aliases": [],
+  "test": "NASA promoted combustion (highest pressure with no burn)",
+  "standard": "NASA-STD-6001 Test 17 / ASTM G124",
+  "value": ">10 500",
+  "unit": "psia",
+  "conditions": "pure oxygen; commercially pure rod 0.32 cm in diameter, ignited at the bottom",
+  "gravity": "Earth",
+  "source_title": "Promoted Combustion Test Data Re-Examined (Lewis, Jeffers, Stoltzfus)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20100021068/downloads/20100021068.pdf",
+  "quote": "Copper (commercially pure) None >72.4 >10 500 b 20 0.1-0.2 5.1-5.2 WSTF09-43730",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "A pressure in pure oxygen, not an oxygen percentage; metals are rated differently from plastics. No burn at any pressure tested.",
   "limit": null,
   "checked": "2026-11-15"
  },
