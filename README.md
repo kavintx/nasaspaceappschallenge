@@ -2,7 +2,36 @@
 
 NASA Space Apps Challenge 2026 — *Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data*.
 
-Photograph an everyday item and see how its materials did in NASA's own microgravity fire tests — what burned, what self-extinguished, what the crew would breathe — at Moon-base (30% O₂) and ISS (21% O₂) conditions. Browse, compare, ask questions with citations, and manage the research pipeline.
+**Live: https://burnscan.space** · [Submission text](SUBMISSION.md) · [Every source](SOURCES.md)
+
+Scan what's going to the Moon. See where it sits in everything NASA has burned in space.
+
+A Moon base will run at 30% oxygen instead of Earth's 21%. Photograph an item going into the habitat, confirm what it is made of, and each material is placed among NASA's microgravity fire tests by oxygen and pressure, with the paper, page and quote behind every point. Where NASA has no test, the site says so, and shows published results from other cited sources separately, labelled with their gravity and publisher.
+
+![The home page: the lead line beside a flame drawn live in 3D](docs/screenshots/home.jpg)
+
+## What's in it
+
+| Page | What it does |
+|---|---|
+| **Scan** (`/scan`) | Photo, label or typed list → materials → each material's tests. A vague name such as "plastic" asks which plastic. |
+| **Flammability map** (on every result) | NASA's tests of one material placed by oxygen (%) and pressure (kPa), marked by outcome. Moon Base and ISS are pinned. Tap a mark for the paper, page and quote. |
+| **Atlas** (`/atlas`) | Every material with NASA microgravity tests, one small map each, sortable and filterable. |
+| **My items** (`/items`) | Scanned items saved on the device, grouped into spaces, with a printable habitat report and a "test next" list of gaps in the data. |
+| **Experiments**, **Papers** | The 13 NASA experiments and the NTRS papers, with the conditions and findings read from each. |
+| **Ask** | Questions answered with citations to the papers (needs the research backend). |
+| **Habitat**, **Compare**, **Pipeline** | Atmospheres by habitat, experiments side by side, and what the database holds. |
+
+![The flammability map for one material](docs/screenshots/flammability-map.jpg)
+
+## The data, and what is and isn't claimed
+
+- **NASA's microgravity tests** are in the research database (Supabase): 13 experiments, 44 NTRS papers, 155 test conditions naming 70 fuels, and 231 findings. They were read from the papers by AI and none has been reviewed by a person yet; the site says this where it shows them.
+- **Other cited sources** are in `web/data/more_sources.json`: 533 results for 99 materials from 189 documents (NASA reports, FAA, NIST, USDA, the European Commission, the US Coast Guard, peer-reviewed journals, named manufacturers). Each row has its link, page and the exact quote. They are shown in their own block and never mixed into the microgravity test points. The full list is in [SOURCES.md](SOURCES.md).
+- **Not used:** Wikipedia, forums, blogs, or any page that does not say who measured the value.
+- **No guessing.** Oxygen and pressure are placed on a chart only when the paper states them with a unit. A material with no test shows "no test found". Nothing is fitted, predicted or averaged.
+- **Most materials have never been tested in space.** The site shows where each one sits in what has been tested, and lists what is missing. It is not a safety rating.
+- **The flames on the site are illustrations**, drawn in the browser or (the intro clip) made with AI, and labelled as such.
 
 ## Quick start — one command
 
@@ -51,13 +80,16 @@ NASA NTRS ──> backend (Fireset repo) ──writes──> Supabase database <
 
 | Page | Source |
 |---|---|
-| Explorer, experiment pages, Compare table, Habitat evidence, Literature, paper pages | Supabase (rolled up per experiment, cached 5 minutes; "Refresh" rebuilds) |
+| Experiments, experiment pages, Compare table, Habitat evidence, Papers, paper pages | Supabase (rolled up per experiment, cached 5 minutes; "Refresh" rebuilds) |
+| Atlas, flammability map | Supabase `conditions`: the numeric oxygen / pressure columns when filled, otherwise the text read by `web/src/units.rs` |
+| Tests from other sources | `web/data/more_sources.json`, compiled into the server; shown when `MORE_SOURCES=on` |
+| My items, habitat report | the browser's own storage, plus `GET /items/findings` (Supabase) for NASA's findings |
 | Burn Scan (photo → materials → test results) | photo → the model key set in `web/.env` (Anthropic/OpenAI/Ollama, via `/scan/identify`); verdicts from Supabase; material-name synonyms via backend `POST /materials/match` when it runs (exact matches only without it) |
 | Ask the Data (streaming chat) | backend `POST /ai/chat`, through `/ask/stream` |
 | Habitat Risk → AI risk assessment | backend `POST /ai/habitat/analyze` |
 | Compare → AI comparison | backend `POST /ai/compare` |
 | Experiment → AI synthesis | backend `POST /ai/summarize/{acronym}` |
-| Pipeline | backend `GET /ai/health`, `GET /pipeline/status`, `POST /ai/test`, ingest/import/extract |
+| Pipeline | with the backend: `GET /ai/health`, `GET /pipeline/status`, `POST /ai/test`, ingest/import/extract. Without it: counts read straight from Supabase |
 | Paper page actions | backend `POST /ai/extract/{id}`, `PATCH /conditions/{id}`, `PATCH /findings/{id}` |
 
 Category, fuel phase, hardware, and the names and one-line descriptions of the 13 known experiments come from a small table in `web/src/catalog.rs`, taken from the NASA challenge brief. Rejected conditions and findings are left out of the roll-ups.
@@ -75,6 +107,7 @@ The dashboard reads `web/.env` (`main.py` creates one from `web/.env.example` on
 | `VISION_FALLBACK` | `anthropic`, `openai` or `none`: tried once if the provider fails |
 | `OLLAMA_BASE_URL`, `OLLAMA_VISION_MODEL` | Local vision model for scanning |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Only for the anthropic provider |
+| `MORE_SOURCES=on` | Shows the cited results from other sources on scan results and the map. Off unless set |
 | `READ_ONLY=true` | **Set this on any public deployment**: turns off ingest, extraction and editing. Browsing, AI answers and chat still work |
 | `STATIC_DIR`, `SUPABASE_URL`, `SUPABASE_KEY` | Rarely needed; sane defaults built in |
 
@@ -97,7 +130,7 @@ cd web && cargo run        # http://localhost:3100 or next free port
 After editing templates or `web/styles/input.css`, regenerate the stylesheet:
 
 ```sh
-tailwindcss -c tailwind.config.js -i styles/input.css -o static/app.css --minify
+npx tailwindcss@3.4.17 -c tailwind.config.js -i styles/input.css -o static/app.css --minify
 ```
 
 `static/app.css` is generated — never hand-edit it.
@@ -108,7 +141,9 @@ The publishable key in `web/src/store.rs` can only read `experiments`, `experime
 
 ## Deploy
 
-`web/Dockerfile` builds a container that runs anywhere Docker does (Render, Fly.io, Railway). Set `READ_ONLY=true` and keep `API_AUTH_TOKEN` in the platform's secret store.
+The public site runs on Netlify: `netlify.toml` builds `web/` as one function and serves `web/static/` directly. Every merge to `main` deploys. Set `READ_ONLY=true`, `MORE_SOURCES=on` and the scanner's key in Netlify's environment variables, never in the repo.
+
+`web/Dockerfile` also builds a container that runs anywhere Docker does (Render, Fly.io, Railway). Set `READ_ONLY=true` and keep `API_AUTH_TOKEN` in the platform's secret store.
 
 ## Troubleshooting
 
