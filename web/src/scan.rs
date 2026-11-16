@@ -279,6 +279,96 @@ fn chart(tests: &[&Test]) -> Value {
     json!({ "points": points, "no_level": no_level, "outcomes": outcomes, "tests": tests.len() })
 }
 
+/// The oxygen-pressure map: every test that states both, as a point or (for a stated range) a bar.
+/// Tests that can't be placed are counted or listed with the reason; none is given a number it didn't state.
+fn map(tests: &[&Test]) -> Value {
+    let code = |o: Outcome| match o {
+        Outcome::Burned => "burned",
+        Outcome::WentOut => "went_out",
+        Outcome::NoIgnition => "no_ignition",
+        Outcome::Unknown => "unrecorded",
+    };
+    let pair = |s: &crate::units::Span| json!([s.min, s.max]);
+    let mut points: Vec<Value> = vec![];
+    let mut unplottable: Vec<Value> = vec![];
+    let (mut placed, mut no_pressure, mut no_oxygen) = (0usize, 0usize, 0usize);
+    let mut counts = [0usize; 4];
+    let (mut o2_lo, mut o2_hi, mut kpa_lo, mut kpa_hi) = (f64::MAX, f64::MIN, f64::MAX, f64::MIN);
+    for (index, t) in tests.iter().enumerate() {
+        let href = t.paper_url.clone().unwrap_or_else(|| t.paper_href.clone());
+        if t.plottable() {
+            placed += 1;
+            counts[severity(t.outcome) as usize] += 1;
+            for o in &t.o2_spans {
+                for p in &t.kpa_spans {
+                    o2_lo = o2_lo.min(o.min);
+                    o2_hi = o2_hi.max(o.max);
+                    kpa_lo = kpa_lo.min(p.min);
+                    kpa_hi = kpa_hi.max(p.max);
+                    points.push(json!({
+                        "test": index,
+                        "o2": pair(o),
+                        "kpa": pair(p),
+                        "outcome": code(t.outcome),
+                        "paper": t.paper_title,
+                        "href": href,
+                        "page": t.source_page,
+                        "quote": t.source_quote,
+                        "note": t.outcome_note,
+                        "o2_text": t.o2_raw,
+                        "pressure_text": t.pressure,
+                        "experiments": t.experiments,
+                    }));
+                }
+            }
+            continue;
+        }
+        // Why this test is not on the map, in the paper's own words where it gave any.
+        let mut why: Vec<String> = vec![];
+        match (&t.o2_raw, t.o2_spans.is_empty()) {
+            (Some(text), true) => why.push(format!("oxygen given as “{text}”")),
+            (None, true) => no_oxygen += 1,
+            _ => {}
+        }
+        match (&t.pressure, t.kpa_spans.is_empty()) {
+            (Some(text), true) => why.push(format!("pressure given as “{text}”")),
+            (None, true) if !t.o2_spans.is_empty() => no_pressure += 1,
+            _ => {}
+        }
+        if t.o2_spans.len() > 1 && t.kpa_spans.len() > 1 {
+            why.push("several oxygen levels and several pressures, with no record of which went together".to_string());
+        }
+        if !why.is_empty() {
+            unplottable.push(json!({ "why": why.join("; "), "paper": t.paper_title, "href": href, "outcome": code(t.outcome) }));
+        }
+    }
+    // One sentence that states only what the placed tests show.
+    let sentence = if placed == 0 {
+        Value::Null
+    } else {
+        let labels = [(3, "burned"), (2, "went out"), (1, "did not ignite"), (0, "outcome not recorded")];
+        let outcomes: Vec<String> = labels.iter().filter(|(k, _)| counts[*k] > 0).map(|(k, label)| format!("{} {label}", counts[*k])).collect();
+        let span = |lo: f64, hi: f64| if hi > lo { format!("{} to {}", num(lo), num(hi)) } else { num(lo) };
+        json!(format!(
+            "{}{placed} test{} with both oxygen and pressure recorded: {}, at {}% oxygen and {} kPa.",
+            if placed < 3 { "Only " } else { "" },
+            if placed == 1 { "" } else { "s" },
+            outcomes.join(", "),
+            span(o2_lo, o2_hi),
+            span(kpa_lo, kpa_hi),
+        ))
+    };
+    json!({
+        "points": points,
+        "placed": placed,
+        "no_pressure": no_pressure,
+        "no_oxygen": no_oxygen,
+        "unplottable": unplottable,
+        "sentence": sentence,
+        "tests": tests.len(),
+    })
+}
+
 fn severity(o: Outcome) -> u8 {
     match o {
         Outcome::Burned => 3,
@@ -468,6 +558,7 @@ pub async fn result(State(app): AppRef, headers: HeaderMap, Json(req): Json<Resu
                 "habitats": verdicts(&tests),
                 "evidence": evidence(&tests),
                 "chart": chart(&tests),
+                "map": map(&tests),
                 "other": if app.more_sources { crate::extra::for_names(&gas_names) } else { vec![] },
                 "closest": closest,
                 "gases": gases(&gas_names),

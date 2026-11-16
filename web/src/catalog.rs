@@ -4,6 +4,7 @@
 
 use crate::backend::{f, https, s};
 use crate::store::Store;
+use crate::units::{self, Span};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::time::Instant;
@@ -84,9 +85,17 @@ impl Outcome {
 
 /// One extracted test condition that names a fuel.
 pub struct Test {
+    /// Every stated oxygen level in percent (both ends of a range), for the per-habitat verdicts.
     pub o2: Vec<f64>,
     pub o2_raw: Option<String>,
+    /// Oxygen in percent and pressure in kPa as stated values or ranges. Empty when the paper
+    /// didn't state one or it couldn't be read: see units.rs.
+    pub o2_spans: Vec<Span>,
+    pub kpa_spans: Vec<Span>,
     pub pressure: Option<String>,
+    /// Where in the paper the outcome (or, failing that, the conditions) was read from.
+    pub source_page: Option<String>,
+    pub source_quote: Option<String>,
     pub airflow: Option<String>,
     pub outcome: Outcome,
     pub outcome_note: Option<String>,
@@ -101,6 +110,17 @@ pub struct Test {
 impl Test {
     pub fn o2_max(&self) -> Option<f64> {
         self.o2.iter().cloned().reduce(f64::max)
+    }
+
+    /// True when the test can be placed on the oxygen-pressure map: both are stated, and at
+    /// most one of them is a list. Two lists can't be paired without guessing which went with which.
+    pub fn plottable(&self) -> bool {
+        !self.o2_spans.is_empty() && !self.kpa_spans.is_empty() && (self.o2_spans.len() == 1 || self.kpa_spans.len() == 1)
+    }
+
+    /// True when the row has oxygen or pressure text that states no readable value.
+    pub fn unread(&self) -> bool {
+        (self.o2_raw.is_some() && self.o2_spans.is_empty()) || (self.pressure.is_some() && self.kpa_spans.is_empty())
     }
 }
 
@@ -172,35 +192,22 @@ fn meta(acronym: &str) -> Meta {
     }
 }
 
-/// Numbers in an oxygen string such as "21%" or "18-21% O2". Only strings that
-/// state a percentage are used, and digits inside names like "O2" are ignored.
+/// Every oxygen level in percent that this text states, both ends of a range included.
+/// Read by units.rs, the one parser for these columns.
 pub fn pct_numbers(text: &str) -> Vec<f64> {
-    if !text.contains('%') {
-        return vec![];
+    ends(&units::oxygen_pct(text))
+}
+
+fn ends(spans: &[Span]) -> Vec<f64> {
+    spans.iter().flat_map(|s| if s.is_range() { vec![s.min, s.max] } else { vec![s.min] }).collect()
+}
+
+/// The numeric columns when the row has them, otherwise the text column read by units.rs.
+fn stated(row: &Value, min: &str, max: &str, text: Option<&str>, read: fn(&str) -> Vec<Span>) -> Vec<Span> {
+    match units::column(f(row, min), f(row, max)) {
+        Some(span) => vec![span],
+        None => text.map(read).unwrap_or_default(),
     }
-    let chars: Vec<char> = text.chars().collect();
-    let mut out = vec![];
-    let mut i = 0;
-    while i < chars.len() {
-        if chars[i].is_ascii_digit() {
-            let start = i;
-            while i < chars.len() && (chars[i].is_ascii_digit() || chars[i] == '.') {
-                i += 1;
-            }
-            let after_letter = start > 0 && chars[start - 1].is_alphabetic();
-            if !after_letter {
-                let tok: String = chars[start..i].iter().collect();
-                if let Ok(n) = tok.trim_end_matches('.').parse::<f64>() {
-                    if n > 0.0 && n <= 100.0 {
-                        out.push(n);
-                    }
-                }
-            }
-        } else {
-            i += 1;
-        }
-    }
-    out
 }
 
 fn add_distinct(list: &mut Vec<String>, value: Option<String>) {
@@ -279,10 +286,19 @@ pub async fn build(store: &Store) -> Result<Catalog, String> {
         for c in rows("conditions").iter().filter(|c| !rejected(c)) {
             if let Some(fuel) = s(c, "fuel_type") {
                 let o2_raw = s(c, "oxygen_concentration");
+                let pressure = s(c, "pressure");
+                let o2_spans: Vec<Span> = stated(c, "oxygen_pct_min", "oxygen_pct_max", o2_raw.as_deref(), units::oxygen_pct)
+                    .into_iter()
+                    .filter(|s| s.min > 0.0 && s.max <= 100.0)
+                    .collect();
                 let test = Test {
-                    o2: o2_raw.as_deref().map(pct_numbers).unwrap_or_default(),
+                    o2: ends(&o2_spans),
                     o2_raw,
-                    pressure: s(c, "pressure"),
+                    kpa_spans: stated(c, "pressure_kpa_min", "pressure_kpa_max", pressure.as_deref(), units::pressure_kpa),
+                    o2_spans,
+                    pressure,
+                    source_page: s(c, "outcome_source_page").or_else(|| s(c, "source_page")),
+                    source_quote: s(c, "outcome_source_quote").or_else(|| s(c, "source_quote")),
                     airflow: s(c, "airflow"),
                     // These two columns may not exist yet; a missing column reads as unknown.
                     outcome: Outcome::parse(s(c, "outcome")),
@@ -365,6 +381,15 @@ pub async fn build(store: &Store) -> Result<Catalog, String> {
         })
         .collect();
     exps.sort_by(|a, b| a.acronym.cmp(&b.acronym));
+    let tests = || materials.iter().flat_map(|m| m.tests.iter());
+    println!(
+        "flammability map: {} tests of {} fuel names; {} can be placed by oxygen and pressure; {} have oxygen or pressure text that states no readable value; {} fuel names have 3 or more placeable tests",
+        tests().count(),
+        materials.len(),
+        tests().filter(|t| t.plottable()).count(),
+        tests().filter(|t| t.unread()).count(),
+        materials.iter().filter(|m| m.tests.iter().filter(|t| t.plottable()).count() >= 3).count(),
+    );
     materials.sort_by(|a, b| b.tests.len().cmp(&a.tests.len()).then(a.name.to_lowercase().cmp(&b.name.to_lowercase())));
     Ok(Catalog { exps, materials, paper_count, failed, built: Instant::now() })
 }

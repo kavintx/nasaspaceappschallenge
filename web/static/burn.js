@@ -265,6 +265,209 @@
     ]);
   }
 
+  // ---------- the flammability map: oxygen against pressure ----------
+
+  // The two habitats, from the challenge brief: 10.2 psi = 70.3 kPa, 14.7 psi = 101.4 kPa.
+  var PINS = [
+    { name: "Moon Base", o2: 30, kpa: 70.3, text: "30% O₂, 10.2 psi (70.3 kPa)" },
+    { name: "ISS", o2: 21, kpa: 101.4, text: "21% O₂, 14.7 psi (101.4 kPa)" },
+  ];
+  var BAR_DASH = { burned: null, went_out: "7 4", no_ignition: "2 4", unrecorded: "1 5" };
+
+  function outcomeOf(key) {
+    return OUTCOMES.filter(function (o) { return o.key === key; })[0] || OUTCOMES[3];
+  }
+  function tidy(v) {
+    return String(Math.round(v * 10) / 10);
+  }
+  function spanText(pair, unit) {
+    return pair[1] > pair[0] ? tidy(pair[0]) + " to " + tidy(pair[1]) + unit : tidy(pair[0]) + unit;
+  }
+  function gravityWords(g) {
+    return g === "Earth" ? "Earth gravity" : g === "microgravity" ? "weightlessness" : g || "gravity not stated";
+  }
+
+  // Oxygen limits from the other-sources layer, as labelled vertical lines. They are a different
+  // kind of test from the points, so they never become points.
+  function limitMarkers(material) {
+    var seen = {}, out = [];
+    (material.other || []).forEach(function (row) {
+      if (typeof row.limit !== "number" || !(row.limit > 0 && row.limit <= 100)) return;
+      var label = gravityWords(row.gravity) + ", " + row.publisher;
+      var key = row.limit + "|" + label;
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push({ limit: row.limit, label: label, test: row.test });
+    });
+    return out.sort(function (a, b) { return a.limit - b.limit; });
+  }
+
+  function flammabilityMap(material) {
+    var data = material.map;
+    if (!data || !data.points || !data.points.length) return null;
+    var points = data.points;
+    var markers = limitMarkers(material);
+
+    // Axes cover the tests and both habitats. Pressure switches to a log scale when the tests span more than a factor of 12.
+    var o2s = [], kpas = [];
+    points.forEach(function (p) { o2s.push(p.o2[0], p.o2[1]); kpas.push(p.kpa[0], p.kpa[1]); });
+    PINS.forEach(function (h) { o2s.push(h.o2); kpas.push(h.kpa); });
+    var lo = Math.min(15, Math.floor(Math.min.apply(null, o2s) / 5) * 5);
+    var hi = Math.max(35, Math.ceil(Math.max.apply(null, o2s) / 5) * 5);
+    var positive = kpas.filter(function (v) { return v > 0; });
+    var kMin = Math.min.apply(null, positive), kMax = Math.max.apply(null, kpas);
+    var log = kMax / kMin > 12;
+    var yLo, yHi, yTicks = [];
+    if (log) {
+      yLo = Math.pow(10, Math.floor(Math.log10(kMin)));
+      yHi = Math.pow(10, Math.ceil(Math.log10(kMax)));
+      for (var d = yLo; d <= yHi; d *= 10) [1, 2, 5].forEach(function (m) { if (d * m >= yLo && d * m <= yHi) yTicks.push(d * m); });
+    } else {
+      var stepY = kMax - kMin > 120 ? 50 : kMax - kMin > 50 ? 20 : 10;
+      yLo = Math.max(0, Math.floor((kMin - stepY * 0.6) / stepY) * stepY);
+      yHi = Math.ceil((kMax + stepY * 0.6) / stepY) * stepY;
+      for (var t = yLo; t <= yHi; t += stepY) yTicks.push(t);
+    }
+    var W = 328, left = 40, right = 12, top = 24, plotH = 196, bottom = top + plotH, H = bottom + 34;
+    function x(v) { return left + ((Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)) * (W - left - right); }
+    function y(v) {
+      var f = log ? (Math.log10(Math.max(v, yLo)) - Math.log10(yLo)) / (Math.log10(yHi) - Math.log10(yLo)) : (v - yLo) / (yHi - yLo);
+      return bottom - Math.max(0, Math.min(1, f)) * plotH;
+    }
+
+    var kids = [svg("rect", { x: left, y: top, width: W - left - right, height: plotH, fill: "#0c111c", stroke: "#2a3040", "stroke-width": 1 })];
+    yTicks.forEach(function (v) {
+      kids.push(svg("line", { x1: left, x2: W - right, y1: y(v), y2: y(v), stroke: "#1c2333", "stroke-width": 1 }));
+      kids.push(svgText(tidy(v), { x: left - 5, y: y(v) + 3, "text-anchor": "end", "font-size": 9, fill: "#a5a8b5" }));
+    });
+    for (var tick = lo; tick <= hi; tick += (hi - lo > 50 ? 20 : hi - lo > 25 ? 10 : 5)) {
+      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: top, y2: bottom, stroke: "#1c2333", "stroke-width": 1 }));
+      kids.push(svgText(tick + "%", { x: x(tick), y: bottom + 13, "text-anchor": "middle", "font-size": 9, fill: "#a5a8b5" }));
+    }
+    kids.push(svgText("oxygen", { x: W - right, y: bottom + 27, "text-anchor": "end", "font-size": 9, fill: "#8b8f9d" }));
+    kids.push(svgText("pressure, kPa" + (log ? " (log scale)" : ""), { x: 2, y: 12, "font-size": 9, fill: "#8b8f9d" }));
+
+    // Limits from other sources: dashed lines with a number that the list below explains.
+    markers.forEach(function (m, i) {
+      m.on = m.limit >= lo && m.limit <= hi;
+      if (!m.on) return;
+      kids.push(svg("line", { x1: x(m.limit), x2: x(m.limit), y1: top, y2: bottom, stroke: "#e5b67a", "stroke-width": 1, "stroke-dasharray": "2 3", opacity: 0.9 }));
+      kids.push(svg("rect", { x: x(m.limit) - 6, y: top + 2 + (i % 3) * 13, width: 12, height: 11, rx: 2, fill: "#0c111c", stroke: "#e5b67a", "stroke-width": 1 }));
+      kids.push(svgText(String(i + 1), { x: x(m.limit), y: top + 10.5 + (i % 3) * 13, "text-anchor": "middle", "font-size": 8, "font-weight": 600, fill: "#e5b67a" }));
+    });
+
+    // The habitats: an open crosshair, so a test point at the same place still shows.
+    PINS.forEach(function (h) {
+      var px = x(h.o2), py = y(h.kpa);
+      kids.push(svg("circle", { cx: px, cy: py, r: 9, fill: "none", stroke: "#f5f5f7", "stroke-width": 1.2 }));
+      kids.push(svg("path", { d: "M" + (px - 13) + " " + py + "H" + (px - 5) + "M" + (px + 5) + " " + py + "H" + (px + 13) + "M" + px + " " + (py - 13) + "V" + (py - 5) + "M" + px + " " + (py + 5) + "V" + (py + 13), stroke: "#f5f5f7", "stroke-width": 1.2, fill: "none" }));
+      var flip = px > W - 80;
+      kids.push(svgText(h.name, { x: flip ? px - 15 : px + 15, y: py - 8, "text-anchor": flip ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#f5f5f7" }));
+    });
+
+    var detail = el("div", { class: "map-detail", "aria-live": "polite" }, [
+      el("p", { class: "text-[12px] leading-4 text-dim", text: "Tap a mark to see the paper, page and quote it comes from." }),
+    ]);
+    var chosen = null;
+    function choose(mark, p) {
+      if (chosen) chosen.removeAttribute("data-on");
+      chosen = mark;
+      mark.setAttribute("data-on", "true");
+      clear(detail);
+      var outcome = outcomeOf(p.outcome);
+      detail.appendChild(el("p", { class: "flex items-center gap-2 text-[14px] font-semibold" }, [
+        svg("svg", { width: 14, height: 14, viewBox: "0 0 14 14", class: "shrink-0", "aria-hidden": "true" }, [outcomeMark(p.outcome, 7, 7, 5)]),
+        el("span", { text: outcome.label + " · " + spanText(p.o2, "% oxygen") + " · " + spanText(p.kpa, " kPa") }),
+      ]));
+      var stated = [p.o2_text ? "oxygen “" + p.o2_text + "”" : null, p.pressure_text ? "pressure “" + p.pressure_text + "”" : null].filter(Boolean);
+      if (stated.length) detail.appendChild(el("p", { class: "mt-1 text-[12px] leading-4 text-muted", text: "As recorded: " + stated.join(", ") + (p.experiments && p.experiments.length ? " · " + p.experiments.join(" / ") : "") }));
+      if (p.note) detail.appendChild(el("p", { class: "mt-2 text-[13px] leading-5", text: p.note }));
+      if (p.quote) detail.appendChild(el("blockquote", { class: "map-quote", text: "“" + p.quote + "”" }));
+      detail.appendChild(el("p", { class: "mt-2 text-[12px] leading-4" }, [
+        p.href ? link(p.paper || "The paper", p.href) : el("span", { text: p.paper || "Paper not linked" }),
+        p.page ? el("span", { class: "text-dim", text: " · page " + p.page }) : el("span", { class: "text-dim", text: " · page not recorded" }),
+      ]));
+    }
+
+    points.forEach(function (p) {
+      var outcome = outcomeOf(p.outcome);
+      var x0 = x(p.o2[0]), x1 = x(p.o2[1]), y0 = y(p.kpa[0]), y1 = y(p.kpa[1]);
+      var wide = p.o2[1] > p.o2[0], tall = p.kpa[1] > p.kpa[0];
+      var shape;
+      if (!wide && !tall) {
+        shape = outcomeMark(p.outcome, x0, y0, 6);
+      } else {
+        // A stated range is a bar (or a box when both are ranges), never a point. The line pattern carries the outcome as well as the colour.
+        var attrs = { stroke: outcome.color, "stroke-width": wide && tall ? 2 : 5, "stroke-linecap": "butt", fill: wide && tall ? outcome.color : "none", "fill-opacity": 0.14 };
+        if (BAR_DASH[p.outcome]) attrs["stroke-dasharray"] = BAR_DASH[p.outcome];
+        if (wide && tall) { attrs.x = x0; attrs.y = y1; attrs.width = x1 - x0; attrs.height = y0 - y1; shape = svg("rect", attrs); }
+        else { attrs.x1 = x0; attrs.x2 = x1; attrs.y1 = y0; attrs.y2 = y1; shape = svg("line", attrs); }
+      }
+      var name = outcome.label + ", " + spanText(p.o2, " percent oxygen") + ", " + spanText(p.kpa, " kilopascals") + ". " + (p.paper || "");
+      var hit = svg("g", { class: "map-mark", tabindex: "0", role: "button", "aria-label": name }, [
+        // A wider invisible target so a thin bar or small mark is easy to tap.
+        wide || tall
+          ? svg("rect", { x: Math.min(x0, x1) - 8, y: Math.min(y0, y1) - 8, width: Math.abs(x1 - x0) + 16, height: Math.abs(y1 - y0) + 16, fill: "transparent" })
+          : svg("circle", { cx: x0, cy: y0, r: 13, fill: "transparent" }),
+        shape,
+      ]);
+      hit.addEventListener("click", function () { choose(hit, p); });
+      hit.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(hit, p); } });
+      kids.push(hit);
+    });
+
+    var counts = {}, bars = false;
+    points.forEach(function (p) { counts[p.outcome] = (counts[p.outcome] || 0) + 1; if (p.o2[1] > p.o2[0] || p.kpa[1] > p.kpa[0]) bars = true; });
+    var legend = el("ul", { class: "mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted" }, OUTCOMES.filter(function (o) { return counts[o.key]; }).map(function (o) {
+      return el("li", { class: "flex items-center gap-1.5" }, [
+        svg("svg", { width: 12, height: 12, viewBox: "0 0 12 12", "aria-hidden": "true" }, [outcomeMark(o.key, 6, 6, 4.5)]),
+        el("span", { text: o.label }),
+      ]);
+    }).concat([el("li", { class: "flex items-center gap-1.5" }, [
+      svg("svg", { width: 14, height: 14, viewBox: "0 0 14 14", "aria-hidden": "true" }, [svg("circle", { cx: 7, cy: 7, r: 4, fill: "none", stroke: "#f5f5f7", "stroke-width": 1.2 }), svg("path", { d: "M0 7H3M11 7H14M7 0V3M7 11V14", stroke: "#f5f5f7", "stroke-width": 1.2 })]),
+      el("span", { text: "Habitat air" }),
+    ])]));
+
+    var notes = [];
+    if (bars) notes.push("A bar or box is a test that states a range, not one value.");
+    if (data.no_pressure) notes.push(data.no_pressure + (data.no_pressure === 1 ? " more test states" : " more tests state") + " an oxygen level but no pressure.");
+    if (data.no_oxygen) notes.push(data.no_oxygen + (data.no_oxygen === 1 ? " test states" : " tests state") + " no oxygen level.");
+
+    var figure = el("figure", { class: "o2-chart flam-map" }, [
+      el("figcaption", { class: "text-[13px] font-medium", text: "NASA’s tests by oxygen and pressure" }),
+      svg("svg", { viewBox: "0 0 " + W + " " + H, class: "mt-2 w-full h-auto", role: "group", "aria-label": "Tests placed by oxygen, " + lo + " to " + hi + " percent, and pressure, " + tidy(yLo) + " to " + tidy(yHi) + " kilopascals. " + (data.sentence || "") }, kids),
+      legend,
+      el("p", { class: "mt-2 text-[13px] leading-5", text: data.sentence || "" }),
+      el("p", { class: "mt-1 text-[11px] leading-4 text-dim", text: PINS.map(function (h) { return h.name + ": " + h.text; }).join(" · ") + "." + (notes.length ? " " + notes.join(" ") : "") }),
+      detail,
+    ]);
+    if (markers.length) {
+      figure.appendChild(el("div", { class: "map-limits" }, [
+        el("p", { class: "text-[12px] font-medium text-amber", text: "Oxygen limits from other sources (dashed lines)" }),
+        el("p", { class: "mt-0.5 text-[11px] leading-4 text-dim", text: "A different kind of test from the marks above, at the gravity shown. Not NASA microgravity test points." }),
+        el("ol", { class: "mt-1.5 space-y-0.5 text-[12px] leading-4 text-muted" }, markers.map(function (m, i) {
+          return el("li", { text: (i + 1) + " · " + tidy(m.limit) + "% · " + m.label + (m.on ? "" : " (beyond this chart’s oxygen range)") });
+        })),
+      ]));
+    }
+    return figure;
+  }
+
+  // Tests whose stated conditions can't be read as numbers: listed, never placed.
+  function unplottableList(material) {
+    var rows = (material.map || {}).unplottable || [];
+    if (!rows.length) return null;
+    return el("details", { class: "map-unplottable" }, [
+      el("summary", { class: "text-[13px]", text: "Conditions not plottable · " + rows.length + (rows.length === 1 ? " test" : " tests") }),
+      el("ul", { class: "mt-2 space-y-2 text-[12px] leading-4 text-muted" }, rows.map(function (r) {
+        return el("li", {}, [
+          el("span", { text: outcomeOf(r.outcome).label + " · " + r.why + ". " }),
+          r.href ? link(r.paper || "The paper", r.href) : null,
+        ]);
+      })),
+    ]);
+  }
+
   function oxygenChart(material) {
     var data = material.chart;
     if (!data || !data.points || !data.points.length) return null;
@@ -510,8 +713,20 @@
       section.appendChild(el("p", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Matched on oxygen level only. Each test’s pressure is on its line below." }));
       var ring = outcomeDonut(material);
       if (ring) section.appendChild(ring);
+      var map = flammabilityMap(material);
+      if (map) section.appendChild(map);
       var chart = oxygenChart(material);
       if (chart) section.appendChild(chart);
+      if (!map) {
+        var unread = ((material.map || {}).unplottable || []).length;
+        section.appendChild(el("p", { class: "mt-2 text-[12px] leading-4 text-muted", text: !chart
+          ? "No test of this material states an oxygen level that can be read as a number, so none can be placed on a chart."
+          : unread
+            ? "No test states both an oxygen level and a pressure that can be read as numbers, so they are placed by oxygen level only."
+            : "Pressure not recorded for these tests, so they are placed by oxygen level only." }));
+      }
+      var unplottable = unplottableList(material);
+      if (unplottable) section.appendChild(unplottable);
       section.appendChild(evidenceList(material.evidence));
     } else {
       var why = result.data !== "ok"

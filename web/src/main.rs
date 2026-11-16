@@ -14,6 +14,7 @@ mod lambda;
 mod scan;
 mod setup;
 mod store;
+mod units;
 mod views;
 mod vision;
 
