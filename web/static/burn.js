@@ -401,7 +401,7 @@
         legendRow("#4fd38a", "Went out"), legendRow("#ff6a3d", "Kept burning"),
       ]));
     }
-    var facts = [row.conditions, row.gravity === "microgravity" ? "Run in weightlessness" : row.gravity === "Earth" ? "Run on Earth" : null, row.note].filter(Boolean);
+    var facts = [row.conditions, row.gravity === "microgravity" ? "Run in weightlessness" : row.gravity === "Earth" ? "Run on Earth" : row.gravity ? "Run at " + row.gravity : null, row.note].filter(Boolean);
     if (facts.length) kids.push(el("p", { class: "mt-2 text-[12px] leading-4 text-dim", text: facts.join(" · ") }));
     kids.push(el("p", { class: "mt-2 text-[12px] leading-4" }, [
       link(row.source_title, row.url),

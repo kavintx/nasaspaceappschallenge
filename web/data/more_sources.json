@@ -272,6 +272,84 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Lowest oxygen for flame spread in weightlessness (parabolic flight)",
+  "standard": null,
+  "value": 14.7,
+  "unit": "% oxygen",
+  "conditions": "sheet 0.125 mm thick, opposed flow 6 cm/s",
+  "gravity": "microgravity",
+  "source_title": "Prediction of Limiting Oxygen Concentration of Thin Materials in Microgravity (Takahashi, Maruta; Trans. JSASS Aerospace Tech. Japan 16(1), 2018)",
+  "publisher": "JSASS journal (Japan)",
+  "url": "https://www.jstage.jst.go.jp/article/tastj/16/1/16_28/_pdf",
+  "quote": "minimum oxygen concentration in which the flame survived in microgravity environment was 14.7 % where the opposed flow velocity was 6cm/s.",
+  "page": "p. 30, section 3.1",
+  "confidence": "medium",
+  "note": "The same paper's Table 2 lists this experimental value as 14.9%. On Earth the same sheet's limit was 17.0%.",
+  "limit": 14.7,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Lowest oxygen for downward flame spread",
+  "standard": null,
+  "value": 17.0,
+  "unit": "% oxygen",
+  "conditions": "sheet 0.125 mm thick, downward spread",
+  "gravity": "Earth",
+  "source_title": "Prediction of Limiting Oxygen Concentration of Thin Materials in Microgravity (Takahashi, Maruta; Trans. JSASS Aerospace Tech. Japan 16(1), 2018)",
+  "publisher": "JSASS journal (Japan)",
+  "url": "https://www.jstage.jst.go.jp/article/tastj/16/1/16_28/_pdf",
+  "quote": "result that the limiting oxygen concentration (LOC) for downward spread (Vg = 35 cm/s) is 17.0 %.",
+  "page": "p. 30, section 3.1",
+  "confidence": "high",
+  "note": "Earth comparison for the parabolic-flight result from the same paper.",
+  "limit": 17.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Flame spread speed along a rod in orbit (SJ-10 satellite)",
+  "standard": null,
+  "value": "0.074 to 0.125 at 33.5% oxygen; 0.141 to 0.330 at 49.4% oxygen",
+  "unit": "mm/s",
+  "conditions": "extruded rod 10 mm in diameter, opposed flow 6 to 12 cm/s",
+  "gravity": "microgravity",
+  "source_title": "Opposed-flow flame spread over cylindrical fuel under oxygen-enriched microgravity environment (Wu, Huang, Wang, Zhu, Yin; Fire Technology 56(1), 2020, accepted manuscript)",
+  "publisher": "Hong Kong Polytechnic University repository",
+  "url": "https://ira.lib.polyu.edu.hk/bitstream/10397/89517/1/42_FT_2020_XJ-10_ug_rod.pdf",
+  "quote": "flame-spread rate increases from 0.074 mm/s to 0.125 mm/s for XO2 = 33.5%, and from 0.141 mm/s to 0.330 mm/s for XO2 = 49.4%, respectively.",
+  "page": "section 3.2",
+  "confidence": "high",
+  "note": "Chinese Academy of Sciences experiment on the SJ-10 recoverable satellite. A speed, not an oxygen limit.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "butyl rubber",
   "aliases": [
    "polyisobutylene"
@@ -571,6 +649,50 @@
   "confidence": "high",
   "note": null,
   "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "etfe",
+  "aliases": [
+   "tefzel",
+   "ethylene tetrafluoroethylene"
+  ],
+  "test": "Lowest oxygen for flame spread along a wire in weightlessness (parabolic flight)",
+  "standard": null,
+  "value": "approximately 26",
+  "unit": "% oxygen",
+  "conditions": "wire insulation 0.15 mm thick on 0.5 mm copper wire, opposed flow 50 to 100 mm/s, 100 kPa",
+  "gravity": "microgravity",
+  "source_title": "Limiting Oxygen Concentration Trend of ETFE-Insulated Wires under Microgravity (Mizutani, Miyamoto, Hashimoto, Konno, Fujita; Int. J. Microgravity Sci. Appl. 35(1), 2018)",
+  "publisher": "Japan Society of Microgravity Application",
+  "url": "https://www.jstage.jst.go.jp/article/ijmsa/35/1/35_350104/_pdf",
+  "quote": "A minimum LOC of approximately 26% was found at external flow velocities ranging 50–100 mm/s.",
+  "page": "abstract",
+  "confidence": "medium",
+  "note": "The paper's conclusions say approximately 25%.",
+  "limit": 26.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "etfe",
+  "aliases": [
+   "tefzel",
+   "ethylene tetrafluoroethylene"
+  ],
+  "test": "Lowest oxygen for flame spread along a horizontal wire",
+  "standard": null,
+  "value": "approximately 37",
+  "unit": "% oxygen",
+  "conditions": "wire insulation 0.15 mm thick on 0.5 mm copper wire, opposed flow up to 200 mm/s, 100 kPa",
+  "gravity": "Earth",
+  "source_title": "Limiting Oxygen Concentration Trend of ETFE-Insulated Wires under Microgravity (Mizutani, Miyamoto, Hashimoto, Konno, Fujita; Int. J. Microgravity Sci. Appl. 35(1), 2018)",
+  "publisher": "Japan Society of Microgravity Application",
+  "url": "https://www.jstage.jst.go.jp/article/ijmsa/35/1/35_350104/_pdf",
+  "quote": "The LOC had a constant value of approximately 37%, except at a 0 mm/s flow velocity, where the value was approximately 42%.",
+  "page": "section 3.1",
+  "confidence": "high",
+  "note": "About 42% with no air flow.",
+  "limit": 37.0,
   "checked": "2026-11-15"
  },
  {
@@ -1070,6 +1192,69 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "nomex",
+  "aliases": [
+   "meta-aramid"
+  ],
+  "test": "Lowest oxygen for flame spread in weightlessness (parabolic flight)",
+  "standard": null,
+  "value": 29.5,
+  "unit": "% oxygen",
+  "conditions": "Nomex HT90-40 fabric, opposed flow",
+  "gravity": "microgravity",
+  "source_title": "Prediction of Limiting Oxygen Concentration of Thin Materials in Microgravity (Takahashi, Maruta; Trans. JSASS Aerospace Tech. Japan 16(1), 2018)",
+  "publisher": "JSASS journal (Japan)",
+  "url": "https://www.jstage.jst.go.jp/article/tastj/16/1/16_28/_pdf",
+  "quote": "The MLOC obtained by the parabolic flights is 29.5 %.",
+  "page": "p. 33, section 3.2",
+  "confidence": "high",
+  "note": "On Earth the same fabric's limit for downward spread was 31.5%.",
+  "limit": 29.5,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "nomex",
+  "aliases": [
+   "meta-aramid"
+  ],
+  "test": "Lowest oxygen for downward flame spread",
+  "standard": null,
+  "value": 31.5,
+  "unit": "% oxygen",
+  "conditions": "Nomex HT90-40 fabric, downward spread",
+  "gravity": "Earth",
+  "source_title": "Prediction of Limiting Oxygen Concentration of Thin Materials in Microgravity (Takahashi, Maruta; Trans. JSASS Aerospace Tech. Japan 16(1), 2018)",
+  "publisher": "JSASS journal (Japan)",
+  "url": "https://www.jstage.jst.go.jp/article/tastj/16/1/16_28/_pdf",
+  "quote": "LOC1g (%) 17.0 31.5",
+  "page": "p. 33, Table 2",
+  "confidence": "medium",
+  "note": "Table row: the columns are PMMA, then Nomex.",
+  "limit": 31.5,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "nomex",
+  "aliases": [
+   "meta-aramid"
+  ],
+  "test": "Lowest oxygen for upward burning at Martian gravity (centrifuge in a drop tower)",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": 19.9,
+  "unit": "% oxygen",
+  "conditions": "Nomex HT90-40 fabric, 14.7 psia, 5.18 s drop",
+  "gravity": "Martian gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Martian ULOI * 18.0 22.0 19.9",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table row: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth gave 23.5%. Drop tests are short, so the burn criteria differ from the Earth test.",
+  "limit": 19.9,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "nylon",
   "aliases": [
    "polyamide",
@@ -1455,6 +1640,28 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "pei",
+  "aliases": [
+   "polyetherimide",
+   "ultem"
+  ],
+  "test": "Lowest oxygen for upward burning at Martian gravity (centrifuge in a drop tower)",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": 22.0,
+  "unit": "% oxygen",
+  "conditions": "Ultem 1000 film 10 mil thick, 10.2 psia, 5.18 s drop",
+  "gravity": "Martian gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Martian ULOI * 18.0 22.0 19.9",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table row: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth gave 23.5%.",
+  "limit": 22.0,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "pen",
   "aliases": [
    "polyethylene naphthalate"
@@ -1822,6 +2029,31 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "polyester (pet)",
+  "aliases": [
+   "polyester",
+   "pet",
+   "pete",
+   "polyethylene terephthalate",
+   "mylar"
+  ],
+  "test": "Lowest oxygen for upward burning at Martian gravity (centrifuge in a drop tower)",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": 18.0,
+  "unit": "% oxygen",
+  "conditions": "Mylar G film 5 mil thick, 10.2 psia, 5.18 s drop",
+  "gravity": "Martian gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Martian ULOI * 18.0 22.0 19.9",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table row: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth gave 21.2%. A film, not a fabric.",
+  "limit": 18.0,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "polyethersulfone",
   "aliases": [
    "pesu",
@@ -2010,6 +2242,56 @@
   "confidence": "medium",
   "note": "Manufacturer whitepaper; agrees with FAA.",
   "limit": 17.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "Lowest oxygen for flame spread along a wire, Earth versus weightlessness",
+  "standard": null,
+  "value": "19% on Earth, 16% in weightlessness",
+  "unit": "% oxygen",
+  "conditions": "polyethylene wire insulation",
+  "gravity": "microgravity",
+  "source_title": "Effect of Environmental Variables on the Flammability of Fire Resistant Materials (Osorio; PhD dissertation, University of California, Berkeley, 2014)",
+  "publisher": "UC Berkeley",
+  "url": "https://escholarship.org/content/qt3mm1p1tr/qt3mm1p1tr.pdf",
+  "quote": "between the 1g and µg LOC is about 3%, (19% versus 16%) whereas for ETFE insulated",
+  "page": "thesis p. 100, chapter 4 conclusions",
+  "confidence": "medium",
+  "note": "Secondary: the thesis is quoting Hokkaido University results (Takahashi et al.). The words before the quote are 'For PE insulated wires the difference'.",
+  "limit": 16.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "Flame kept burning along a wire in weightlessness (parabolic flight)",
+  "standard": null,
+  "value": "Still burning at 16%",
+  "unit": "% oxygen",
+  "conditions": "wire insulation 0.3 mm thick on 0.5 mm wire, air flowing with the flame at 50 to 200 mm/s",
+  "gravity": "microgravity",
+  "source_title": "Can a spreading flame over electric wire insulation in concurrent flow achieve steady propagation in microgravity? (Nagachi et al.; Proc. Combust. Inst. 37, 2019, accepted manuscript)",
+  "publisher": "University of Edinburgh repository",
+  "url": "https://www.pure.ed.ac.uk/ws/files/70051621/Can_a_spreading_flame.pdf",
+  "quote": "However, for an oxygen concentration of 16% , the flame base became faint blue and difficult to observe, but the molten insulation was moving, thus confirming that the flame was sustained.",
+  "page": "section 3.1",
+  "confidence": "medium",
+  "note": "16% is the lowest oxygen level reported, not a measured limit: the paper does not say where it goes out.",
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
