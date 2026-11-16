@@ -41,10 +41,11 @@ const O2_TOLERANCE: f64 = 1.0;
 /// Result cards compare these two habitats, in this order.
 const SHOWN: [&str; 2] = ["moon_base", "iss"];
 
-/// The same message on the public website, where there is no box to paste a key into.
+/// The public website's message, which says nothing about how the scanner is set up.
 const NOT_CONNECTED_HOSTED: &str = "The photo scanner isn’t available right now. You can still type the materials in.";
 
-const NOT_CONNECTED: &str = "Scanner not connected. Paste your Anthropic or OpenAI key in the box above, or run Ollama — you can still type the materials in.";
+/// A copy on someone's own computer: the key goes in web/.env (or `main.py --configure`), never in the page.
+const NOT_CONNECTED: &str = "The photo scanner isn’t set up on this copy. You can still type the materials in.";
 
 // ---------- pages ----------
 
@@ -97,22 +98,15 @@ pub async fn overview(State(app): AppRef) -> Response {
 #[template(path = "scan.html")]
 pub struct ScanPage {
     pub scanner_on: bool,
-    /// True when no Anthropic/OpenAI key is stored — the page shows its
-    /// one-box unlock, which arms the scanner without a restart.
-    pub needs_key: bool,
 }
 
 pub async fn scan_page(State(app): AppRef) -> Response {
     let v = app.vision.read().await;
-    let (mut scanner_on, mut needs_key) = (v.may_work(), !v.has_own_key());
+    // The public website has no local Ollama: the scanner is on only with a key set.
+    // The page never asks a visitor for a key; keys are set by whoever runs the site.
+    let scanner_on = if crate::hosted() { v.has_own_key() } else { v.may_work() };
     drop(v);
-    // The public website never asks visitors for a key (that box is for people running
-    // their own copy), and it has no local Ollama: the scanner is on only with a key set.
-    if crate::hosted() {
-        scanner_on = !needs_key;
-        needs_key = false;
-    }
-    render(ScanPage { scanner_on, needs_key })
+    render(ScanPage { scanner_on })
 }
 
 #[derive(Template)]

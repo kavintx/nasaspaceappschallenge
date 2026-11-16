@@ -141,7 +141,7 @@ async fn run_chat(
     match cfg.open(&system, &messages).await {
         Err(why) => {
             let msg = match why {
-                ChatOpenError::NotConnected => "No AI key is set on this machine yet. Paste an Anthropic or OpenAI key on the Scan page to switch the AI on.".to_string(),
+                ChatOpenError::NotConnected => "The AI isn’t set up on this copy yet.".to_string(),
                 ChatOpenError::Failed(m) => crate::public_error(m, "Ask couldn’t answer just now. Try again in a moment."),
             };
             ev(&tx, json!({ "type": "error", "error": msg })).await;

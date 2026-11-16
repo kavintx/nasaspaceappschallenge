@@ -16,7 +16,7 @@ py main.py
 
 `main.py` asks nothing. It clones the research backend next to this repo if you don't have it, sets it up silently, generates the shared site token into both `.env` files, then builds and starts **both** containers. When it finishes, it prints a link. The first build compiles everything inside a `rust:1-bookworm` container and takes a few minutes; the results are kept in named Docker volumes, so every later start is nearly instant.
 
-Then open **http://localhost:3101/scan** and paste an **Anthropic or OpenAI key** into the box. That's the one step. The key is saved on this machine only (never shown back), the scanner arms immediately — no restart — and Burn Scan works: photo → materials → how those materials did in NASA's tests, all read from the research database (Supabase) which is baked in. The photo-recognition scanner lives **inside the dashboard itself**, so a pasted key is all scanning ever needs.
+To turn the photo scanner on, run `py main.py --configure` once and give it an **Anthropic or OpenAI key** (or put `ANTHROPIC_API_KEY=` in `web/.env`), then start again. The site itself never asks for a key. With one set, open **http://localhost:3101/scan** and Burn Scan works: photo → materials → how those materials did in NASA's tests, all read from the research database (Supabase) which is baked in. The photo-recognition scanner lives **inside the dashboard itself**, so that one key is all scanning ever needs.
 
 The research database and model server are the project's own setup, filled in by the team — a first-time runner is never asked and never needs to know they exist. Accounts, Ask-the-Data and the Pipeline page run through the research backend; on a machine where the team has wired in its database address, that comes up automatically from the same command. Where it hasn't, browsing and Burn Scan still work; the rest stays off rather than crashing.
 
@@ -52,7 +52,7 @@ NASA NTRS ──> backend (Fireset repo) ──writes──> Supabase database <
 | Page | Source |
 |---|---|
 | Explorer, experiment pages, Compare table, Habitat evidence, Literature, paper pages | Supabase (rolled up per experiment, cached 5 minutes; "Refresh" rebuilds) |
-| Burn Scan (photo → materials → test results) | photo → your own model key (Anthropic/OpenAI/Ollama, via `/scan/identify`); verdicts from Supabase; material-name synonyms via backend `POST /materials/match` when it runs (exact matches only without it) |
+| Burn Scan (photo → materials → test results) | photo → the model key set in `web/.env` (Anthropic/OpenAI/Ollama, via `/scan/identify`); verdicts from Supabase; material-name synonyms via backend `POST /materials/match` when it runs (exact matches only without it) |
 | Ask the Data (streaming chat) | backend `POST /ai/chat`, through `/ask/stream` |
 | Habitat Risk → AI risk assessment | backend `POST /ai/habitat/analyze` |
 | Compare → AI comparison | backend `POST /ai/compare` |

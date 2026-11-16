@@ -12,7 +12,6 @@ mod config;
 mod extra;
 mod lambda;
 mod scan;
-mod setup;
 mod store;
 mod units;
 mod views;
@@ -85,7 +84,6 @@ async fn main() {
     let app = Router::new()
         .route("/", get(scan::overview))
         .route("/scan", get(scan::scan_page))
-        .route("/setup", post(setup::unlock))
         .route("/items", get(scan::items))
         .route("/atlas", get(scan::atlas))
         .route("/atlas/data", get(scan::atlas_data))
