@@ -215,13 +215,13 @@
     { names: ["plastic", "plastics", "hard plastic", "soft plastic", "rigid plastic", "moulded plastic", "molded plastic"], word: "Plastic",
       options: ["ABS", "polypropylene", "polyethylene", "PVC", "polystyrene", "polycarbonate", "PET", "acrylic", "nylon"] },
     { names: ["fabric", "textile", "cloth", "synthetic fabric", "woven fabric", "knit fabric"], word: "Fabric",
-      options: ["cotton", "polyester", "polyester/cotton blend", "nylon", "wool", "silk", "rayon", "linen"] },
+      options: ["cotton", "polyester", "polyester/cotton blend", "nylon", "wool", "silk", "rayon", "linen", "spandex"] },
     { names: ["rubber", "synthetic rubber"], word: "Rubber",
-      options: ["natural rubber", "silicone rubber", "neoprene", "butyl rubber"] },
+      options: ["natural rubber", "silicone rubber", "neoprene", "nitrile rubber", "epdm rubber", "butyl rubber"] },
     { names: ["metal", "metals", "metal alloy"], word: "Metal",
-      options: ["stainless steel", "carbon steel", "aluminium", "copper", "brass", "zinc"] },
+      options: ["stainless steel", "carbon steel", "aluminium", "copper", "brass", "zinc", "titanium", "magnesium"] },
     { names: ["foam", "padding", "foam padding"], word: "Foam",
-      options: ["polyurethane foam", "melamine foam", "polyimide foam"] },
+      options: ["polyurethane foam", "polyethylene foam", "expanded polystyrene foam", "melamine foam", "polyimide foam"] },
   ];
   function family(name) {
     var key = String(name || "").trim().toLowerCase();
