@@ -272,6 +272,107 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Lowest oxygen for flame spread in weightlessness (parabolic flight)",
+  "standard": null,
+  "value": 14.7,
+  "unit": "% oxygen",
+  "conditions": "sheet 0.125 mm thick, opposed flow 6 cm/s",
+  "gravity": "microgravity",
+  "source_title": "Prediction of Limiting Oxygen Concentration of Thin Materials in Microgravity (Takahashi, Maruta; Trans. JSASS Aerospace Tech. Japan 16(1), 2018)",
+  "publisher": "JSASS journal (Japan)",
+  "url": "https://www.jstage.jst.go.jp/article/tastj/16/1/16_28/_pdf",
+  "quote": "minimum oxygen concentration in which the flame survived in microgravity environment was 14.7 % where the opposed flow velocity was 6cm/s.",
+  "page": "p. 30, section 3.1",
+  "confidence": "medium",
+  "note": "The same paper's Table 2 lists this experimental value as 14.9%. On Earth the same sheet's limit was 17.0%.",
+  "limit": 14.7,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Lowest oxygen for downward flame spread",
+  "standard": null,
+  "value": 17.0,
+  "unit": "% oxygen",
+  "conditions": "sheet 0.125 mm thick, downward spread",
+  "gravity": "Earth",
+  "source_title": "Prediction of Limiting Oxygen Concentration of Thin Materials in Microgravity (Takahashi, Maruta; Trans. JSASS Aerospace Tech. Japan 16(1), 2018)",
+  "publisher": "JSASS journal (Japan)",
+  "url": "https://www.jstage.jst.go.jp/article/tastj/16/1/16_28/_pdf",
+  "quote": "result that the limiting oxygen concentration (LOC) for downward spread (Vg = 35 cm/s) is 17.0 %.",
+  "page": "p. 30, section 3.1",
+  "confidence": "high",
+  "note": "Earth comparison for the parabolic-flight result from the same paper.",
+  "limit": 17.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acrylic (pmma)",
+  "aliases": [
+   "acrylic",
+   "pmma",
+   "plexiglass",
+   "plexiglas",
+   "perspex",
+   "polymethyl methacrylate"
+  ],
+  "test": "Flame spread speed along a rod in orbit (SJ-10 satellite)",
+  "standard": null,
+  "value": "0.074 to 0.125 at 33.5% oxygen; 0.141 to 0.330 at 49.4% oxygen",
+  "unit": "mm/s",
+  "conditions": "extruded rod 10 mm in diameter, opposed flow 6 to 12 cm/s",
+  "gravity": "microgravity",
+  "source_title": "Opposed-flow flame spread over cylindrical fuel under oxygen-enriched microgravity environment (Wu, Huang, Wang, Zhu, Yin; Fire Technology 56(1), 2020, accepted manuscript)",
+  "publisher": "Hong Kong Polytechnic University repository",
+  "url": "https://ira.lib.polyu.edu.hk/bitstream/10397/89517/1/42_FT_2020_XJ-10_ug_rod.pdf",
+  "quote": "flame-spread rate increases from 0.074 mm/s to 0.125 mm/s for XO2 = 33.5%, and from 0.141 mm/s to 0.330 mm/s for XO2 = 49.4%, respectively.",
+  "page": "section 3.2",
+  "confidence": "high",
+  "note": "Chinese Academy of Sciences experiment on the SJ-10 recoverable satellite. A speed, not an oxygen limit.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "aluminium",
+  "aliases": [
+   "aluminum",
+   "aluminium alloy",
+   "aluminum alloy"
+  ],
+  "test": "NASA promoted combustion (lowest burn pressure)",
+  "standard": "NASA-STD-6001 Test 17 / ASTM G124",
+  "value": 100,
+  "unit": "psia",
+  "conditions": "pure oxygen; alloy 1100 rod 0.32 cm in diameter, ignited at the bottom",
+  "gravity": "Earth",
+  "source_title": "Promoted Combustion Test Data Re-Examined (Lewis, Jeffers, Stoltzfus)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20100021068/downloads/20100021068.pdf",
+  "quote": "Aluminum 1100 0.7 100 6 0-5 0.3 50 3 0-0.9 12 WSTF 88-21971",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "A pressure in pure oxygen, not an oxygen percentage; metals are rated differently from plastics. It did not burn at 50 psia.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "butyl rubber",
   "aliases": [
    "polyisobutylene"
@@ -310,6 +411,25 @@
   "page": "Table A-1, p. A-1",
   "confidence": "high",
   "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "copper",
+  "aliases": [],
+  "test": "NASA promoted combustion (highest pressure with no burn)",
+  "standard": "NASA-STD-6001 Test 17 / ASTM G124",
+  "value": ">10 500",
+  "unit": "psia",
+  "conditions": "pure oxygen; commercially pure rod 0.32 cm in diameter, ignited at the bottom",
+  "gravity": "Earth",
+  "source_title": "Promoted Combustion Test Data Re-Examined (Lewis, Jeffers, Stoltzfus)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20100021068/downloads/20100021068.pdf",
+  "quote": "Copper (commercially pure) None >72.4 >10 500 b 20 0.1-0.2 5.1-5.2 WSTF09-43730",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "A pressure in pure oxygen, not an oxygen percentage; metals are rated differently from plastics. No burn at any pressure tested.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -574,6 +694,50 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "etfe",
+  "aliases": [
+   "tefzel",
+   "ethylene tetrafluoroethylene"
+  ],
+  "test": "Lowest oxygen for flame spread along a wire in weightlessness (parabolic flight)",
+  "standard": null,
+  "value": "approximately 26",
+  "unit": "% oxygen",
+  "conditions": "wire insulation 0.15 mm thick on 0.5 mm copper wire, opposed flow 50 to 100 mm/s, 100 kPa",
+  "gravity": "microgravity",
+  "source_title": "Limiting Oxygen Concentration Trend of ETFE-Insulated Wires under Microgravity (Mizutani, Miyamoto, Hashimoto, Konno, Fujita; Int. J. Microgravity Sci. Appl. 35(1), 2018)",
+  "publisher": "Japan Society of Microgravity Application",
+  "url": "https://www.jstage.jst.go.jp/article/ijmsa/35/1/35_350104/_pdf",
+  "quote": "A minimum LOC of approximately 26% was found at external flow velocities ranging 50–100 mm/s.",
+  "page": "abstract",
+  "confidence": "medium",
+  "note": "The paper's conclusions say approximately 25%.",
+  "limit": 26.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "etfe",
+  "aliases": [
+   "tefzel",
+   "ethylene tetrafluoroethylene"
+  ],
+  "test": "Lowest oxygen for flame spread along a horizontal wire",
+  "standard": null,
+  "value": "approximately 37",
+  "unit": "% oxygen",
+  "conditions": "wire insulation 0.15 mm thick on 0.5 mm copper wire, opposed flow up to 200 mm/s, 100 kPa",
+  "gravity": "Earth",
+  "source_title": "Limiting Oxygen Concentration Trend of ETFE-Insulated Wires under Microgravity (Mizutani, Miyamoto, Hashimoto, Konno, Fujita; Int. J. Microgravity Sci. Appl. 35(1), 2018)",
+  "publisher": "Japan Society of Microgravity Application",
+  "url": "https://www.jstage.jst.go.jp/article/ijmsa/35/1/35_350104/_pdf",
+  "quote": "The LOC had a constant value of approximately 37%, except at a 0 mm/s flow velocity, where the value was approximately 42%.",
+  "page": "section 3.1",
+  "confidence": "high",
+  "note": "About 42% with no air flow.",
+  "limit": 37.0,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "fep",
   "aliases": [
    "fluorinated ethylene propylene"
@@ -811,6 +975,28 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "kevlar",
+  "aliases": [
+   "para-aramid",
+   "poly(p-phenylene terephthalamide)"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": 29,
+  "unit": "% oxygen",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Kevlar Aramid Fiber Technical Guide",
+  "publisher": "DuPont (manufacturer)",
+  "url": "https://www.r-g.de/wiki/images/e/ec/Td_en_Kevlar_guide.pdf",
+  "quote": "(limiting oxygen index of 29). Burning usually stops when the",
+  "page": "p. 15, Section II",
+  "confidence": "medium",
+  "note": "The manufacturer's own guide, read from a copy hosted by a distributor.",
+  "limit": 29.0,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "leather",
   "aliases": [],
   "test": "Limiting oxygen index",
@@ -827,6 +1013,69 @@
   "confidence": "medium",
   "note": "One specific leather (the study's control sample), not a general value for all leather.",
   "limit": 24.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "linen",
+  "aliases": [
+   "flax"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 442,
+  "unit": "°F",
+  "conditions": "slow oven heating in flowing air, ignites by itself with no flame applied; average at 11 °F per hour",
+  "gravity": "Earth",
+  "source_title": "Ignition Temperatures of Various Papers, Woods, and Fabrics (S. H. Graf; Oregon State College Engineering Experiment Station Bulletin No. 26, 1949)",
+  "publisher": "Oregon State University",
+  "url": "https://ir.library.oregonstate.edu/downloads/fj236300t",
+  "quote": "ing rate of 11 F per hour and 0.05 cubic foot per minute air flow rate was 442 F.",
+  "page": "printed p. 47",
+  "confidence": "high",
+  "note": "442 °F is about 228 °C. Two other specimens ignited at 482 °F and 463 °F.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "lyocell",
+  "aliases": [
+   "tencel"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "GB/T 5454-1997",
+  "value": 18.2,
+  "unit": "% oxygen",
+  "conditions": "untreated lyocell fabric",
+  "gravity": "Earth",
+  "source_title": "Enhancing the flame retardancy of lyocell fabric finished with an efficient, halogen-free flame retardant (RSC Advances 11(55), 2021)",
+  "publisher": "RSC Advances journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9042939/",
+  "quote": "The LOI value of the original sample was only 18.2%, which belonged to the category of flammable materials.",
+  "page": "Results",
+  "confidence": "high",
+  "note": null,
+  "limit": 18.2,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "lyocell",
+  "aliases": [
+   "tencel"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": 15,
+  "unit": "% oxygen",
+  "conditions": "untreated lyocell fabric",
+  "gravity": "Earth",
+  "source_title": "Synthesis of Novel Arginine-Based Flame Retardant and Its Application in Lyocell Fabric (Molecules 26(12):3588, 2021)",
+  "publisher": "Molecules journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8231223/",
+  "quote": "The LOI value of original fabric is 15%.",
+  "page": "Results, discussion of Table 4",
+  "confidence": "high",
+  "note": "Lower than the 18.2 in the other lyocell paper: a different fabric and lab.",
+  "limit": 15.0,
   "checked": "2026-11-15"
  },
  {
@@ -848,6 +1097,29 @@
   "page": "Table A-1, p. A-1",
   "confidence": "high",
   "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "melamine foam",
+  "aliases": [
+   "basotect",
+   "melamine resin foam",
+   "magic eraser"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "V-0",
+  "unit": "rating",
+  "conditions": "Basotect G+ open-cell foam",
+  "gravity": "Earth",
+  "source_title": "Technical Information: Basotect G+ (August 2024)",
+  "publisher": "BASF (manufacturer)",
+  "url": "https://techlite.com/cdn/shop/files/Basotect_G_Technical_Information_Sheets.pdf",
+  "quote": "UL 94 V- 0",
+  "page": "p. 2, Table 1, Fire behavior",
+  "confidence": "medium",
+  "note": "V-0 = went out fastest in the vertical test. The manufacturer's data sheet, read from a copy hosted by a distributor.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -1070,6 +1342,90 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "nomex",
+  "aliases": [
+   "meta-aramid"
+  ],
+  "test": "Lowest oxygen for flame spread in weightlessness (parabolic flight)",
+  "standard": null,
+  "value": 29.5,
+  "unit": "% oxygen",
+  "conditions": "Nomex HT90-40 fabric, opposed flow",
+  "gravity": "microgravity",
+  "source_title": "Prediction of Limiting Oxygen Concentration of Thin Materials in Microgravity (Takahashi, Maruta; Trans. JSASS Aerospace Tech. Japan 16(1), 2018)",
+  "publisher": "JSASS journal (Japan)",
+  "url": "https://www.jstage.jst.go.jp/article/tastj/16/1/16_28/_pdf",
+  "quote": "The MLOC obtained by the parabolic flights is 29.5 %.",
+  "page": "p. 33, section 3.2",
+  "confidence": "high",
+  "note": "On Earth the same fabric's limit for downward spread was 31.5%.",
+  "limit": 29.5,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "nomex",
+  "aliases": [
+   "meta-aramid"
+  ],
+  "test": "Lowest oxygen for downward flame spread",
+  "standard": null,
+  "value": 31.5,
+  "unit": "% oxygen",
+  "conditions": "Nomex HT90-40 fabric, downward spread",
+  "gravity": "Earth",
+  "source_title": "Prediction of Limiting Oxygen Concentration of Thin Materials in Microgravity (Takahashi, Maruta; Trans. JSASS Aerospace Tech. Japan 16(1), 2018)",
+  "publisher": "JSASS journal (Japan)",
+  "url": "https://www.jstage.jst.go.jp/article/tastj/16/1/16_28/_pdf",
+  "quote": "LOC1g (%) 17.0 31.5",
+  "page": "p. 33, Table 2",
+  "confidence": "medium",
+  "note": "Table row: the columns are PMMA, then Nomex.",
+  "limit": 31.5,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "nomex",
+  "aliases": [
+   "meta-aramid"
+  ],
+  "test": "Lowest oxygen for upward burning at lunar gravity",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": "Went out at 19.9% · burned at 21.0%",
+  "unit": "% oxygen",
+  "conditions": "Nomex HT90-40 fabric, 14.7 psia",
+  "gravity": "lunar gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Lunar ULOI * 15.6 21.0 21.0 Lunar MOC * 14.1 19.9 19.9",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table rows: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth: burned at 23.5%. The lunar-gravity values are from earlier NASA Glenn tests, as tabulated in this paper. Drop tests are short, so the burn criteria differ from the Earth test.",
+  "limit": 19.9,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "nomex",
+  "aliases": [
+   "meta-aramid"
+  ],
+  "test": "Lowest oxygen for upward burning at Martian gravity",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": "Went out at 19.0% · burned at 19.9%",
+  "unit": "% oxygen",
+  "conditions": "Nomex HT90-40 fabric, 14.7 psia, centrifuge in a drop tower",
+  "gravity": "Martian gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Martian ULOI * 18.0 22.0 19.9 Martian MOC * 17.0 21.1 19. 0",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table rows: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth: burned at 23.5%. Drop tests are short, so the burn criteria differ from the Earth test.",
+  "limit": 19.0,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "nylon",
   "aliases": [
    "polyamide",
@@ -1211,6 +1567,50 @@
   "confidence": "medium",
   "note": null,
   "limit": 20.1,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "paper",
+  "aliases": [
+   "newspaper",
+   "newsprint"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": "19.70",
+  "unit": "% oxygen",
+  "conditions": "untreated wood-based paper",
+  "gravity": "Earth",
+  "source_title": "The fully bio-based bilayered flame retardant treatment for paper via natural bio-materials (Frontiers in Chemistry 12:1503694, 2024)",
+  "publisher": "Frontiers in Chemistry journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11689656/",
+  "quote": "Based on the LOI of 19.70% for untreated paper",
+  "page": "Results, discussion of Figure 6",
+  "confidence": "medium",
+  "note": "The paper's abstract says 19.07% for the same untreated paper, so one of the two is a misprint in the source.",
+  "limit": 19.7,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "paper",
+  "aliases": [
+   "newspaper",
+   "newsprint"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 428,
+  "unit": "°F",
+  "conditions": "tightly rolled newspaper, slow oven heating in flowing air, ignites by itself with no flame applied",
+  "gravity": "Earth",
+  "source_title": "Ignition Temperatures of Various Papers, Woods, and Fabrics (S. H. Graf; Oregon State College Engineering Experiment Station Bulletin No. 26, 1949)",
+  "publisher": "Oregon State University",
+  "url": "https://ir.library.oregonstate.edu/downloads/fj236300t",
+  "quote": "Newspaper 428 None 1 x 29 18 0.0037 7.8 10",
+  "page": "Table 3",
+  "confidence": "medium",
+  "note": "428 °F is about 220 °C. Row from a scanned table; the ignition temperature is the first number.",
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -1455,6 +1855,50 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "pei",
+  "aliases": [
+   "polyetherimide",
+   "ultem"
+  ],
+  "test": "Lowest oxygen for upward burning at lunar gravity",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": "Went out at 19.9% · burned at 21.0%",
+  "unit": "% oxygen",
+  "conditions": "Ultem 1000 film 10 mil thick, 10.2 psia",
+  "gravity": "lunar gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Lunar ULOI * 15.6 21.0 21.0 Lunar MOC * 14.1 19.9 19.9",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table rows: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth: burned at 23.5%. The lunar-gravity values are from earlier NASA Glenn tests, as tabulated in this paper. Drop tests are short, so the burn criteria differ from the Earth test.",
+  "limit": 19.9,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pei",
+  "aliases": [
+   "polyetherimide",
+   "ultem"
+  ],
+  "test": "Lowest oxygen for upward burning at Martian gravity",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": "Went out at 21.1% · burned at 22.0%",
+  "unit": "% oxygen",
+  "conditions": "Ultem 1000 film 10 mil thick, 10.2 psia, centrifuge in a drop tower",
+  "gravity": "Martian gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Martian ULOI * 18.0 22.0 19.9 Martian MOC * 17.0 21.1 19. 0",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table rows: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth: burned at 23.5%. Drop tests are short, so the burn criteria differ from the Earth test.",
+  "limit": 21.1,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "pen",
   "aliases": [
    "polyethylene naphthalate"
@@ -1537,6 +1981,50 @@
   "page": "Table A-1, p. A-2",
   "confidence": "high",
   "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pla",
+  "aliases": [
+   "polylactic acid",
+   "polylactide"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D2863-97",
+  "value": 19.5,
+  "unit": "% oxygen",
+  "conditions": "plain PLA with nothing added",
+  "gravity": "Earth",
+  "source_title": "Making a Supertough Flame-Retardant Polylactide Composite through Reactive Blending with Ethylene-Acrylic Ester-Glycidyl Methacrylate Terpolymer and Addition of Aluminum Hypophosphite (ACS Omega 2(5), 2017)",
+  "publisher": "ACS Omega journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6641001/",
+  "quote": "for neat PLA and STPLA are 19.5 and 19.0%, respectively and ratings are not capable for these two samples according to the UL-94 rating.",
+  "page": "Section 2.2 and Table 1",
+  "confidence": "high",
+  "note": null,
+  "limit": 19.5,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "pla",
+  "aliases": [
+   "polylactic acid",
+   "polylactide"
+  ],
+  "test": "UL 94",
+  "standard": "UL 94",
+  "value": "No rating",
+  "unit": "rating",
+  "conditions": "plain PLA, vertical test",
+  "gravity": "Earth",
+  "source_title": "Making a Supertough Flame-Retardant Polylactide Composite through Reactive Blending with Ethylene-Acrylic Ester-Glycidyl Methacrylate Terpolymer and Addition of Aluminum Hypophosphite (ACS Omega 2(5), 2017)",
+  "publisher": "ACS Omega journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6641001/",
+  "quote": "for neat PLA and STPLA are 19.5 and 19.0%, respectively and ratings are not capable for these two samples according to the UL-94 rating.",
+  "page": "Section 2.2 and Table 1",
+  "confidence": "high",
+  "note": "It burned too readily to earn any vertical-test class.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -1822,6 +2310,106 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "polyester (pet)",
+  "aliases": [
+   "polyester",
+   "pet",
+   "pete",
+   "polyethylene terephthalate",
+   "mylar"
+  ],
+  "test": "Lowest oxygen for upward burning at lunar gravity",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": "Went out at 14.1% · burned at 15.6%",
+  "unit": "% oxygen",
+  "conditions": "Mylar G film 5 mil thick, 10.2 psia",
+  "gravity": "lunar gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Lunar ULOI * 15.6 21.0 21.0 Lunar MOC * 14.1 19.9 19.9",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table rows: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth: burned at 21.2%. The lunar-gravity values are from earlier NASA Glenn tests, as tabulated in this paper. Drop tests are short, so the burn criteria differ from the Earth test. A film, not a fabric.",
+  "limit": 14.1,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyester (pet)",
+  "aliases": [
+   "polyester",
+   "pet",
+   "pete",
+   "polyethylene terephthalate",
+   "mylar"
+  ],
+  "test": "Lowest oxygen for upward burning at Martian gravity",
+  "standard": "modified NASA-STD-6001 Test 1",
+  "value": "Went out at 17.0% · burned at 18.0%",
+  "unit": "% oxygen",
+  "conditions": "Mylar G film 5 mil thick, 10.2 psia, centrifuge in a drop tower",
+  "gravity": "Martian gravity",
+  "source_title": "Evaluating Material Flammability in Microgravity and Martian Gravity Compared to the NASA Standard Normal Gravity Test (Olson, Ferkul; 42nd Int. Conf. on Environmental Systems, 2012)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20130010991/downloads/20130010991.pdf",
+  "quote": "Martian ULOI * 18.0 22.0 19.9 Martian MOC * 17.0 21.1 19. 0",
+  "page": "p. 6, Table I",
+  "confidence": "medium",
+  "note": "Table rows: the columns are Mylar G, Ultem 1000, Nomex HT90-40. The same test on Earth: burned at 21.2%. Drop tests are short, so the burn criteria differ from the Earth test. A film, not a fabric.",
+  "limit": 17.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyester/cotton blend",
+  "aliases": [
+   "polycotton",
+   "poly-cotton",
+   "cotton/polyester blend",
+   "polyester cotton blend",
+   "cotton polyester blend"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863-76",
+  "value": 15.6,
+  "unit": "% oxygen",
+  "conditions": "fabric of 53% polyester and 47% cotton, measured along the polyester threads",
+  "gravity": "Earth",
+  "source_title": "Effect of the raw material composition of fabrics on the Limiting Oxygen Index (Jeler, Ceric; Tekstil 29(3), 1980; NASA translation TM-88483, 1986)",
+  "publisher": "Tekstil journal (NASA translation)",
+  "url": "https://ntrs.nasa.gov/api/citations/19870005030/downloads/19870005030.pdf",
+  "quote": "The PES-cotton mixture (C4) has a much lower LO1 (15.6) than cotton",
+  "page": "analysis of Table 1",
+  "confidence": "high",
+  "note": "Scanned document: 'LO1' is how the scan reads LOI. The blend burned at lower oxygen than 100% cotton (19.2) in the same study.",
+  "limit": 15.6,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyester/cotton blend",
+  "aliases": [
+   "polycotton",
+   "poly-cotton",
+   "cotton/polyester blend",
+   "polyester cotton blend",
+   "cotton polyester blend"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": 16.9,
+  "unit": "% oxygen",
+  "conditions": "untreated fabric, 80% polyester and 20% cotton",
+  "gravity": "Earth",
+  "source_title": "Fabrication of P/N/B-Based Intumescent Flame-Retardant Coating for Polyester/Cotton Blend Fabric (Materials 15(18):6420, 2022)",
+  "publisher": "Materials journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9501000/",
+  "quote": "versus 16.9% for the pristine one",
+  "page": "Results",
+  "confidence": "high",
+  "note": null,
+  "limit": 16.9,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "polyethersulfone",
   "aliases": [
    "pesu",
@@ -2010,6 +2598,56 @@
   "confidence": "medium",
   "note": "Manufacturer whitepaper; agrees with FAA.",
   "limit": 17.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "Lowest oxygen for flame spread along a wire, Earth versus weightlessness",
+  "standard": null,
+  "value": "19% on Earth, 16% in weightlessness",
+  "unit": "% oxygen",
+  "conditions": "polyethylene wire insulation",
+  "gravity": "microgravity",
+  "source_title": "Effect of Environmental Variables on the Flammability of Fire Resistant Materials (Osorio; PhD dissertation, University of California, Berkeley, 2014)",
+  "publisher": "UC Berkeley",
+  "url": "https://escholarship.org/content/qt3mm1p1tr/qt3mm1p1tr.pdf",
+  "quote": "between the 1g and µg LOC is about 3%, (19% versus 16%) whereas for ETFE insulated",
+  "page": "thesis p. 100, chapter 4 conclusions",
+  "confidence": "medium",
+  "note": "Secondary: the thesis is quoting Hokkaido University results (Takahashi et al.). The words before the quote are 'For PE insulated wires the difference'.",
+  "limit": 16.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "polyethylene",
+  "aliases": [
+   "pe",
+   "hdpe",
+   "ldpe",
+   "high-density polyethylene",
+   "low-density polyethylene"
+  ],
+  "test": "Flame kept burning along a wire in weightlessness (parabolic flight)",
+  "standard": null,
+  "value": "Still burning at 16%",
+  "unit": "% oxygen",
+  "conditions": "wire insulation 0.3 mm thick on 0.5 mm wire, air flowing with the flame at 50 to 200 mm/s",
+  "gravity": "microgravity",
+  "source_title": "Can a spreading flame over electric wire insulation in concurrent flow achieve steady propagation in microgravity? (Nagachi et al.; Proc. Combust. Inst. 37, 2019, accepted manuscript)",
+  "publisher": "University of Edinburgh repository",
+  "url": "https://www.pure.ed.ac.uk/ws/files/70051621/Can_a_spreading_flame.pdf",
+  "quote": "However, for an oxygen concentration of 16% , the flame base became faint blue and difficult to observe, but the molten insulation was moving, thus confirming that the flame was sustained.",
+  "page": "section 3.1",
+  "confidence": "medium",
+  "note": "16% is the lowest oxygen level reported, not a measured limit: the paper does not say where it goes out.",
+  "limit": null,
   "checked": "2026-11-15"
  },
  {
@@ -2578,6 +3216,75 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "rayon (viscose)",
+  "aliases": [
+   "rayon",
+   "viscose",
+   "viscose rayon"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863-76",
+  "value": 17.8,
+  "unit": "% oxygen",
+  "conditions": "100% viscose fabric, conditioned at 65% humidity and 20 °C",
+  "gravity": "Earth",
+  "source_title": "Effect of the raw material composition of fabrics on the Limiting Oxygen Index (Jeler, Ceric; Tekstil 29(3), 1980; NASA translation TM-88483, 1986)",
+  "publisher": "Tekstil journal (NASA translation)",
+  "url": "https://ntrs.nasa.gov/api/citations/19870005030/downloads/19870005030.pdf",
+  "quote": "c2 viscose 100 17.8",
+  "page": "Table 1",
+  "confidence": "high",
+  "note": "Scanned document. The same study measured 100% cotton at 19.2.",
+  "limit": 17.8,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "rayon (viscose)",
+  "aliases": [
+   "rayon",
+   "viscose",
+   "viscose rayon"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": 18.9,
+  "unit": "% oxygen",
+  "conditions": "review table of common fibres",
+  "gravity": "Earth",
+  "source_title": "How to Address Flame-Retardant Technology on Cotton Fabrics by Using Functional Inorganic Sol-Gel Precursors and Nanofillers (Trovato et al.; Inorganics 11:306, 2023)",
+  "publisher": "Inorganics journal",
+  "url": "https://iris.cnr.it/retrieve/c8517fd7-f2c6-45ec-a4fe-c60ad6766d05/prod_491238-doc_204812.pdf",
+  "quote": "Viscose - - 350 420 18.9",
+  "page": "p. 7, Table 1",
+  "confidence": "medium",
+  "note": "Secondary: a review's table, not its own measurement. The oxygen index is the last number.",
+  "limit": 18.9,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "rayon (viscose)",
+  "aliases": [
+   "rayon",
+   "viscose",
+   "viscose rayon"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 460,
+  "unit": "°F",
+  "conditions": "slow oven heating in flowing air, ignites by itself with no flame applied; a second specimen ignited below 440 °F",
+  "gravity": "Earth",
+  "source_title": "Ignition Temperatures of Various Papers, Woods, and Fabrics (S. H. Graf; Oregon State College Engineering Experiment Station Bulletin No. 26, 1949)",
+  "publisher": "Oregon State University",
+  "url": "https://ir.library.oregonstate.edu/downloads/fj236300t",
+  "quote": "ignited at 460 F while the other ignited below 440 F (the exact",
+  "page": "printed p. 51",
+  "confidence": "high",
+  "note": "460 °F is about 238 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "rigid polyurethane foam",
   "aliases": [
    "rigid polyurethane"
@@ -2743,6 +3450,82 @@
   "page": "Table A-1, p. A-3",
   "confidence": "high",
   "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "silk",
+  "aliases": [],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863-76",
+  "value": 27,
+  "unit": "% oxygen",
+  "conditions": "100% silk fabric, conditioned at 65% humidity and 20 °C",
+  "gravity": "Earth",
+  "source_title": "Effect of the raw material composition of fabrics on the Limiting Oxygen Index (Jeler, Ceric; Tekstil 29(3), 1980; NASA translation TM-88483, 1986)",
+  "publisher": "Tekstil journal (NASA translation)",
+  "url": "https://ntrs.nasa.gov/api/citations/19870005030/downloads/19870005030.pdf",
+  "quote": "has the highest LOI, amounting to 27. which means that it is barely",
+  "page": "analysis of Table 2",
+  "confidence": "high",
+  "note": "Higher than the 23 to 24 measured in the two journal papers listed here.",
+  "limit": 27.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "silk",
+  "aliases": [],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D2863-2000",
+  "value": 23.3,
+  "unit": "% oxygen",
+  "conditions": "untreated silk fabric",
+  "gravity": "Earth",
+  "source_title": "One-pot strategy to simultaneously prepare dyed, flame retardant and UV-resistant silk fabric based on a safflower yellow derivative (RSC Advances 12(40), 2022)",
+  "publisher": "RSC Advances journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9475561/",
+  "quote": "The LOI values of pure silk, D-silk, PN-silk and FR-silk were 23.3%, 24.1%, 31.5% and 32.8% before washing, respectively.",
+  "page": "Results",
+  "confidence": "high",
+  "note": null,
+  "limit": 23.3,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "silk",
+  "aliases": [],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": 24,
+  "unit": "% oxygen",
+  "conditions": "untreated silk fabric",
+  "gravity": "Earth",
+  "source_title": "Synergistic Effects and Mechanism of Modified Silica Sol Flame Retardant Systems on Silk Fabric (Materials 11(10):1842, 2018)",
+  "publisher": "Materials journal",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6212991/",
+  "quote": "compared with the original silk (LOI is 24)",
+  "page": "Results, discussion of Table 2",
+  "confidence": "high",
+  "note": null,
+  "limit": 24.0,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "silk",
+  "aliases": [],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": "431 and 425",
+  "unit": "°F",
+  "conditions": "slow oven heating in flowing air, ignites by itself with no flame applied; two samples",
+  "gravity": "Earth",
+  "source_title": "Ignition Temperatures of Various Papers, Woods, and Fabrics (S. H. Graf; Oregon State College Engineering Experiment Station Bulletin No. 26, 1949)",
+  "publisher": "Oregon State University",
+  "url": "https://ir.library.oregonstate.edu/downloads/fj236300t",
+  "quote": "ordinary pure silk, ignited at 431 F and 425 F.",
+  "page": "printed p. 51",
+  "confidence": "high",
+  "note": "About 222 °C and 218 °C.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -2939,6 +3722,28 @@
   "confidence": "medium",
   "note": "Industry source; method not stated.",
   "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "wool/polyester blend",
+  "aliases": [
+   "polyester/wool blend",
+   "wool polyester blend"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863-76",
+  "value": 20.1,
+  "unit": "% oxygen",
+  "conditions": "fabric of 55% polyester and 45% wool",
+  "gravity": "Earth",
+  "source_title": "Effect of the raw material composition of fabrics on the Limiting Oxygen Index (Jeler, Ceric; Tekstil 29(3), 1980; NASA translation TM-88483, 1986)",
+  "publisher": "Tekstil journal (NASA translation)",
+  "url": "https://ntrs.nasa.gov/api/citations/19870005030/downloads/19870005030.pdf",
+  "quote": "55% PES component in a mixture with wool reduces the LO1 to 20.1.",
+  "page": "analysis of Table 2",
+  "confidence": "high",
+  "note": "Scanned document: 'LO1' is how the scan reads LOI. The same study measured 100% wool at 24.0.",
+  "limit": 20.1,
   "checked": "2026-11-15"
  }
 ]

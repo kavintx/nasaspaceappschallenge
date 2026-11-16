@@ -23,6 +23,10 @@ fn names_of(row: &Value) -> impl Iterator<Item = &str> {
 /// A name without a trailing word that only says what form it is in ("ABS plastic" is ABS).
 fn bare(name: &str) -> String {
     let lower = name.trim().to_lowercase();
+    // Acrylic cloth is polyacrylonitrile. Plain "acrylic" is the sheet plastic (PMMA), a different material.
+    if matches!(lower.as_str(), "acrylic fabric" | "acrylic fibre" | "acrylic fiber" | "acrylic yarn" | "acrylic knit") {
+        return "polyacrylonitrile".to_string();
+    }
     [" plastic", " fabric", " fibre", " fiber", " film"]
         .iter()
         .find_map(|form| lower.strip_suffix(form))
@@ -62,6 +66,8 @@ mod tests {
         assert!(!for_names(&["ABS plastic"]).is_empty());
         // Kevlar and Nomex are both aramids, but a Nomex test is not a Kevlar test.
         assert!(for_names(&["aramid"]).is_empty());
+        assert!(for_names(&["acrylic fabric"]).iter().all(|row| row["material"] == "polyacrylonitrile"));
+        assert!(for_names(&["acrylic"]).iter().all(|row| row["material"] == "acrylic (pmma)"));
         assert!(for_names(&["kevlar"]).iter().all(|row| row["material"] == "kevlar"));
         assert!(for_names(&["nomex"]).iter().all(|row| row["material"] == "nomex"));
     }

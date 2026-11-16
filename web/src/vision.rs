@@ -579,7 +579,7 @@ fn prompt(mode: &str) -> String {
          Rules:\n\
          - Use plain, common material names: cotton, polyester, nylon, wool, leather, paper, cardboard, wood, \
          glass, steel, aluminium, copper, rubber, silicone, PVC, polyethylene, polypropylene, PET, acrylic, \
-         polycarbonate, ABS, polyurethane foam. Use the specific name when you can tell and \"plastic\" or \
+         polycarbonate, ABS, polystyrene, PLA, neoprene, rayon, silk, linen, polyurethane foam. Use the specific name when you can tell and \"plastic\" or \
          \"metal\" when you can't.\n\
          - Give one material per part: your single best reading. List two or more only when the part really is \
          a blend or mix (for example a cotton and polyester fabric, or a label that lists several fibres). \
