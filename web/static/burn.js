@@ -302,11 +302,14 @@
     return out.sort(function (a, b) { return a.limit - b.limit; });
   }
 
-  function flammabilityMap(material) {
+  // opts.compact: the small version on an atlas card. Same points, pins and axes; no detail
+  // panel, legend or limit lines, and the marks are not separate buttons (the card is).
+  function flammabilityMap(material, opts) {
+    var compact = !!(opts && opts.compact);
     var data = material.map;
     if (!data || !data.points || !data.points.length) return null;
     var points = data.points;
-    var markers = limitMarkers(material);
+    var markers = compact ? [] : limitMarkers(material);
 
     // Axes cover the tests and both habitats. Pressure switches to a log scale when the tests span more than a factor of 12.
     var o2s = [], kpas = [];
@@ -328,7 +331,7 @@
       yHi = Math.ceil((kMax + stepY * 0.6) / stepY) * stepY;
       for (var t = yLo; t <= yHi; t += stepY) yTicks.push(t);
     }
-    var W = 328, left = 40, right = 12, top = 24, plotH = 196, bottom = top + plotH, H = bottom + 34;
+    var W = 328, left = 40, right = 12, top = 24, plotH = compact ? 118 : 196, bottom = top + plotH, H = bottom + 34;
     function x(v) { return left + ((Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)) * (W - left - right); }
     function y(v) {
       var f = log ? (Math.log10(Math.max(v, yLo)) - Math.log10(yLo)) / (Math.log10(yHi) - Math.log10(yLo)) : (v - yLo) / (yHi - yLo);
@@ -404,6 +407,7 @@
         else { attrs.x1 = x0; attrs.x2 = x1; attrs.y1 = y0; attrs.y2 = y1; shape = svg("line", attrs); }
       }
       var name = outcome.label + ", " + spanText(p.o2, " percent oxygen") + ", " + spanText(p.kpa, " kilopascals") + ". " + (p.paper || "");
+      if (compact) { kids.push(shape); return; }
       var hit = svg("g", { class: "map-mark", tabindex: "0", role: "button", "aria-label": name }, [
         // A wider invisible target so a thin bar or small mark is easy to tap.
         wide || tall
@@ -416,6 +420,10 @@
       kids.push(hit);
     });
 
+    var label = "Tests placed by oxygen, " + lo + " to " + hi + " percent, and pressure, " + tidy(yLo) + " to " + tidy(yHi) + " kilopascals. " + (data.sentence || "");
+    if (compact) {
+      return el("div", { class: "atlas-chart flam-map" }, [svg("svg", { viewBox: "0 0 " + W + " " + H, class: "w-full h-auto", role: "img", "aria-label": label }, kids)]);
+    }
     var counts = {}, bars = false;
     points.forEach(function (p) { counts[p.outcome] = (counts[p.outcome] || 0) + 1; if (p.o2[1] > p.o2[0] || p.kpa[1] > p.kpa[0]) bars = true; });
     var legend = el("ul", { class: "mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted" }, OUTCOMES.filter(function (o) { return counts[o.key]; }).map(function (o) {
@@ -435,7 +443,7 @@
 
     var figure = el("figure", { class: "o2-chart flam-map" }, [
       el("figcaption", { class: "text-[13px] font-medium", text: "NASA’s tests by oxygen and pressure" }),
-      svg("svg", { viewBox: "0 0 " + W + " " + H, class: "mt-2 w-full h-auto", role: "group", "aria-label": "Tests placed by oxygen, " + lo + " to " + hi + " percent, and pressure, " + tidy(yLo) + " to " + tidy(yHi) + " kilopascals. " + (data.sentence || "") }, kids),
+      svg("svg", { viewBox: "0 0 " + W + " " + H, class: "mt-2 w-full h-auto", role: "group", "aria-label": label }, kids),
       legend,
       el("p", { class: "mt-2 text-[13px] leading-5", text: data.sentence || "" }),
       el("p", { class: "mt-1 text-[11px] leading-4 text-dim", text: PINS.map(function (h) { return h.name + ": " + h.text; }).join(" · ") + "." + (notes.length ? " " + notes.join(" ") : "") }),
@@ -468,7 +476,7 @@
     ]);
   }
 
-  function oxygenChart(material) {
+  function oxygenChart(material, opts) {
     var data = material.chart;
     if (!data || !data.points || !data.points.length) return null;
     var points = data.points.slice().sort(function (a, b) { return a.o2 - b.o2; });
@@ -520,6 +528,11 @@
       ]);
     }));
     var summary = OUTCOMES.filter(function (o) { return counts[o.key]; }).map(function (o) { return counts[o.key] + " " + o.label.toLowerCase(); }).join(", ");
+    if (opts && opts.compact) {
+      return el("div", { class: "atlas-chart o2-strip", "data-summary": summary }, [
+        svg("svg", { viewBox: "0 0 " + W + " " + H, class: "w-full h-auto", role: "img", "aria-label": "Tests placed by oxygen level, from " + lo + "% to " + hi + "%: " + summary + "." }, kids),
+      ]);
+    }
     return el("figure", { class: "o2-chart" }, [
       el("figcaption", { class: "text-[13px] font-medium", text: "NASA’s tests by oxygen level" }),
       svg("svg", { viewBox: "0 0 " + W + " " + H, class: "mt-2 w-full h-auto", role: "img", "aria-label": "Tests placed by oxygen level, from " + lo + "% to " + hi + "%: " + summary + "." }, kids),
@@ -1230,6 +1243,113 @@
     draw();
   }
 
+  // ---------- the atlas page: one small map per tested material ----------
+
+  function atlasPage(root) {
+    var SORTS = [
+      { key: "tests", label: "Most tests" },
+      { key: "burned", label: "Burned at or above Moon Base oxygen" },
+      { key: "name", label: "Name" },
+    ];
+    var FILTERS = [
+      { key: "all", label: "All", keep: function () { return true; } },
+      { key: "burned", label: "Burned at Moon Base level", keep: function (m) { return m.burned_moon > 0; } },
+      { key: "below", label: "Tested only below", keep: function (m) { return m.only_below; } },
+      { key: "none", label: "No outcome recorded", keep: function (m) { return m.no_outcome; } },
+    ];
+    var state = { sort: "tests", filter: "all" };
+    var data = null;
+    var dialog = el("dialog", { class: "atlas-dialog", "aria-label": "Full flammability map" });
+    dialog.addEventListener("click", function (e) { if (e.target === dialog) dialog.close(); });
+
+    function openFull(material) {
+      clear(dialog);
+      dialog.appendChild(el("button", { type: "button", class: "btn-big-ghost atlas-close", text: "Close", onclick: function () { dialog.close(); } }));
+      dialog.appendChild(materialSection(material, data));
+      dialog.appendChild(el("p", { class: "mt-4 text-[12px] leading-4 text-dim", text: "Listed under the name the papers use. Another spelling of the same material is a separate entry." }));
+      if (dialog.showModal) dialog.showModal(); else dialog.setAttribute("open", "");
+      dialog.scrollTop = 0;
+    }
+
+    function card(material) {
+      var few = material.tests < 3;
+      var count = (few ? "Only " : "") + material.tests + (material.tests === 1 ? " test" : " tests");
+      var chart = flammabilityMap(material, { compact: true });
+      var strip = chart ? null : oxygenChart(material, { compact: true });
+      var summary = chart
+        ? material.map.sentence
+        : strip
+          ? "By oxygen level only, one mark per stated level: " + strip.getAttribute("data-summary") + ". No test states a pressure that can be read as a number."
+          : "No test of it states an oxygen level that can be read as a number, so there is nothing to place.";
+      var facts = [count];
+      if (material.burned_moon) facts.push(material.burned_moon + " burned at or above " + data.moon_o2 + "% oxygen");
+      else if (material.only_below) facts.push("tested only below " + data.moon_o2 + "% oxygen");
+      if (material.no_outcome) facts.push("no outcome recorded");
+      var node = el("div", { class: "atlas-card", role: "button", tabindex: "0", "aria-label": material.query + ". " + facts.join(", ") + ". Open the full map." }, [
+        el("h3", { class: "text-[17px] leading-6 font-semibold break-words", text: material.query }),
+        el("p", { class: "mt-0.5 text-[12px] leading-4 " + (few ? "text-amber" : "text-muted"), text: facts.join(" · ") }),
+        chart || strip,
+        el("p", { class: "mt-2 text-[12px] leading-4 text-muted", text: summary }),
+      ]);
+      node.addEventListener("click", function () { openFull(material); });
+      node.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFull(material); } });
+      return node;
+    }
+
+    function switches(list, current, label, pick) {
+      return el("div", { class: "flex flex-wrap items-center gap-2", role: "group", "aria-label": label }, [el("span", { class: "text-[12px] text-dim mr-1", text: label })].concat(list.map(function (item) {
+        return el("button", { type: "button", class: "switch-btn", "aria-current": item.key === current ? "true" : null, text: item.label, onclick: function () { pick(item.key); } });
+      })));
+    }
+
+    function draw() {
+      clear(root);
+      if (data.data !== "ok") {
+        root.appendChild(el("p", { class: "notice", role: "status", text: data.data_message || "NASA’s test data could not be read just now." }));
+        return;
+      }
+      function tile(value, text) {
+        return el("div", { class: "rounded-xl bg-ink-800 border border-line p-3" }, [
+          el("p", { class: "text-[30px] leading-9 font-semibold", text: String(value) }),
+          el("p", { class: "mt-1 text-[12px] leading-4 text-muted", text: text }),
+        ]);
+      }
+      root.appendChild(el("div", { class: "grid grid-cols-3 gap-3" }, [
+        tile(data.counts.materials, "materials with NASA microgravity tests"),
+        tile(data.counts.plotted, "tests placed by both oxygen and pressure"),
+        tile(data.counts.no_moon, "materials with no test at Moon Base oxygen (" + data.moon_o2 + "%)"),
+      ]));
+      root.appendChild(el("div", { class: "mt-5 space-y-3" }, [
+        switches(FILTERS, state.filter, "Show", function (key) { state.filter = key; draw(); }),
+        switches(SORTS, state.sort, "Sort by", function (key) { state.sort = key; draw(); }),
+      ]));
+      var keep = FILTERS.filter(function (f) { return f.key === state.filter; })[0].keep;
+      var shown = data.materials.filter(keep).sort(function (a, b) {
+        if (state.sort === "name") return a.query.toLowerCase().localeCompare(b.query.toLowerCase());
+        if (state.sort === "burned" && b.burned_moon !== a.burned_moon) return b.burned_moon - a.burned_moon;
+        return b.tests - a.tests || a.query.toLowerCase().localeCompare(b.query.toLowerCase());
+      });
+      root.appendChild(el("p", { class: "mt-4 text-[12px] text-dim", role: "status", text: "Showing " + shown.length + " of " + data.materials.length + " materials. Each is listed under the name the papers use. Tap one for the full map and its sources." }));
+      if (!shown.length) root.appendChild(el("p", { class: "mt-6 text-[15px] text-muted", text: "No material matches this filter." }));
+      root.appendChild(el("div", { class: "atlas-grid" }, shown.map(card)));
+      root.appendChild(dialog);
+    }
+
+    root.appendChild(el("p", { class: "text-[14px] text-muted", role: "status", text: "Loading NASA’s tests…" }));
+    fetch("/atlas/data").then(function (r) {
+      if (!r.ok) throw new Error("status " + r.status);
+      return r.json();
+    }).then(function (reply) {
+      data = reply;
+      draw();
+    }).catch(function () {
+      clear(root);
+      root.appendChild(el("p", { class: "notice", role: "alert", text: "Couldn’t load the tests. Check your connection and reload the page." }));
+    });
+  }
+
+  var atlasRoot = document.getElementById("burn-atlas");
+  if (atlasRoot) atlasPage(atlasRoot);
   var scanRoot = document.getElementById("burn-scan");
   if (scanRoot) scanPage(scanRoot);
   var itemsRoot = document.getElementById("burn-items");

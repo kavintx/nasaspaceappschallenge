@@ -127,6 +127,79 @@ pub async fn items() -> Response {
     render(ItemsPage { active: "items", page_title: "My items".into(), context_line: "Saved on this device only".into() })
 }
 
+// ---------- atlas: every tested material ----------
+
+#[derive(Template)]
+#[template(path = "atlas.html")]
+pub struct AtlasPage {
+    pub active: &'static str,
+    pub page_title: String,
+    pub context_line: String,
+}
+
+pub async fn atlas() -> Response {
+    render(AtlasPage { active: "atlas", page_title: "Atlas".into(), context_line: "Every material NASA has burned in microgravity, by oxygen and pressure".into() })
+}
+
+/// Every fuel named in the extracted test conditions, each in the same shape as a scan
+/// result's material, so the atlas draws them with the same charts. Names are the papers'
+/// own: two spellings of one material stay two entries, because nothing here merges them.
+pub async fn atlas_data(State(app): AppRef) -> Response {
+    let cat = match load_catalog(&app, false).await {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("atlas: {e}");
+            return Json(json!({ "data": "error", "data_message": "NASA’s test data could not be read just now. Try again in a moment.", "materials": [] })).into_response();
+        }
+    };
+    let moon = HABITATS.iter().find(|h| h.key == "moon_base").and_then(|h| h.o2_pct).unwrap_or(30.0);
+    let floor = moon - O2_TOLERANCE;
+    let (mut plotted, mut no_moon) = (0u64, 0usize);
+    let materials: Vec<Value> = cat
+        .materials
+        .iter()
+        .map(|m| {
+            let tests: Vec<&Test> = m.tests.iter().collect();
+            let levels: Vec<f64> = tests.iter().flat_map(|t| t.o2.iter().copied()).collect();
+            let at_moon = tests.iter().any(|t| at_level(t, moon).is_some());
+            let placed = map(&tests);
+            plotted += placed["placed"].as_u64().unwrap_or(0);
+            if !at_moon {
+                no_moon += 1;
+            }
+            json!({
+                "query": m.name,
+                "tested": true,
+                "fuels": [m.name],
+                "tests": tests.len(),
+                // Tests that burned at Moon Base oxygen or above (within the same one-point band the verdicts use).
+                "burned_moon": tests.iter().filter(|t| t.outcome == Outcome::Burned && t.o2.iter().any(|v| *v >= floor)).count(),
+                "only_below": !levels.is_empty() && levels.iter().all(|v| *v < floor),
+                "no_outcome": tests.iter().all(|t| t.outcome == Outcome::Unknown),
+                "at_moon": at_moon,
+                "habitats": verdicts(&tests),
+                "evidence": evidence(&tests),
+                "chart": chart(&tests),
+                "map": placed,
+                "other": if app.more_sources { crate::extra::for_names(&[m.name.as_str()]) } else { vec![] },
+                "closest": Value::Null,
+                "gases": gases(&[m.name.as_str()]),
+            })
+        })
+        .collect();
+    Json(json!({
+        "data": "ok",
+        "data_message": Value::Null,
+        "lookup": "ok",
+        "lookup_message": Value::Null,
+        "moon_o2": moon,
+        "counts": { "materials": materials.len(), "plotted": plotted, "no_moon": no_moon },
+        "materials": materials,
+        "sources": { "analyzer": air::ANALYZER_URL, "limits": air::LIMITS_URL, "table_page": air::TABLE_PAGE },
+    }))
+    .into_response()
+}
+
 // ---------- identify: photo -> parts and materials ----------
 
 #[derive(Deserialize)]

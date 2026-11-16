@@ -87,6 +87,8 @@ async fn main() {
         .route("/scan", get(scan::scan_page))
         .route("/setup", post(setup::unlock))
         .route("/items", get(scan::items))
+        .route("/atlas", get(scan::atlas))
+        .route("/atlas/data", get(scan::atlas_data))
         .route("/scan/identify", post(scan::identify).layer(DefaultBodyLimit::max(scan::MAX_IMAGE_BYTES + 1024)))
         .route("/scan/result", post(scan::result))
         .route("/habitat", get(views::habitat))

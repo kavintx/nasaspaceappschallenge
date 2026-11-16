@@ -202,3 +202,14 @@ html.motion-off .donut-arc { animation: none; }
 .map-limits { margin-top: 0.75rem; border-top: 1px dashed #e5b67a55; padding-top: 0.75rem; }
 .map-unplottable { margin-top: 0.75rem; font-size: 13px; color: #a5a8b5; }
 .map-unplottable summary { cursor: pointer; color: #f5f5f7; }
+
+/* The atlas: one compact map per tested material. */
+.atlas-grid { margin-top: 0.75rem; display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); }
+.atlas-card { border: 1px solid #2a3040; border-radius: 0.75rem; background: #090d18; padding: 0.875rem; cursor: pointer; text-align: left; transition: border-color 0.2s ease; }
+.atlas-card:hover { border-color: #a5a8b5; }
+.atlas-card:focus-visible { outline: 2px solid #2997ff; outline-offset: 2px; }
+.atlas-chart { margin-top: 0.5rem; }
+.atlas-dialog { width: min(100% - 1.5rem, 640px); max-height: calc(100dvh - 1.5rem); margin: auto; overflow-y: auto; border: 1px solid #2a3040; border-radius: 1rem; background: #02040d; color: #f5f5f7; padding: 1rem; }
+.atlas-dialog::backdrop { background: rgba(2, 4, 13, 0.78); }
+.atlas-dialog .result-card { margin-top: 0.75rem; animation: none; }
+.atlas-close { position: sticky; top: 0; z-index: 1; width: 100%; background: #02040d; }
