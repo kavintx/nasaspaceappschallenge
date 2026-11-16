@@ -83,11 +83,16 @@ pub struct PipelinePage {
     pub page_title: String,
     pub context_line: String,
     pub read_only: bool,
+    /// False when this copy has no research backend: the page then shows the database's own
+    /// counts and leaves out the actions, which only the backend can run.
+    pub connected: bool,
     pub health_ok: bool,
     pub health_line: String,
     pub experiments_count: String,
     pub paper_counts: Vec<(String, String)>,
     pub job_counts: Vec<(String, String)>,
+    /// Heading over `job_counts`: backend jobs, or extracted rows when read from the database.
+    pub job_title: &'static str,
     pub programs: Vec<&'static str>,
     pub result: Option<ActionResult>,
 }
@@ -143,10 +148,63 @@ fn result_from(title: &str, reply: Result<Value, String>) -> ActionResult {
     out
 }
 
+/// How many rows carry each value of `key`, most common first. A missing value counts as "not set".
+fn tally(rows: &[Value], key: &str) -> Vec<(String, String)> {
+    let mut counts: Vec<(String, usize)> = vec![];
+    for row in rows {
+        let label = js(row, key).unwrap_or_else(|| "not set".into()).replace('_', " ");
+        match counts.iter_mut().find(|(l, _)| *l == label) {
+            Some(entry) => entry.1 += 1,
+            None => counts.push((label, 1)),
+        }
+    }
+    counts.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+    counts.into_iter().map(|(label, n)| (label, n.to_string())).collect()
+}
+
+/// The pipeline page on a copy with no research backend: what the database holds right now,
+/// read straight from it. Finding and extracting papers needs the backend, so those are left out.
+async fn database_page(app: &AppState) -> Response {
+    let (experiments, papers, conditions, findings) =
+        tokio::join!(app.store.experiments(), app.store.papers(None), app.store.conditions(), app.store.findings());
+    let (experiments, papers, conditions, findings) = match (experiments, papers, conditions, findings) {
+        (Ok(e), Ok(p), Ok(c), Ok(f)) => (e, p, c, f),
+        (e, p, c, f) => {
+            let why = [e.err(), p.err(), c.err(), f.err()].into_iter().flatten().next().unwrap_or_default();
+            eprintln!("pipeline: database read failed: {why}");
+            return message_page("pipeline", "Data unavailable", "The research database could not be read just now. Try again in a moment.".into());
+        }
+    };
+    let mut extracted = vec![(format!("test conditions from {} papers", distinct(&conditions, "paper_id")), conditions.len().to_string())];
+    extracted.extend(tally(&conditions, "verification_status").into_iter().map(|(label, n)| (format!("conditions {label}"), n)));
+    extracted.push(("findings".to_string(), findings.len().to_string()));
+    render(PipelinePage {
+        active: "pipeline",
+        page_title: "Pipeline".into(),
+        context_line: "What the research database holds right now".into(),
+        read_only: true,
+        connected: false,
+        health_ok: true,
+        health_line: String::new(),
+        experiments_count: experiments.len().to_string(),
+        paper_counts: tally(&papers, "status"),
+        job_counts: extracted,
+        job_title: "Extracted so far",
+        programs: vec![],
+        result: None,
+    })
+}
+
+fn distinct(rows: &[Value], key: &str) -> usize {
+    let mut seen: Vec<String> = rows.iter().filter_map(|r| js(r, key)).collect();
+    seen.sort();
+    seen.dedup();
+    seen.len()
+}
+
 async fn pipeline_page(app: &AppState, result: Option<ActionResult>) -> Response {
-    let b = match backend(app) {
-        Ok(b) => b,
-        Err(page) => return page,
+    let Some(b) = app.backend.as_ref() else {
+        return database_page(app).await;
     };
     let (health, status) = tokio::join!(b.health(), b.pipeline_status());
     let (health_ok, health_line) = match health {
@@ -189,11 +247,13 @@ async fn pipeline_page(app: &AppState, result: Option<ActionResult>) -> Response
         page_title: "Pipeline".into(),
         context_line: "Ingest, extract and check the research database".into(),
         read_only: app.read_only,
+        connected: true,
         health_ok,
         health_line,
         experiments_count: js(&status, "experiments_count").unwrap_or_else(|| "—".into()),
         paper_counts: counts("papers_by_status"),
         job_counts: counts("jobs_by_kind_status"),
+        job_title: "Jobs",
         programs: PROGRAMS.to_vec(),
         result,
     })
