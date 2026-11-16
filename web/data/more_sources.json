@@ -138,6 +138,50 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "acetone",
+  "aliases": [
+   "nail polish remover",
+   "propanone"
+  ],
+  "test": "flash point",
+  "standard": null,
+  "value": 1,
+  "unit": "°F",
+  "conditions": "closed cup",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: ACETONE (ACT), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/ACT.pdf",
+  "quote": "4.1 Flash Point: 1°F C.C.",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "1 °F is about -17 °C: the vapour above the liquid can be lit by a spark far below room temperature.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "acetone",
+  "aliases": [
+   "nail polish remover",
+   "propanone"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 869,
+  "unit": "°F",
+  "conditions": "auto-ignition (no flame or spark applied)",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: ACETONE (ACT), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/ACT.pdf",
+  "quote": "4.7 Auto Ignition Temperature: 869°F",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "869 °F is about 465 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "acrylic (pmma)",
   "aliases": [
    "acrylic",
@@ -499,6 +543,25 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "brass",
+  "aliases": [],
+  "test": "NASA promoted combustion (highest pressure with no burn)",
+  "standard": "NASA-STD-6001 Test 17 / ASTM G124",
+  "value": ">10 500",
+  "unit": "psia",
+  "conditions": "pure oxygen; Brass 260 rod 0.32 cm in diameter, ignited at the bottom",
+  "gravity": "Earth",
+  "source_title": "Promoted Combustion Test Data Re-Examined (Lewis, Jeffers, Stoltzfus)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20100021068/downloads/20100021068.pdf",
+  "quote": "Brass 260 None >72.4b >10 500 6 20 0.1-0.3 5.2 WSTF 0943596",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "A pressure in pure oxygen, not an oxygen percentage; metals are rated differently from plastics. No burn at any pressure tested (20 tests).",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "butyl rubber",
   "aliases": [
    "polyisobutylene"
@@ -520,6 +583,29 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "carbon steel",
+  "aliases": [
+   "mild steel",
+   "steel",
+   "iron"
+  ],
+  "test": "Non-combustibility class (deemed, no test needed)",
+  "standard": "Euroclass reaction to fire (classes of Decision 2000/147/EC, as used in EN 13501-1)",
+  "value": "A1",
+  "unit": "class",
+  "conditions": "solid metal, not powder or swarf",
+  "gravity": "Earth",
+  "source_title": "Commission Decision 96/603/EC of 4 October 1996 establishing the list of products belonging to Classes A 'No contribution to fire' (consolidated text of 12 June 2003, as amended by 2000/605/EC and 2003/424/EC)",
+  "publisher": "European Commission (EUR-Lex)",
+  "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:01996D0603-20030612",
+  "quote": "Iron, steel and stainless steel Not in finely divided form",
+  "page": "Annex, table of materials (Annex title: Classes A1 and A1FL without the need for testing)",
+  "confidence": "high",
+  "note": "A1 is the top European class: no contribution to fire. This is for burning in air; in pure high-pressure oxygen iron and steel do burn.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "cellulose acetate",
   "aliases": [
    "acetate"
@@ -537,6 +623,93 @@
   "page": "Table A-1, p. A-1",
   "confidence": "high",
   "note": null,
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "ceramic",
+  "aliases": [
+   "ceramics",
+   "porcelain",
+   "ceramic tile"
+  ],
+  "test": "Non-combustibility class (deemed, no test needed)",
+  "standard": "Euroclass reaction to fire (classes of Decision 2000/147/EC, as used in EN 13501-1)",
+  "value": "A1",
+  "unit": "class",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Commission Decision 96/603/EC of 4 October 1996 establishing the list of products belonging to Classes A 'No contribution to fire' (consolidated text of 12 June 2003, as amended by 2000/605/EC and 2003/424/EC)",
+  "publisher": "European Commission (EUR-Lex)",
+  "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:01996D0603-20030612",
+  "quote": "Ceramics Includes dust-pressed and extruded products, glazed or unglazed",
+  "page": "Annex, table of materials (Annex title: Classes A1 and A1FL without the need for testing)",
+  "confidence": "high",
+  "note": "A1 is the top European class: no contribution to fire. Applies when the product holds no more than 1 % organic material.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "clay brick",
+  "aliases": [
+   "brick",
+   "fired clay",
+   "terracotta"
+  ],
+  "test": "Non-combustibility class (deemed, no test needed)",
+  "standard": "Euroclass reaction to fire (classes of Decision 2000/147/EC, as used in EN 13501-1)",
+  "value": "A1",
+  "unit": "class",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Commission Decision 96/603/EC of 4 October 1996 establishing the list of products belonging to Classes A 'No contribution to fire' (consolidated text of 12 June 2003, as amended by 2000/605/EC and 2003/424/EC)",
+  "publisher": "European Commission (EUR-Lex)",
+  "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:01996D0603-20030612",
+  "quote": "Clay units Units from clay or other argillaceous materials, with or without sand, fuel or other additives. Includes bricks, tiles, paving and fireclay units (e.g. chimney liners)",
+  "page": "Annex, table of materials (Annex title: Classes A1 and A1FL without the need for testing)",
+  "confidence": "high",
+  "note": "A1 is the top European class: no contribution to fire. Applies when the product holds no more than 1 % organic material.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "coconut oil",
+  "aliases": [],
+  "test": "flash point",
+  "standard": null,
+  "value": 420,
+  "unit": "°F",
+  "conditions": "closed cup",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: OILS, EDIBLE: COCONUT (OCC), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/OCC.pdf",
+  "quote": "4.1 Flash Point: 420°F C.C.",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "420 °F is about 216 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "concrete",
+  "aliases": [
+   "cement",
+   "reinforced concrete"
+  ],
+  "test": "Non-combustibility class (deemed, no test needed)",
+  "standard": "Euroclass reaction to fire (classes of Decision 2000/147/EC, as used in EN 13501-1)",
+  "value": "A1",
+  "unit": "class",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Commission Decision 96/603/EC of 4 October 1996 establishing the list of products belonging to Classes A 'No contribution to fire' (consolidated text of 12 June 2003, as amended by 2000/605/EC and 2003/424/EC)",
+  "publisher": "European Commission (EUR-Lex)",
+  "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:01996D0603-20030612",
+  "quote": "Concrete Includes ready-mixed concrete and precast reinforced and prestressed products",
+  "page": "Annex, table of materials (Annex title: Classes A1 and A1FL without the need for testing)",
+  "confidence": "high",
+  "note": "A1 is the top European class: no contribution to fire. Applies when the product holds no more than 1 % organic material.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -817,6 +990,29 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "epdm rubber",
+  "aliases": [
+   "epdm",
+   "ethylene propylene diene rubber",
+   "ethylene propylene rubber"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": 17.8,
+  "unit": "% oxygen",
+  "conditions": "unfilled EPDM, no flame retardant",
+  "gravity": "Earth",
+  "source_title": "Flame Retardancy, Fire Behavior, and Flame Retardant Mechanism of Intumescent Flame Retardant EPDM Containing Ammonium Polyphosphate/Pentaerythrotol and Expandable Graphite (Wang, Xue, Zhao, Lin, Jin, Liu, Zhu, Yang, Shang; Materials 12, 4035, 2019)",
+  "publisher": "Materials (MDPI), via PubMed Central",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6947204/",
+  "quote": "the pure EPDM is a flammable material with a very low LOI value of 17.8 and no UL-94 rating",
+  "page": "Section 3.1, Table 1",
+  "confidence": "high",
+  "note": null,
+  "limit": 17.8,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "epoxy",
   "aliases": [
    "epoxy resin"
@@ -1062,6 +1258,98 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "ethanol",
+  "aliases": [
+   "ethyl alcohol",
+   "alcohol",
+   "drinking alcohol"
+  ],
+  "test": "flash point",
+  "standard": null,
+  "value": 55,
+  "unit": "°F",
+  "conditions": "closed cup (64 °F open cup)",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: ETHYL ALCOHOL (EAL), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/EAL.pdf",
+  "quote": "4.1 Flash Point: 64°F O.C. 55°F C.C.",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "55 °F is about 13 °C, below room temperature.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "ethanol",
+  "aliases": [
+   "ethyl alcohol",
+   "alcohol",
+   "drinking alcohol"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 689,
+  "unit": "°F",
+  "conditions": "auto-ignition (no flame or spark applied)",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: ETHYL ALCOHOL (EAL), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/EAL.pdf",
+  "quote": "4.7 Auto Ignition Temperature: 689°F",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "689 °F is about 365 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "eva (ethylene-vinyl acetate)",
+  "aliases": [
+   "eva",
+   "ethylene vinyl acetate",
+   "ethylene-vinyl acetate"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": 18.6,
+  "unit": "% oxygen",
+  "conditions": "solid EVA copolymer, no flame retardant",
+  "gravity": "Earth",
+  "source_title": "Synergistic effect of modified anhydrous magnesium carbonate and hexaphenoxycyclotriphosphazene on flame retardancy of ethylene-vinyl acetate copolymer (Liu, Xu, Chen, Xu, Sun; RSC Advances 14, 15143, 2024)",
+  "publisher": "RSC Advances, via PubMed Central",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11079627/",
+  "quote": "Pure EVA exhibits a relatively low LOI value of 18.6%, failing the UL-94 test as it consistently drips after ignition",
+  "page": "Section 3.5, Table 1",
+  "confidence": "high",
+  "note": "Measured on solid moulded EVA, not on foam.",
+  "limit": 18.6,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "eva (ethylene-vinyl acetate)",
+  "aliases": [
+   "eva",
+   "ethylene vinyl acetate",
+   "ethylene-vinyl acetate"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": null,
+  "value": 18.2,
+  "unit": "% oxygen",
+  "conditions": "solid EVA copolymer, no flame retardant",
+  "gravity": "Earth",
+  "source_title": "Synergistic Effect of Cerium Oxide for Improving the Fire-Retardant, Mechanical and Ultraviolet-Blocking Properties of EVA/Magnesium Hydroxide Composites (Hobson, Yin, Yu, Zhou, Prolongo, Ao, Wang; Materials 15, 5867, 2022)",
+  "publisher": "Materials (MDPI), via PubMed Central",
+  "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9457504/",
+  "quote": "The LOI value of pure EVA was only 18.2% and it failed to pass UL-94 rating.",
+  "page": "Section 3.3, Table 6",
+  "confidence": "high",
+  "note": "Measured on solid moulded EVA, not on foam.",
+  "limit": 18.2,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "expanded polystyrene foam",
   "aliases": [
    "eps",
@@ -1194,6 +1482,50 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "glass",
+  "aliases": [
+   "window glass",
+   "glassware"
+  ],
+  "test": "Non-combustibility class (deemed, no test needed)",
+  "standard": "Euroclass reaction to fire (classes of Decision 2000/147/EC, as used in EN 13501-1)",
+  "value": "A1",
+  "unit": "class",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Commission Decision 96/603/EC of 4 October 1996 establishing the list of products belonging to Classes A 'No contribution to fire' (consolidated text of 12 June 2003, as amended by 2000/605/EC and 2003/424/EC)",
+  "publisher": "European Commission (EUR-Lex)",
+  "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:01996D0603-20030612",
+  "quote": "Glass Includes heat strengthened, chemically toughened, laminated and wired glass",
+  "page": "Annex, table of materials (Annex title: Classes A1 and A1FL without the need for testing)",
+  "confidence": "high",
+  "note": "A1 is the top European class: no contribution to fire. Applies when the product holds no more than 1 % organic material.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "gypsum plaster",
+  "aliases": [
+   "plaster",
+   "gypsum"
+  ],
+  "test": "Non-combustibility class (deemed, no test needed)",
+  "standard": "Euroclass reaction to fire (classes of Decision 2000/147/EC, as used in EN 13501-1)",
+  "value": "A1",
+  "unit": "class",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Commission Decision 96/603/EC of 4 October 1996 establishing the list of products belonging to Classes A 'No contribution to fire' (consolidated text of 12 June 2003, as amended by 2000/605/EC and 2003/424/EC)",
+  "publisher": "European Commission (EUR-Lex)",
+  "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:01996D0603-20030612",
+  "quote": "Gypsum and gypsum based plasters May include additives (retarders, fillers, fibres, pigments, hydrated lime, air and water retaining agents and plasticisers)",
+  "page": "Annex, table of materials (Annex title: Classes A1 and A1FL without the need for testing)",
+  "confidence": "high",
+  "note": "A1 is the top European class: no contribution to fire. Applies when the product holds no more than 1 % organic material.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "high-impact polystyrene",
   "aliases": [
    "hips"
@@ -1274,6 +1606,54 @@
   "page": "Table 3a",
   "confidence": "high",
   "note": "The 1.6 mm sample of the same resin peaked at 723 kW/m2.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "isopropyl alcohol",
+  "aliases": [
+   "isopropanol",
+   "rubbing alcohol",
+   "2-propanol",
+   "ipa"
+  ],
+  "test": "flash point",
+  "standard": null,
+  "value": 53,
+  "unit": "°F",
+  "conditions": "closed cup (65 °F open cup)",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: ISOPROPYL ALCOHOL (IPA), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/IPA.pdf",
+  "quote": "4.1 Flash Point: 65°F O.C. 53°F C.C.",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "53 °F is about 12 °C, below room temperature.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "isopropyl alcohol",
+  "aliases": [
+   "isopropanol",
+   "rubbing alcohol",
+   "2-propanol",
+   "ipa"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 750,
+  "unit": "°F",
+  "conditions": "auto-ignition (no flame or spark applied)",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: ISOPROPYL ALCOHOL (IPA), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/IPA.pdf",
+  "quote": "4.7 Auto Ignition Temperature: 750°F",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "750 °F is about 399 °C.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -1401,6 +1781,110 @@
   "page": "printed p. 47",
   "confidence": "high",
   "note": "442 °F is about 228 °C. Two other specimens ignited at 482 °F and 463 °F.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "lithium-ion battery",
+  "aliases": [
+   "li-ion battery",
+   "lithium ion battery",
+   "lithium battery",
+   "18650 cell",
+   "laptop battery",
+   "phone battery"
+  ],
+  "test": "Thermal runaway onset temperature",
+  "standard": null,
+  "value": 114.1,
+  "unit": "°C",
+  "conditions": "Samsung ICR18650-26F cell, fully charged (100 %), heated slowly in an accelerating rate calorimeter; mean of 3 cells",
+  "gravity": "Earth",
+  "source_title": "Measurement of Energy Distributed Between Cell Mass and Hot Ejecta during Thermal Runaway of Lithium Ion Cells at Varying State of Charge (S. Yayathi, W. Walker, D. Doughty; NASA Johnson Space Center, 228th Electrochemical Society Meeting, 2015; NTRS 20150019469)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20150019469/downloads/20150019469.pdf",
+  "quote": "100% SOC 3 114.1 0.330 786.2 22.0 40.8 2.20",
+  "page": "Slide 20, Samsung SDI ICR18650-26F closed tank test",
+  "confidence": "high",
+  "note": "The temperature at which the cell starts heating itself. Columns: samples, mean onset °C, st. dev., mean peak cell °C, st. dev., mean total energy kJ, st. dev. The cells peaked near 786 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "lithium-ion battery",
+  "aliases": [
+   "li-ion battery",
+   "lithium ion battery",
+   "lithium battery",
+   "18650 cell",
+   "laptop battery",
+   "phone battery"
+  ],
+  "test": "Thermal runaway onset temperature",
+  "standard": null,
+  "value": 138.2,
+  "unit": "°C",
+  "conditions": "Samsung ICR18650-26F cell, half charged (50 %), heated slowly in an accelerating rate calorimeter; mean of 2 cells",
+  "gravity": "Earth",
+  "source_title": "Measurement of Energy Distributed Between Cell Mass and Hot Ejecta during Thermal Runaway of Lithium Ion Cells at Varying State of Charge (S. Yayathi, W. Walker, D. Doughty; NASA Johnson Space Center, 228th Electrochemical Society Meeting, 2015; NTRS 20150019469)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20150019469/downloads/20150019469.pdf",
+  "quote": "50% SOC 2 138.2 0.05 386.4 45.5 16.2 1.75",
+  "page": "Slide 20, Samsung SDI ICR18650-26F closed tank test",
+  "confidence": "high",
+  "note": "A half-charged cell needs to get hotter before it runs away, and releases less than half the energy.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "lithium-ion battery",
+  "aliases": [
+   "li-ion battery",
+   "lithium ion battery",
+   "lithium battery",
+   "18650 cell",
+   "laptop battery",
+   "phone battery"
+  ],
+  "test": "Self-heating onset temperature",
+  "standard": null,
+  "value": "91, 90, 91",
+  "unit": "°C",
+  "conditions": "18650 cells with LiMn2O4, LiFePO4 and NMC cathodes, fully charged, accelerating rate calorimeter",
+  "gravity": "Earth",
+  "source_title": "Experimental Analysis of Thermal Runaway in 18650 Cylindrical Li-Ion Cells Using an Accelerating Rate Calorimeter (Lei, Zhao, Ziebert, Uhlmann, Rohde, Seifert; Batteries 3, 14, 2017)",
+  "publisher": "Karlsruhe Institute of Technology repository (journal: Batteries, MDPI)",
+  "url": "https://publikationen.bibliothek.kit.edu/1000079077/6013714",
+  "quote": "Onset temperature of self-heating in ◦C 91 90 91",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "Where slow self-heating is first detected; full thermal runaway follows at a higher temperature. Peak temperatures were 581, 259 and 731 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "lithium-ion battery",
+  "aliases": [
+   "li-ion battery",
+   "lithium ion battery",
+   "lithium battery",
+   "18650 cell",
+   "laptop battery",
+   "phone battery"
+  ],
+  "test": "Thermal runaway onset temperature",
+  "standard": null,
+  "value": "about 110",
+  "unit": "°C",
+  "conditions": "18650 cell with LiMn2O4 cathode, fully charged, accelerating rate calorimeter",
+  "gravity": "Earth",
+  "source_title": "Experimental Analysis of Thermal Runaway in 18650 Cylindrical Li-Ion Cells Using an Accelerating Rate Calorimeter (Lei, Zhao, Ziebert, Uhlmann, Rohde, Seifert; Batteries 3, 14, 2017)",
+  "publisher": "Karlsruhe Institute of Technology repository (journal: Batteries, MDPI)",
+  "url": "https://publikationen.bibliothek.kit.edu/1000079077/6013714",
+  "quote": "reaction starts, thus leading to thermal runaway, was about 110 ◦C",
+  "page": "Section 4, Conclusions",
+  "confidence": "high",
+  "note": null,
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -1554,6 +2038,29 @@
   "page": "Table 3",
   "confidence": "high",
   "note": "Table row; the ' | ' cell separators come from converting the web page's table to text. The cells are sample, peak heat release rate and total heat release.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "natural stone",
+  "aliases": [
+   "stone",
+   "slate",
+   "rock"
+  ],
+  "test": "Non-combustibility class (deemed, no test needed)",
+  "standard": "Euroclass reaction to fire (classes of Decision 2000/147/EC, as used in EN 13501-1)",
+  "value": "A1",
+  "unit": "class",
+  "conditions": null,
+  "gravity": "Earth",
+  "source_title": "Commission Decision 96/603/EC of 4 October 1996 establishing the list of products belonging to Classes A 'No contribution to fire' (consolidated text of 12 June 2003, as amended by 2000/605/EC and 2003/424/EC)",
+  "publisher": "European Commission (EUR-Lex)",
+  "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:01996D0603-20030612",
+  "quote": "Natural stone and slate products A worked or non-worked element produced from natural stone (magmatic, sedimentary or metamorphic rocks) or slate",
+  "page": "Annex, table of materials (Annex title: Classes A1 and A1FL without the need for testing)",
+  "confidence": "high",
+  "note": "A1 is the top European class: no contribution to fire. Applies when the product holds no more than 1 % organic material.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -1984,6 +2491,44 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "olive oil",
+  "aliases": [],
+  "test": "flash point",
+  "standard": null,
+  "value": 437,
+  "unit": "°F",
+  "conditions": "closed cup",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: OILS, EDIBLE: OLIVE (OOL), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/OOL.pdf",
+  "quote": "4.1 Flash Point: 437°F C.C.",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "437 °F is about 225 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "olive oil",
+  "aliases": [],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 650,
+  "unit": "°F",
+  "conditions": "auto-ignition (no flame or spark applied)",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: OILS, EDIBLE: OLIVE (OOL), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/OOL.pdf",
+  "quote": "4.7 Auto Ignition Temperature: 650°F",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "650 °F is about 343 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "paper",
   "aliases": [
    "newspaper",
@@ -2024,6 +2569,102 @@
   "page": "Table 3",
   "confidence": "medium",
   "note": "428 °F is about 220 °C. Row from a scanned table; the ignition temperature is the first number.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "paraffin wax",
+  "aliases": [
+   "candle wax",
+   "candle",
+   "wax",
+   "paraffin"
+  ],
+  "test": "flash point",
+  "standard": null,
+  "value": 390,
+  "unit": "°F",
+  "conditions": "closed cup; molten wax",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: WAXES: PARAFFIN (WPF), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/WPF.pdf",
+  "quote": "4.1 Flash Point: 390°F C.C.",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "390 °F is about 199 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "paraffin wax",
+  "aliases": [
+   "candle wax",
+   "candle",
+   "wax",
+   "paraffin"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 473,
+  "unit": "°F",
+  "conditions": "auto-ignition (no flame or spark applied)",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: WAXES: PARAFFIN (WPF), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/WPF.pdf",
+  "quote": "4.7 Auto Ignition Temperature: 473°F",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "473 °F is about 245 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "paraffin wax",
+  "aliases": [
+   "candle wax",
+   "candle",
+   "wax",
+   "paraffin"
+  ],
+  "test": "Candle flame lifetime in weightlessness (Space Shuttle)",
+  "standard": null,
+  "value": "less than 60",
+  "unit": "s",
+  "conditions": "candle in a sealed, perforated safety box; cabin air at 1 atm, 21.7 % oxygen",
+  "gravity": "microgravity",
+  "source_title": "Candle Flames in Non-Buoyant Atmospheres (D. L. Dietrich, H. D. Ross, Y. Shu, J. S. T'ien; NASA Lewis Research Center, NTRS 20000005087; published in Combustion Science and Technology 156, 2000)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20000005087/downloads/20000005087.pdf",
+  "quote": "The flame lifetimes were typically less than 60 seconds.",
+  "page": "Abstract, p. 2",
+  "confidence": "high",
+  "note": "A burn time, not an oxygen limit. The flame went out because the safety box slowed oxygen reaching it. The candles were n-paraffin wax with 20 % stearic acid.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "paraffin wax",
+  "aliases": [
+   "candle wax",
+   "candle",
+   "wax",
+   "paraffin"
+  ],
+  "test": "Candle flame lifetime in weightlessness (Mir space station)",
+  "standard": null,
+  "value": "up to 45",
+  "unit": "min",
+  "conditions": "candle in a redesigned box that let oxygen through; Mir cabin air, richer in oxygen than the Shuttle",
+  "gravity": "microgravity",
+  "source_title": "Candle Flames in Non-Buoyant Atmospheres (D. L. Dietrich, H. D. Ross, Y. Shu, J. S. T'ien; NASA Lewis Research Center, NTRS 20000005087; published in Combustion Science and Technology 156, 2000)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20000005087/downloads/20000005087.pdf",
+  "quote": "The Mir flames burned for as long as 45 minutes.",
+  "page": "Abstract, p. 2",
+  "confidence": "high",
+  "note": "A burn time, not an oxygen limit.",
   "limit": null,
   "checked": "2026-11-15"
  },
@@ -2396,6 +3037,29 @@
   "confidence": "high",
   "note": null,
   "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "petg",
+  "aliases": [
+   "pet-g",
+   "glycol-modified pet",
+   "copolyester"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 24,
+  "unit": "% oxygen",
+  "conditions": "Eastar copolyester 6763, a standard PETG grade",
+  "gravity": "Earth",
+  "source_title": "Eastar copolyester 6763 technical information (Eastman Chemical Company, publication MBS-80Q, 2012)",
+  "publisher": "Eastman Chemical Company",
+  "url": "https://eastman.com/content/dam/eastman/corporate/en/literature/m/mbs80.pdf",
+  "quote": "Oxygen index, % 24 D2863",
+  "page": "Table 1, typical properties",
+  "confidence": "high",
+  "note": "Manufacturer's typical value for one grade. The same table lists a UL 94 HB classification at 1.14 mm.",
+  "limit": 24.0,
   "checked": "2026-11-15"
  },
  {
@@ -3464,6 +4128,31 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "polystyrene foam (xps)",
+  "aliases": [
+   "xps",
+   "xps foam",
+   "extruded polystyrene",
+   "extruded polystyrene foam",
+   "foam board insulation"
+  ],
+  "test": "Limiting oxygen index",
+  "standard": "ASTM D 2863",
+  "value": 24,
+  "unit": "% oxygen",
+  "conditions": "FOAMULAR NGX insulating sheathing; guaranteed minimum, not a typical value",
+  "gravity": "Earth",
+  "source_title": "Product Data Sheet: FOAMULAR NGX Insulating Sheathing XPS Insulation (Owens Corning, Pub. No. 23512-P, October 2025)",
+  "publisher": "Owens Corning",
+  "url": "https://www.owenscorning.com/dms/23512",
+  "quote": "Oxygen Index,8 minimum % by volume ASTM D2863 24",
+  "page": "Physical properties table, p. 1",
+  "confidence": "high",
+  "note": "A minimum the product is made to meet, for one building-insulation product. The '8' in the quote is a footnote mark.",
+  "limit": 24.0,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "polysulfone",
   "aliases": [
    "psu"
@@ -4393,6 +5082,78 @@
   "checked": "2026-11-15"
  },
  {
+  "material": "vegetable oil",
+  "aliases": [
+   "cooking oil",
+   "soybean oil",
+   "soya bean oil",
+   "edible oil"
+  ],
+  "test": "flash point",
+  "standard": null,
+  "value": 610,
+  "unit": "°F",
+  "conditions": "open cup; generic edible vegetable oil",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: OILS, EDIBLE: VEGETABLE (OVG), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/OVG.pdf",
+  "quote": "4.1 Flash Point: 610°F O.C.",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "610 °F is about 321 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "vegetable oil",
+  "aliases": [
+   "cooking oil",
+   "soybean oil",
+   "soya bean oil",
+   "edible oil"
+  ],
+  "test": "flash point",
+  "standard": null,
+  "value": 540,
+  "unit": "°F",
+  "conditions": "closed cup; soya bean oil",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: OILS, EDIBLE: SOYA BEAN (OSB), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/OSB.pdf",
+  "quote": "4.1 Flash Point: 540°F C.C.",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "540 °F is about 282 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "vegetable oil",
+  "aliases": [
+   "cooking oil",
+   "soybean oil",
+   "soya bean oil",
+   "edible oil"
+  ],
+  "test": "ignition temperature",
+  "standard": null,
+  "value": 833,
+  "unit": "°F",
+  "conditions": "auto-ignition (no flame or spark applied); soya bean oil",
+  "gravity": "Earth",
+  "source_title": "Chemical Hazards Response Information System (CHRIS) data sheet: OILS, EDIBLE: SOYA BEAN (OSB), U.S. Coast Guard, June 1999",
+  "publisher": "U.S. Coast Guard (hosted by NOAA CAMEO Chemicals)",
+  "url": "https://cameochemicals.noaa.gov/chris/OSB.pdf",
+  "quote": "4.7 Auto Ignition Temperature: 833°F",
+  "page": "Section 4, Fire Hazards",
+  "confidence": "high",
+  "note": "833 °F is about 445 °C.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
   "material": "wood",
   "aliases": [
    "plywood",
@@ -4613,6 +5374,48 @@
   "confidence": "high",
   "note": "Scanned document: 'LO1' is how the scan reads LOI. The same study measured 100% wool at 24.0.",
   "limit": 20.1,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "zinc",
+  "aliases": [
+   "zinc alloy"
+  ],
+  "test": "Non-combustibility class (deemed, no test needed)",
+  "standard": "Euroclass reaction to fire (classes of Decision 2000/147/EC, as used in EN 13501-1)",
+  "value": "A1",
+  "unit": "class",
+  "conditions": "solid metal, not powder",
+  "gravity": "Earth",
+  "source_title": "Commission Decision 96/603/EC of 4 October 1996 establishing the list of products belonging to Classes A 'No contribution to fire' (consolidated text of 12 June 2003, as amended by 2000/605/EC and 2003/424/EC)",
+  "publisher": "European Commission (EUR-Lex)",
+  "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:01996D0603-20030612",
+  "quote": "Zinc and zinc alloys Not in finely divided form",
+  "page": "Annex, table of materials (Annex title: Classes A1 and A1FL without the need for testing)",
+  "confidence": "high",
+  "note": "A1 is the top European class: no contribution to fire. Applies when the product holds no more than 1 % organic material.",
+  "limit": null,
+  "checked": "2026-11-15"
+ },
+ {
+  "material": "zinc",
+  "aliases": [
+   "zinc alloy"
+  ],
+  "test": "NASA promoted combustion (lowest burn pressure)",
+  "standard": "NASA-STD-6001 Test 17 / ASTM G124",
+  "value": 300,
+  "unit": "psia",
+  "conditions": "pure oxygen; commercially pure rod 0.32 cm in diameter, ignited at the bottom",
+  "gravity": "Earth",
+  "source_title": "Promoted Combustion Test Data Re-Examined (Lewis, Jeffers, Stoltzfus)",
+  "publisher": "NASA NTRS",
+  "url": "https://ntrs.nasa.gov/api/citations/20100021068/downloads/20100021068.pdf",
+  "quote": "Zinc (commercially pure) 2.1 300 1 1.6 1.4 200 1 0.5 5.5 WSTF 90-24249",
+  "page": "Table 3",
+  "confidence": "high",
+  "note": "A pressure in pure oxygen, not an oxygen percentage; metals are rated differently from plastics. It did not burn at 200 psia. One test at each pressure.",
+  "limit": null,
   "checked": "2026-11-15"
  }
 ]
