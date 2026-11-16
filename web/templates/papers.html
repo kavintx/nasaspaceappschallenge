@@ -1,39 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="wrap pt-14 pb-8">
-  <h2 class="text-[26px] md:text-[34px] leading-[1.05] max-w-3xl">The papers behind the findings.</h2>
-  <p class="mt-5 text-[20px] text-muted">NASA technical reports, with the test conditions and findings an AI pulled from each.</p>
-  {% if !counts.is_empty() %}<p class="mt-5 text-[14px] text-muted">{% for c in counts %}<span class="text-fg font-medium">{{ c.1 }}</span> {{ c.0 }}{% if !loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
-</section>
+<section class="wrap py-10 md:py-14">
+  <div class="grid gap-x-12 gap-y-10 lg:grid-cols-[240px_minmax(0,1fr)]">
 
-<section class="wrap pb-16">
-  <form method="get" action="/papers" class="grid sm:grid-cols-[220px_1fr_auto] gap-6 items-end">
-    <label class="block"><span class="eyebrow">Status</span>
-      <select name="status" onchange="this.form.submit()" class="field mt-2">
-        <option value="">All statuses</option>
-        {% for c in counts %}<option value="{{ c.0 }}" {% if f_status == c.0.as_str() %}selected{% endif %}>{{ c.0 }}</option>{% endfor %}
-      </select></label>
-    <label class="block"><span class="eyebrow">Search titles and abstracts</span>
-      <input name="q" value="{{ f_q }}" placeholder="e.g. flame spread, PMMA, Saffire" class="field mt-2 placeholder:text-dim"></label>
-    <button class="btn-ghost">Search</button>
-  </form>
-  {% if let Some(e) = error %}<p class="mt-8 text-[14px] text-amber">{{ e }}</p>{% endif %}
-  <p class="mt-10 eyebrow">{{ rows.len() }} of {{ loaded }} loaded papers{% if loaded == 200 %} · showing the first 200{% endif %}</p>
-  <div class="mt-3 overflow-x-auto">
-    <table class="w-full text-left text-[13px] min-w-[760px]">
-      <thead class="text-muted"><tr class="border-b border-line"><th class="py-3 pl-3 font-normal">Paper</th><th class="font-normal">Year</th><th class="font-normal">Type</th><th class="font-normal pr-3">Status</th></tr></thead>
-      <tbody>
-        {% for r in rows %}
-        <tr class="border-b border-line hover:bg-rowhl">
-          <td class="py-3.5 pl-3 pr-6"><a class="font-medium hover:text-sky" href="{{ r.href }}">{{ r.title }}</a></td>
-          <td class="text-muted whitespace-nowrap pr-6">{{ r.year }}</td>
-          <td class="text-muted whitespace-nowrap pr-6">{{ r.kind }}</td>
-          <td class="text-muted pr-3">{{ r.status }}</td>
-        </tr>
-        {% endfor %}
-        {% if rows.is_empty() && error.is_none() %}<tr><td colspan="4" class="py-10 text-center text-muted">No papers match.</td></tr>{% endif %}
-      </tbody>
-    </table>
+    {# Side column: what the list is, and how many papers sit at each status. #}
+    <aside class="min-w-0">
+      <div class="border-t-2 border-fg pt-3">
+        <p class="eyebrow">About this list</p>
+        <p class="mt-2 text-[15px] leading-6 text-muted">NASA technical reports, with the test conditions and findings an AI pulled from each.</p>
+      </div>
+      {% if !counts.is_empty() %}
+      <div class="mt-8 border-t-2 border-fg pt-3">
+        <p class="eyebrow">Papers by status</p>
+        <dl class="mt-2">
+          {% for c in counts %}
+          <div class="flex items-baseline justify-between gap-4 border-b border-line py-2">
+            <dt class="text-[14px] text-muted break-words min-w-0">{{ c.0 }}</dt>
+            <dd class="font-mono text-[14px] text-fg">{{ c.1 }}</dd>
+          </div>
+          {% endfor %}
+        </dl>
+      </div>
+      {% endif %}
+    </aside>
+
+    <div class="min-w-0">
+      <div class="section-head"><span class="n">01</span><h2>Index</h2></div>
+
+      <form method="get" action="/papers" class="mt-5 grid gap-4 sm:grid-cols-[200px_minmax(0,1fr)_auto] items-end">
+        <label class="block min-w-0"><span class="eyebrow">Status</span>
+          <select name="status" onchange="this.form.submit()" class="field mt-2">
+            <option value="">All statuses</option>
+            {% for c in counts %}<option value="{{ c.0 }}" {% if f_status == c.0.as_str() %}selected{% endif %}>{{ c.0 }}</option>{% endfor %}
+          </select></label>
+        <label class="block min-w-0"><span class="eyebrow">Search titles and abstracts</span>
+          <input name="q" value="{{ f_q }}" placeholder="e.g. flame spread, PMMA, Saffire" class="field mt-2 placeholder:text-dim"></label>
+        <div><button class="btn-ghost">Search</button></div>
+      </form>
+
+      {% if let Some(e) = error %}<p class="notice mt-6" role="status">{{ e }}</p>{% endif %}
+
+      <p class="mt-8 eyebrow">{{ rows.len() }} of {{ loaded }} loaded papers{% if loaded == 200 %} · showing the first 200{% endif %}</p>
+      <div class="mt-2 overflow-x-auto border-t-2 border-fg">
+        <table class="w-full text-left text-[14px] min-w-[600px]">
+          <thead class="text-dim"><tr class="border-b border-line"><th class="py-2.5 pr-6">Paper</th><th class="pr-6">Year</th><th class="pr-6">Type</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for r in rows %}
+            <tr class="border-b border-line align-baseline hover:bg-ink-850">
+              <td class="py-3 pr-6"><a class="font-medium leading-5 hover:text-sky hover:underline" href="{{ r.href }}">{{ r.title }}</a></td>
+              <td class="font-mono text-[12px] text-muted whitespace-nowrap pr-6">{{ r.year }}</td>
+              <td class="font-mono text-[12px] text-muted whitespace-nowrap pr-6">{{ r.kind }}</td>
+              <td class="font-mono text-[12px] text-muted">{{ r.status }}</td>
+            </tr>
+            {% endfor %}
+            {% if rows.is_empty() && error.is_none() %}<tr><td colspan="4" class="py-10 text-muted">No papers match.</td></tr>{% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </section>
 {% endblock %}

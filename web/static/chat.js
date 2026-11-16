@@ -25,11 +25,11 @@
       if (!line || /^[-|:=* ]+$/.test(line)) return;
       var clean = function (t) { return t.replace(/\*\*|__|`/g, "").trim(); };
       if (line.charAt(0) === "#") {
-        box.appendChild(el("h4", "mt-6 text-[17px] font-medium", clean(line.replace(/^#+/, ""))));
+        box.appendChild(el("h4", "mt-6 text-[17px] leading-6 font-semibold text-fg", clean(line.replace(/^#+/, ""))));
       } else if (/^[-*•] /.test(line)) {
-        box.appendChild(el("p", "mt-2 pl-5 -indent-5 text-[15px] leading-relaxed text-muted", "•  " + clean(line.slice(2))));
+        box.appendChild(el("p", "mt-2 pl-5 -indent-5 text-[16px] leading-7 text-fg", "•  " + clean(line.slice(2))));
       } else {
-        box.appendChild(el("p", "mt-3 text-[15px] leading-relaxed text-muted", clean(line)));
+        box.appendChild(el("p", "mt-3 first:mt-0 text-[16px] leading-7 text-fg", clean(line)));
       }
     });
   }
@@ -37,19 +37,22 @@
   function renderCitations(box, citations) {
     box.textContent = "";
     if (!citations || !citations.length) return;
-    box.appendChild(el("div", "mt-7 eyebrow", "Cited NASA papers"));
-    citations.forEach(function (c) {
-      var row = el("div", "mt-3 pb-3 border-b border-line");
+    box.appendChild(el("div", "mt-8 pt-2 border-t border-fg eyebrow", "Cited NASA papers"));
+    citations.forEach(function (c, i) {
+      var entry = el("div", "grid grid-cols-[2.25rem_minmax(0,1fr)] items-baseline py-3 border-b border-line");
+      entry.appendChild(el("span", "font-mono text-[12px] text-dim", "[" + (i + 1) + "]"));
+      var row = el("div", "min-w-0");
+      entry.appendChild(row);
       var id = c.ntrs_id || c.paper_id;
-      var title = el(id ? "a" : "span", "text-[15px] text-sky hover:underline", c.title || "Untitled NASA paper");
+      var title = el(id ? "a" : "span", "text-[15px] leading-6 text-sky underline break-words", c.title || "Untitled NASA paper");
       if (id) title.href = "/papers/" + encodeURIComponent(id);
       row.appendChild(title);
       var meta = [];
       if (c.ntrs_id) meta.push("NTRS " + c.ntrs_id);
       if (c.page != null) meta.push("p. " + c.page);
       row.appendChild(el("div", "mt-1 eyebrow", meta.join(" · ")));
-      if (c.quote) row.appendChild(el("p", "mt-2 text-[13px] leading-relaxed text-dim", "“" + c.quote + "”"));
-      box.appendChild(row);
+      if (c.quote) row.appendChild(el("p", "mt-2 pl-3 border-l border-line text-[13px] leading-5 text-muted", "“" + c.quote + "”"));
+      box.appendChild(entry);
     });
   }
 
@@ -60,11 +63,13 @@
     send.textContent = "Answering…";
     starters.hidden = true;
 
-    var turn = el("div", "py-7 border-b border-line");
-    turn.appendChild(el("div", "eyebrow", "You asked"));
-    turn.appendChild(el("p", "mt-2 text-[22px] leading-snug font-medium", message));
-    var answer = el("div", "mt-4 whitespace-pre-wrap text-[15px] leading-relaxed text-muted", "Searching the papers…");
-    var cites = el("div");
+    // One entry of the transcript: a ruled row with a narrow label column and the text beside it.
+    var turn = el("div", "grid gap-x-8 gap-y-2 md:grid-cols-[7rem_minmax(0,1fr)] border-t-2 border-fg pt-3 pb-10");
+    turn.appendChild(el("div", "eyebrow md:pt-1.5", "Question"));
+    turn.appendChild(el("p", "min-w-0 break-words text-[22px] leading-7 font-semibold", message));
+    turn.appendChild(el("div", "eyebrow mt-4 md:pt-1", "Answer"));
+    var answer = el("div", "min-w-0 max-w-3xl break-words whitespace-pre-wrap text-[16px] leading-7 text-muted md:mt-4", "Searching the papers…");
+    var cites = el("div", "min-w-0 max-w-3xl md:col-start-2");
     turn.appendChild(answer);
     turn.appendChild(cites);
     thread.appendChild(turn);
@@ -74,7 +79,7 @@
     var failed = false;
     function fail(msg) {
       failed = true;
-      answer.className = "mt-4 text-[14px] text-amber";
+      answer.className = "min-w-0 max-w-3xl break-words text-[14px] leading-5 text-amber md:mt-4";
       answer.textContent = msg;
     }
     function handle(block) {
@@ -122,7 +127,7 @@
       })
       .then(function () {
         if (failed) return;
-        if (text.trim()) { answer.className = "mt-2"; renderAnswer(answer, text); }
+        if (text.trim()) { answer.className = "min-w-0 max-w-3xl break-words md:mt-4"; renderAnswer(answer, text); }
         else fail("The AI service returned an empty answer.");
       })
       .catch(function (e) { fail(e.message || "Couldn't reach the AI service."); })

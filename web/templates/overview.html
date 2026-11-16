@@ -1,8 +1,34 @@
 {% extends "base.html" %}
-{# The lead line is the page title here, so the usual title strip is left out. #}
+{# The intro is the page title here, so the usual title strip is left out. #}
 {% block titlebar %}{% endblock %}
 {% block content %}
 
+{# Intro: a tilted screen that lies flat as you scroll, playing a clip of a candle flame
+   losing gravity. static/motion.js drives it; without scripts the screen is simply flat. #}
+<section class="cscroll" id="intro" aria-label="Introduction">
+  <div class="cscroll-inner">
+    <div class="cscroll-head">
+      <h2>
+        <span class="cscroll-kicker">How things burn in a spacecraft</span>
+        <span class="cscroll-title">Flame in Freefall</span>
+      </h2>
+    </div>
+    <div class="cscroll-card">
+      <div class="cscroll-screen">
+        <video id="intro-video" src="/static/img/intro.mp4" poster="/static/img/intro-start.webp" data-end-poster="/static/img/intro-end.webp"
+               muted playsinline preload="auto" disablepictureinpicture tabindex="-1" aria-hidden="true"></video>
+        <p class="cscroll-caption">
+          <span class="cap-a">On Earth, hot gas rises and pulls a flame into a teardrop.</span>
+          <span class="cap-b">In freefall nothing rises, so the flame becomes a sphere.</span>
+        </p>
+        <p class="intro-credit">Illustration, made with AI. Not NASA footage.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# This block slides up over the end of the pinned intro, through a fade, so there is no hard edge. #}
+<div class="after-intro">
 {# The opening: the lead line beside the chamber. The flame in the chamber is drawn live by
    static/flame3d.js: it starts as it burns on Earth and is then let go into freefall. #}
 <section class="wrap home-hero" aria-label="Introduction">
@@ -46,6 +72,7 @@
     </figure>
   </div>
 </section>
+</div>
 
 <section class="wrap py-12 md:py-16">
   <div class="section-head" data-reveal><span class="n">01</span><h2>In the database now</h2></div>

@@ -1,56 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="wrap pt-14 pb-10">
-  <h2 class="text-[26px] md:text-[34px] leading-[1.05] max-w-3xl">Two or more experiments, side by side.</h2>
-  <p class="mt-5 text-[20px] text-muted">Compare conditions, methods and findings without losing the context.</p>
-</section>
-
-<section class="wrap pb-14 overflow-x-auto">
-  <form method="get" action="/compare" class="min-w-[860px]">
-    <div class="grid grid-cols-[190px_repeat(3,1fr)] border-b border-line pb-5">
-      <div class="text-[13px] text-muted">{{ cols.len() }} experiment{% if cols.len() != 1 %}s{% endif %}<div class="mt-2 text-[11px] text-amber">Differences<br>highlighted</div></div>
-      {% for c in cols %}
-      <div class="px-4">
-        <div class="flex items-center justify-between gap-2">
-          <select name="{{ c.slot }}" onchange="this.form.submit()" aria-label="Experiment {{ loop.index }}" class="bg-transparent text-[22px] font-medium outline-none cursor-pointer max-w-full">
-            {% for o in options %}<option class="bg-ink-800 text-[14px]" value="{{ o.0 }}" {% if o.0 == c.id %}selected{% endif %}>{{ o.1 }}</option>{% endfor %}
-          </select>
-          <a href="{{ c.remove_href }}" aria-label="Remove {{ c.acronym }}" class="text-muted hover:text-fg text-[18px]">×</a>
-        </div>
-        <div class="mt-2 text-[11px] text-muted">{{ c.meta }}</div>
-      </div>
-      {% endfor %}
-      {% if can_add %}
-      <div class="px-4">
-        <select name="{{ next_slot }}" onchange="this.form.submit()" aria-label="Add experiment" class="field">
-          <option value="">+ Add experiment</option>
-          {% for o in options %}{% if !selected.contains(o.0) %}<option value="{{ o.0 }}">{{ o.1 }}</option>{% endif %}{% endfor %}
-        </select>
-      </div>
-      {% endif %}
-    </div>
-    <noscript><button class="btn-primary mt-4">Update</button></noscript>
-  </form>
-
-  {% if cols.is_empty() %}<p class="py-12 text-muted">Pick an experiment above to start comparing.</p>{% endif %}
-  <div class="min-w-[860px]">
-    {% for row in rows %}
-    <div class="grid grid-cols-[190px_repeat(3,1fr)] border-b border-line">
-      <div class="py-6 pl-3 text-[13px] text-muted">{{ row.label }}</div>
-      {% for cell in row.cells %}
-      <div class="py-6 px-4 text-[13px] leading-relaxed {% if row.differs %}bg-ink-700 text-amber{% endif %}">{{ cell }}</div>
-      {% endfor %}
-    </div>
-    {% endfor %}
+<section class="wrap pt-8 md:pt-10 pb-8">
+  <div class="grid gap-x-10 gap-y-3 md:grid-cols-12">
+    <p class="eyebrow md:col-span-3">Side by side</p>
+    <p class="md:col-span-7 text-[17px] leading-6 md:text-[19px] md:leading-7">Two or more experiments, side by side: their conditions, methods and findings.</p>
   </div>
 </section>
 
-<section class="border-t border-line/60" id="ai">
-  <div class="wrap py-14 grid lg:grid-cols-12 gap-12">
+<section class="wrap pb-12 md:pb-16">
+  <div class="section-head"><span class="n">01</span><h2>Comparison table</h2></div>
+  {# The picker row and the value rows share one grid, so they scroll sideways together on a phone. #}
+  <div class="mt-5 overflow-x-auto">
+    <form method="get" action="/compare" class="min-w-[860px]">
+      <div class="grid grid-cols-[190px_repeat(3,1fr)] border-b-2 border-fg">
+        <div class="py-3 pr-3">
+          <div class="font-mono text-[12px] uppercase tracking-[0.06em] text-fg">{{ cols.len() }} experiment{% if cols.len() != 1 %}s{% endif %}</div>
+          <div class="mt-2 pl-2 border-l-2 border-amber font-mono text-[11px] leading-4 uppercase tracking-[0.04em] text-amber">Differences<br>highlighted</div>
+        </div>
+        {% for c in cols %}
+        <div class="py-3 px-4 border-l border-line min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <select name="{{ c.slot }}" onchange="this.form.submit()" aria-label="Experiment {{ loop.index }}" class="bg-transparent text-[26px] leading-8 font-bold [font-stretch:72%] outline-none cursor-pointer min-w-0 max-w-full focus-visible:text-sky">
+              {% for o in options %}<option class="bg-ink-800 text-[14px]" value="{{ o.0 }}" {% if o.0 == c.id %}selected{% endif %}>{{ o.1 }}</option>{% endfor %}
+            </select>
+            <a href="{{ c.remove_href }}" aria-label="Remove {{ c.acronym }}" class="shrink-0 inline-flex items-center justify-center w-7 h-7 border border-line font-mono text-[14px] text-muted hover:border-fg hover:text-fg">×</a>
+          </div>
+          <div class="mt-2 font-mono text-[11px] leading-4 text-muted">{{ c.meta }}</div>
+        </div>
+        {% endfor %}
+        {% if can_add %}
+        <div class="py-3 px-4 border-l border-line min-w-0">
+          <select name="{{ next_slot }}" onchange="this.form.submit()" aria-label="Add experiment" class="field">
+            <option value="">+ Add experiment</option>
+            {% for o in options %}{% if !selected.contains(o.0) %}<option value="{{ o.0 }}">{{ o.1 }}</option>{% endif %}{% endfor %}
+          </select>
+        </div>
+        {% endif %}
+      </div>
+      <noscript><button class="btn-primary mt-4">Update</button></noscript>
+    </form>
+
+    {% if cols.is_empty() %}<p class="py-10 text-[15px] text-muted">Pick an experiment above to start comparing.</p>{% endif %}
+    <div class="min-w-[860px]">
+      {% for row in rows %}
+      <div class="grid grid-cols-[190px_repeat(3,1fr)] border-b border-line">
+        <div class="py-4 pr-3 font-mono text-[11px] leading-5 uppercase tracking-[0.06em] {% if row.differs %}text-amber{% else %}text-dim{% endif %}">{{ row.label }}</div>
+        {% for cell in row.cells %}
+        <div class="py-4 px-4 text-[13px] leading-5 min-w-0 break-words {% if row.differs %}border-l-2 border-amber text-amber{% else %}border-l border-line{% endif %}">{{ cell }}</div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="mt-6 grid gap-x-10 gap-y-2 md:grid-cols-12">
+    <p class="eyebrow md:col-span-3">Reading the table</p>
+    <div class="md:col-span-7">
+      <p class="text-[15px] leading-6">These experiments are complementary evidence, not interchangeable tests. Match the fuel and atmosphere to your question.</p>
+      <p class="mt-2 eyebrow">Values are rolled up from AI-extracted test conditions across each experiment's papers. “—” means nothing extracted yet. Check the source papers for run-level values.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap pb-16" id="ai">
+  <div class="section-head"><span class="n">02</span><h2>AI comparison</h2></div>
+  <div class="mt-6 grid lg:grid-cols-12 gap-x-10 gap-y-8">
     <div class="lg:col-span-4">
-      <h3 class="text-[28px] font-semibold tracking-tight">AI comparison.</h3>
-      <p class="mt-3 text-[15px] leading-relaxed text-muted">A written comparison of the selected experiments, drawn from their indexed papers.</p>
-      {% if !ai_on %}<p class="mt-5 text-[14px] text-amber">The AI backend isn't connected, so this can't be generated right now.</p>{% else %}
+      <p class="text-[15px] leading-6 text-muted">A written comparison of the selected experiments, drawn from their indexed papers.</p>
+      {% if !ai_on %}<p class="notice mt-5" role="status">The AI backend isn't connected, so this can't be generated right now.</p>{% else %}
       <form method="get" action="/compare#ai" data-slow class="mt-6 space-y-4">
         {% for c in cols %}<input type="hidden" name="{{ c.slot }}" value="{{ c.id }}">{% endfor %}
         <input type="hidden" name="ai" value="1">
@@ -60,16 +77,9 @@
       </form>
       {% endif %}
     </div>
-    <div class="lg:col-span-8">
-      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else if ai_on %}<p class="text-[15px] text-dim lg:mt-14">Not generated yet.</p>{% endif %}
+    <div class="lg:col-span-8 lg:border-l lg:border-line lg:pl-10 min-w-0">
+      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else if ai_on %}<p class="eyebrow">Not generated yet.</p>{% endif %}
     </div>
-  </div>
-</section>
-<section class="bg-ink-850">
-  <div class="wrap py-12">
-    <h3 class="text-[28px] font-semibold tracking-tight">Complementary evidence, not interchangeable tests.</h3>
-    <p class="mt-3 text-[18px] text-muted">Match the fuel and atmosphere to your question.</p>
-    <p class="mt-4 eyebrow">Values are rolled up from AI-extracted test conditions across each experiment's papers. “—” means nothing extracted yet. Check the source papers for run-level values.</p>
   </div>
 </section>
 {% endblock %}

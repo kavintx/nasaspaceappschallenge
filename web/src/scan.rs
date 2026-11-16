@@ -11,7 +11,7 @@
 use crate::admin::same_origin;
 use crate::air;
 use crate::backend::{f, flag, s, Fail};
-use crate::catalog::{Catalog, Outcome, Test};
+use crate::catalog::{Catalog, Exp, Finding, Outcome, Test};
 use crate::views::{load_catalog, num, render, HABITATS};
 use crate::vision::VisionError;
 use crate::AppState;
@@ -119,6 +119,103 @@ pub struct ItemsPage {
 
 pub async fn items() -> Response {
     render(ItemsPage { active: "items", page_title: "My items".into(), context_line: "Saved on this device only".into() })
+}
+
+// ---------- habitat report: NASA's findings, grouped ----------
+
+/// The habitat report on the items page shows this many findings per group and counts the rest.
+const FINDINGS_PER_GROUP: usize = 4;
+/// The groups the report shows, in this order. Findings in any other category are counted, not shown.
+const FINDING_GROUPS: [(&str, &str); 3] = [("prevention", "Prevention"), ("detection", "Detection"), ("suppression", "Suppression")];
+
+/// Every extracted finding in the three groups, as the database has it: the finding's own text,
+/// the experiments it belongs to and its paper. One finding tied to several experiments is one
+/// entry that names them all. Order: verified first, then the extraction's confidence, then
+/// experiment name. Nothing is reworded and nothing is matched to a material.
+fn group_findings(exps: &[Exp], limit: usize) -> Value {
+    struct Row<'a> {
+        finding: &'a Finding,
+        experiments: Vec<&'a Exp>,
+    }
+    let mut other = 0usize;
+    let mut groups: Vec<Vec<Row>> = FINDING_GROUPS.iter().map(|_| vec![]).collect();
+    for e in exps {
+        for x in &e.findings {
+            let Some(g) = FINDING_GROUPS.iter().position(|(key, _)| *key == x.category) else {
+                other += 1;
+                continue;
+            };
+            match groups[g].iter_mut().find(|r| r.finding.text == x.text && r.finding.paper_href == x.paper_href) {
+                Some(row) => row.experiments.push(e),
+                None => groups[g].push(Row { finding: x, experiments: vec![e] }),
+            }
+        }
+    }
+    let list: Vec<Value> = FINDING_GROUPS
+        .iter()
+        .zip(groups.iter_mut())
+        .map(|((key, label), rows)| {
+            // A stable sort: findings that tie stay in experiment order.
+            rows.sort_by(|a, b| {
+                b.finding.verified.cmp(&a.finding.verified).then(b.finding.confidence.partial_cmp(&a.finding.confidence).unwrap_or(Ordering::Equal))
+            });
+            let findings: Vec<Value> = rows
+                .iter()
+                .take(limit)
+                .map(|r| {
+                    json!({
+                        "text": r.finding.text,
+                        "experiments": r.experiments.iter().map(|e| json!({ "acronym": e.acronym, "href": format!("/experiments/{}", urlencoding::encode(&e.id)) })).collect::<Vec<_>>(),
+                        "paper_href": r.finding.paper_href,
+                        "source": r.finding.source,
+                        "confidence": r.finding.confidence,
+                        "verified": r.finding.verified,
+                    })
+                })
+                .collect();
+            json!({ "key": key, "label": label, "total": rows.len(), "more": rows.len().saturating_sub(limit), "findings": findings })
+        })
+        .collect();
+    json!({ "groups": list, "other": other })
+}
+
+/// GET /items/findings: NASA's findings by group for the habitat report, plus the oxygen level
+/// and pressure the report compares against. Read-only: it reads the cached catalog and writes nothing.
+pub async fn items_findings(State(app): AppRef) -> Response {
+    let moon = HABITATS.iter().find(|h| h.key == "moon_base");
+    let level = json!({
+        "name": moon.map(|h| h.name),
+        "o2_pct": moon.and_then(|h| h.o2_pct),
+        "psi": moon.and_then(|h| h.psi),
+        // 1 psi = 6.894757 kPa, the same factor units.rs reads pressures with.
+        "kpa": moon.and_then(|h| h.psi).map(|p| (p * 6.894_757 * 10.0).round() / 10.0),
+        "tolerance": O2_TOLERANCE,
+    });
+    match load_catalog(&app, false).await {
+        Ok(cat) => {
+            let grouped = group_findings(&cat.exps, FINDINGS_PER_GROUP);
+            Json(json!({
+                "data": "ok",
+                "data_message": Value::Null,
+                "level": level,
+                "experiments": cat.exps.len(),
+                "order": "verified first, then by AI confidence",
+                "groups": grouped["groups"],
+                "other": grouped["other"],
+            }))
+            .into_response()
+        }
+        Err(e) => {
+            eprintln!("items findings: {e}");
+            Json(json!({
+                "data": "error",
+                "data_message": "NASA’s findings could not be read just now. Try again in a moment.",
+                "level": level,
+                "groups": [],
+            }))
+            .into_response()
+        }
+    }
 }
 
 // ---------- atlas: every tested material ----------
@@ -646,4 +743,66 @@ pub async fn result(State(app): AppRef, headers: HeaderMap, Json(req): Json<Resu
         },
     }))
     .into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn finding(text: &str, category: &str, paper: &str, confidence: Option<f64>, verified: bool) -> Finding {
+        Finding { text: text.into(), category: category.into(), paper_href: paper.into(), source: "p. 1".into(), confidence, verified }
+    }
+
+    fn exp(acronym: &str, findings: Vec<Finding>) -> Exp {
+        Exp { id: acronym.to_lowercase().replace(' ', "-"), acronym: acronym.into(), findings, ..Exp::default() }
+    }
+
+    #[test]
+    fn findings_are_grouped_counted_and_limited() {
+        let exps = vec![
+            exp(
+                "BASS II",
+                vec![
+                    finding("low confidence", "prevention", "/papers/a", Some(0.4), false),
+                    finding("shared", "prevention", "/papers/b", Some(0.9), false),
+                    finding("a detection one", "detection", "/papers/a", None, false),
+                    finding("uncategorised", "", "/papers/a", Some(0.9), false),
+                ],
+            ),
+            exp(
+                "SAFFIRE I",
+                vec![
+                    finding("shared", "prevention", "/papers/b", Some(0.9), false),
+                    finding("verified", "prevention", "/papers/c", Some(0.1), true),
+                    finding("something else", "other", "/papers/c", Some(0.9), false),
+                ],
+            ),
+        ];
+        let out = group_findings(&exps, 2);
+        let groups = out["groups"].as_array().unwrap();
+        assert_eq!(groups.iter().map(|g| g["label"].as_str().unwrap()).collect::<Vec<_>>(), ["Prevention", "Detection", "Suppression"]);
+
+        // Prevention: three different findings (the shared one counted once), two shown, one more.
+        let prevention = &groups[0];
+        assert_eq!(prevention["total"], 3);
+        assert_eq!(prevention["more"], 1);
+        let shown = prevention["findings"].as_array().unwrap();
+        assert_eq!(shown.len(), 2);
+        // Verified first, then the higher confidence. Text is passed through unchanged.
+        assert_eq!(shown[0]["text"], "verified");
+        assert_eq!(shown[0]["paper_href"], "/papers/c");
+        assert_eq!(shown[1]["text"], "shared");
+        let names: Vec<&str> = shown[1]["experiments"].as_array().unwrap().iter().map(|e| e["acronym"].as_str().unwrap()).collect();
+        assert_eq!(names, ["BASS II", "SAFFIRE I"]);
+        assert_eq!(shown[1]["experiments"][1]["href"], "/experiments/saffire-i");
+
+        assert_eq!(groups[1]["total"], 1);
+        assert_eq!(groups[1]["more"], 0);
+        assert!(groups[1]["findings"][0]["confidence"].is_null());
+        // A group with nothing in it is still there, empty.
+        assert_eq!(groups[2]["total"], 0);
+        assert!(groups[2]["findings"].as_array().unwrap().is_empty());
+        // "other" and uncategorised findings are counted and never shown.
+        assert_eq!(out["other"], 2);
+    }
 }

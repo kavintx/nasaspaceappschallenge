@@ -136,19 +136,19 @@
 
   // How a test ended: one colour and one shape each, so colour is never the only cue.
   var OUTCOMES = [
-    { key: "burned", label: "Burned", color: "#d9390a" },
-    { key: "went_out", label: "Went out on its own", color: "#b47300" },
-    { key: "no_ignition", label: "Did not ignite", color: "#0c7a3d" },
-    { key: "unrecorded", label: "Outcome not recorded", color: "#4f4c43" },
+    { key: "burned", label: "Burned", color: "#ff5a26" },
+    { key: "went_out", label: "Went out on its own", color: "#e0a03c" },
+    { key: "no_ignition", label: "Did not ignite", color: "#4cc27a" },
+    { key: "unrecorded", label: "Outcome not recorded", color: "#a8a496" },
   ];
   function outcomeMark(key, x, y, r) {
     var o = OUTCOMES.filter(function (it) { return it.key === key; })[0] || OUTCOMES[3];
-    var ring = { stroke: "#efece3", "stroke-width": 1.5 };
+    var ring = { stroke: "#0e0e0c", "stroke-width": 1.5 };
     var mark;
     if (key === "burned") mark = svg("circle", { cx: x, cy: y, r: r, fill: o.color });
     else if (key === "went_out") mark = svg("rect", { x: x - r * 0.8, y: y - r * 0.8, width: r * 1.6, height: r * 1.6, fill: o.color, transform: "rotate(45 " + x + " " + y + ")" });
     else if (key === "no_ignition") mark = svg("path", { d: "M" + x + " " + (y - r) + "L" + (x + r) + " " + (y + r * 0.8) + "L" + (x - r) + " " + (y + r * 0.8) + "Z", fill: o.color });
-    else return svg("circle", { cx: x, cy: y, r: r - 1, fill: "#efece3", stroke: o.color, "stroke-width": 2 });
+    else return svg("circle", { cx: x, cy: y, r: r - 1, fill: "#0e0e0c", stroke: o.color, "stroke-width": 2 });
     Object.keys(ring).forEach(function (k) { mark.setAttribute(k, ring[k]); });
     return mark;
   }
@@ -161,7 +161,7 @@
     var total = slices.reduce(function (sum, s) { return sum + s.value; }, 0);
     if (!total) return null;
     var r = 40, width = 13, around = 2 * Math.PI * r, gap = slices.length > 1 ? 2.5 : 0, at = 0;
-    var kids = [svg("circle", { cx: 50, cy: 50, r: r, fill: "none", stroke: "#d8d3c5", "stroke-width": width })];
+    var kids = [svg("circle", { cx: 50, cy: 50, r: r, fill: "none", stroke: "#2a2924", "stroke-width": width })];
     slices.forEach(function (s, i) {
       var length = (s.value / total) * around;
       var arc = svg("circle", {
@@ -176,8 +176,8 @@
       kids.push(arc);
       at += length;
     });
-    kids.push(svgText(String(centre), { x: 50, y: under ? 51 : 56, "text-anchor": "middle", "font-size": 22, "font-weight": 700, fill: "#14130f" }));
-    if (under) kids.push(svgText(under, { x: 50, y: 64, "text-anchor": "middle", "font-size": 9, fill: "#4f4c43" }));
+    kids.push(svgText(String(centre), { x: 50, y: under ? 51 : 56, "text-anchor": "middle", "font-size": 22, "font-weight": 700, fill: "#ece8dd" }));
+    if (under) kids.push(svgText(under, { x: 50, y: 64, "text-anchor": "middle", "font-size": 9, fill: "#a8a496" }));
     return svg("svg", { viewBox: "0 0 100 100", width: size, height: size, class: "donut", role: "img",
       "aria-label": slices.map(function (s) { return s.label + " " + s.value; }).join(", ") + ", of " + total + "." }, kids);
   }
@@ -235,7 +235,7 @@
     var tested = all.filter(function (m) { return m.tested; }).length;
     var elsewhere = all.filter(function (m) { return !m.tested && (m.other || []).length; }).length;
     var none = all.length - tested - elsewhere;
-    var BLUE = "#1a35d6", TEAL = "#0a6a78", GREY = "#a9a493";
+    var BLUE = "#7f93ff", TEAL = "#58b8c6", GREY = "#55524a";
     var ring = donut([
       { label: "In NASA’s microgravity database", value: tested, color: BLUE },
       { label: "Tests from other sources only", value: elsewhere, color: TEAL },
@@ -338,34 +338,34 @@
       return bottom - Math.max(0, Math.min(1, f)) * plotH;
     }
 
-    var kids = [svg("rect", { x: left, y: top, width: W - left - right, height: plotH, fill: "#f6f4ee", stroke: "#b3ad9c", "stroke-width": 1 })];
+    var kids = [svg("rect", { x: left, y: top, width: W - left - right, height: plotH, fill: "#141412", stroke: "#3b3930", "stroke-width": 1 })];
     yTicks.forEach(function (v) {
-      kids.push(svg("line", { x1: left, x2: W - right, y1: y(v), y2: y(v), stroke: "#d8d3c5", "stroke-width": 1 }));
-      kids.push(svgText(tidy(v), { x: left - 5, y: y(v) + 3, "text-anchor": "end", "font-size": 9, fill: "#4f4c43" }));
+      kids.push(svg("line", { x1: left, x2: W - right, y1: y(v), y2: y(v), stroke: "#2a2924", "stroke-width": 1 }));
+      kids.push(svgText(tidy(v), { x: left - 5, y: y(v) + 3, "text-anchor": "end", "font-size": 9, fill: "#a8a496" }));
     });
     for (var tick = lo; tick <= hi; tick += (hi - lo > 50 ? 20 : hi - lo > 25 ? 10 : 5)) {
-      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: top, y2: bottom, stroke: "#d8d3c5", "stroke-width": 1 }));
-      kids.push(svgText(tick + "%", { x: x(tick), y: bottom + 13, "text-anchor": "middle", "font-size": 9, fill: "#4f4c43" }));
+      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: top, y2: bottom, stroke: "#2a2924", "stroke-width": 1 }));
+      kids.push(svgText(tick + "%", { x: x(tick), y: bottom + 13, "text-anchor": "middle", "font-size": 9, fill: "#a8a496" }));
     }
-    kids.push(svgText("oxygen", { x: W - right, y: bottom + 27, "text-anchor": "end", "font-size": 9, fill: "#6f6b61" }));
-    kids.push(svgText("pressure, kPa" + (log ? " (log scale)" : ""), { x: 2, y: 12, "font-size": 9, fill: "#6f6b61" }));
+    kids.push(svgText("oxygen", { x: W - right, y: bottom + 27, "text-anchor": "end", "font-size": 9, fill: "#858174" }));
+    kids.push(svgText("pressure, kPa" + (log ? " (log scale)" : ""), { x: 2, y: 12, "font-size": 9, fill: "#858174" }));
 
     // Limits from other sources: dashed lines with a number that the list below explains.
     markers.forEach(function (m, i) {
       m.on = m.limit >= lo && m.limit <= hi;
       if (!m.on) return;
-      kids.push(svg("line", { x1: x(m.limit), x2: x(m.limit), y1: top, y2: bottom, stroke: "#b47300", "stroke-width": 1, "stroke-dasharray": "2 3", opacity: 0.9 }));
-      kids.push(svg("rect", { x: x(m.limit) - 6, y: top + 2 + (i % 3) * 13, width: 12, height: 11, rx: 2, fill: "#f6f4ee", stroke: "#b47300", "stroke-width": 1 }));
-      kids.push(svgText(String(i + 1), { x: x(m.limit), y: top + 10.5 + (i % 3) * 13, "text-anchor": "middle", "font-size": 8, "font-weight": 600, fill: "#b47300" }));
+      kids.push(svg("line", { x1: x(m.limit), x2: x(m.limit), y1: top, y2: bottom, stroke: "#e0a03c", "stroke-width": 1, "stroke-dasharray": "2 3", opacity: 0.9 }));
+      kids.push(svg("rect", { x: x(m.limit) - 6, y: top + 2 + (i % 3) * 13, width: 12, height: 11, rx: 2, fill: "#141412", stroke: "#e0a03c", "stroke-width": 1 }));
+      kids.push(svgText(String(i + 1), { x: x(m.limit), y: top + 10.5 + (i % 3) * 13, "text-anchor": "middle", "font-size": 8, "font-weight": 600, fill: "#e0a03c" }));
     });
 
     // The habitats: an open crosshair, so a test point at the same place still shows.
     PINS.forEach(function (h) {
       var px = x(h.o2), py = y(h.kpa);
-      kids.push(svg("circle", { cx: px, cy: py, r: 9, fill: "none", stroke: "#14130f", "stroke-width": 1.2 }));
-      kids.push(svg("path", { d: "M" + (px - 13) + " " + py + "H" + (px - 5) + "M" + (px + 5) + " " + py + "H" + (px + 13) + "M" + px + " " + (py - 13) + "V" + (py - 5) + "M" + px + " " + (py + 5) + "V" + (py + 13), stroke: "#14130f", "stroke-width": 1.2, fill: "none" }));
+      kids.push(svg("circle", { cx: px, cy: py, r: 9, fill: "none", stroke: "#ece8dd", "stroke-width": 1.2 }));
+      kids.push(svg("path", { d: "M" + (px - 13) + " " + py + "H" + (px - 5) + "M" + (px + 5) + " " + py + "H" + (px + 13) + "M" + px + " " + (py - 13) + "V" + (py - 5) + "M" + px + " " + (py + 5) + "V" + (py + 13), stroke: "#ece8dd", "stroke-width": 1.2, fill: "none" }));
       var flip = px > W - 80;
-      kids.push(svgText(h.name, { x: flip ? px - 15 : px + 15, y: py - 8, "text-anchor": flip ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#14130f" }));
+      kids.push(svgText(h.name, { x: flip ? px - 15 : px + 15, y: py - 8, "text-anchor": flip ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#ece8dd" }));
     });
 
     var detail = el("div", { class: "map-detail", "aria-live": "polite" }, [
@@ -432,7 +432,7 @@
         el("span", { text: o.label }),
       ]);
     }).concat([el("li", { class: "flex items-center gap-1.5" }, [
-      svg("svg", { width: 14, height: 14, viewBox: "0 0 14 14", "aria-hidden": "true" }, [svg("circle", { cx: 7, cy: 7, r: 4, fill: "none", stroke: "#14130f", "stroke-width": 1.2 }), svg("path", { d: "M0 7H3M11 7H14M7 0V3M7 11V14", stroke: "#14130f", "stroke-width": 1.2 })]),
+      svg("svg", { width: 14, height: 14, viewBox: "0 0 14 14", "aria-hidden": "true" }, [svg("circle", { cx: 7, cy: 7, r: 4, fill: "none", stroke: "#ece8dd", "stroke-width": 1.2 }), svg("path", { d: "M0 7H3M11 7H14M7 0V3M7 11V14", stroke: "#ece8dd", "stroke-width": 1.2 })]),
       el("span", { text: "Habitat air" }),
     ])]));
 
@@ -500,14 +500,14 @@
 
     // The two habitats: a band one point either side, which is what counts as "at that level".
     [{ v: 30, name: "Moon Base 30%" }, { v: 21, name: "ISS 21%" }].forEach(function (h) {
-      kids.push(svg("rect", { x: x(h.v - 1), y: top - 8, width: x(h.v + 1) - x(h.v - 1), height: base - top + 8, rx: 3, fill: "#1a35d6", opacity: 0.16 }));
-      kids.push(svg("line", { x1: x(h.v), x2: x(h.v), y1: top - 8, y2: base, stroke: "#1a35d6", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.8 }));
-      kids.push(svgText(h.name, { x: x(h.v), y: 11, "text-anchor": "middle", "font-size": 10, "font-weight": 600, fill: "#14130f" }));
+      kids.push(svg("rect", { x: x(h.v - 1), y: top - 8, width: x(h.v + 1) - x(h.v - 1), height: base - top + 8, rx: 3, fill: "#7f93ff", opacity: 0.16 }));
+      kids.push(svg("line", { x1: x(h.v), x2: x(h.v), y1: top - 8, y2: base, stroke: "#7f93ff", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.8 }));
+      kids.push(svgText(h.name, { x: x(h.v), y: 11, "text-anchor": "middle", "font-size": 10, "font-weight": 600, fill: "#ece8dd" }));
     });
-    kids.push(svg("line", { x1: left, x2: W - right, y1: base, y2: base, stroke: "#b3ad9c", "stroke-width": 1 }));
+    kids.push(svg("line", { x1: left, x2: W - right, y1: base, y2: base, stroke: "#3b3930", "stroke-width": 1 }));
     for (var tick = lo; tick <= hi; tick += (hi - lo > 50 ? 20 : hi - lo > 25 ? 10 : 5)) {
-      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: base, y2: base + 4, stroke: "#b3ad9c", "stroke-width": 1 }));
-      kids.push(svgText(tick + "%", { x: x(tick), y: base + 16, "text-anchor": "middle", "font-size": 10, fill: "#4f4c43" }));
+      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: base, y2: base + 4, stroke: "#3b3930", "stroke-width": 1 }));
+      kids.push(svgText(tick + "%", { x: x(tick), y: base + 16, "text-anchor": "middle", "font-size": 10, fill: "#a8a496" }));
     }
     points.forEach(function (p) {
       if (p.row >= 9) return; // a very tall column is cut; the count below still includes it
@@ -543,7 +543,7 @@
   }
 
   // What the item is made of, part by part. Colour follows the material, in a fixed order.
-  var MATERIAL_COLORS = ["#14130f", "#1a35d6", "#d9390a", "#0a6a78", "#8f5300", "#6f6b61"];
+  var MATERIAL_COLORS = ["#ece8dd", "#7f93ff", "#ff5a26", "#58b8c6", "#e0a03c", "#858174"];
   function materialsFigure(rows) {
     rows = (rows || []).filter(function (r) { return (r.material || "").trim(); });
     if (!rows.length) return null;
@@ -554,7 +554,7 @@
     });
     function color(name) {
       var i = order.indexOf(name.trim().toLowerCase());
-      return i < MATERIAL_COLORS.length ? MATERIAL_COLORS[i] : "#6f6b61";
+      return i < MATERIAL_COLORS.length ? MATERIAL_COLORS[i] : "#858174";
     }
     var parts = [], byPart = {};
     rows.forEach(function (r) {
@@ -614,15 +614,15 @@
     var W = 320, left = 10, right = 10, y = 26, h = 12;
     function x(v) { return left + (Math.max(0, Math.min(100, v)) / 100) * (W - left - right); }
     var kids = [
-      svg("rect", { x: x(0), y: y, width: x(limit) - x(0), height: h, rx: 4, fill: "#0c7a3d", opacity: 0.85 }),
-      svg("rect", { x: x(limit) + 2, y: y, width: Math.max(0, x(100) - x(limit) - 2), height: h, rx: 4, fill: "#d9390a", opacity: 0.9 }),
+      svg("rect", { x: x(0), y: y, width: x(limit) - x(0), height: h, rx: 4, fill: "#4cc27a", opacity: 0.85 }),
+      svg("rect", { x: x(limit) + 2, y: y, width: Math.max(0, x(100) - x(limit) - 2), height: h, rx: 4, fill: "#ff5a26", opacity: 0.9 }),
     ];
     [{ v: 21, name: "ISS" }, { v: 30, name: "Moon Base" }].forEach(function (hab, i) {
-      kids.push(svg("line", { x1: x(hab.v), x2: x(hab.v), y1: y - 6, y2: y + h + 6, stroke: "#14130f", "stroke-width": 1.5, "stroke-dasharray": "2 2" }));
-      kids.push(svgText(hab.name + " " + hab.v + "%", { x: x(hab.v), y: i === 0 ? 12 : y + h + 18, "text-anchor": i === 0 ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#14130f" }));
+      kids.push(svg("line", { x1: x(hab.v), x2: x(hab.v), y1: y - 6, y2: y + h + 6, stroke: "#ece8dd", "stroke-width": 1.5, "stroke-dasharray": "2 2" }));
+      kids.push(svgText(hab.name + " " + hab.v + "%", { x: x(hab.v), y: i === 0 ? 12 : y + h + 18, "text-anchor": i === 0 ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#ece8dd" }));
     });
-    kids.push(svgText("0%", { x: x(0), y: y + h + 18, "font-size": 9, fill: "#4f4c43" }));
-    kids.push(svgText("100% oxygen", { x: x(100), y: 12, "text-anchor": "end", "font-size": 9, fill: "#4f4c43" }));
+    kids.push(svgText("0%", { x: x(0), y: y + h + 18, "font-size": 9, fill: "#a8a496" }));
+    kids.push(svgText("100% oxygen", { x: x(100), y: 12, "text-anchor": "end", "font-size": 9, fill: "#a8a496" }));
     return svg("svg", { viewBox: "0 0 " + W + " 60", class: "mt-2 w-full h-auto", role: "img",
       "aria-label": "Oxygen scale from 0 to 100 percent. Goes out below " + limit + " percent, keeps burning above. ISS air is 21 percent, Moon Base 30 percent." }, kids);
   }
@@ -642,7 +642,7 @@
       kids.push(el("p", { class: "mt-1 text-[13px] leading-5 text-muted", text: "In this test it stopped burning on its own at about " + limit + "% oxygen and below." }));
       kids.push(oxygenLimitBar(limit));
       kids.push(el("ul", { class: "mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted" }, [
-        legendRow("#0c7a3d", "Went out"), legendRow("#d9390a", "Kept burning"),
+        legendRow("#4cc27a", "Went out"), legendRow("#ff5a26", "Kept burning"),
       ]));
     }
     var facts = [row.conditions, row.gravity === "microgravity" ? "Run in weightlessness" : row.gravity === "Earth" ? "Run on Earth" : row.gravity ? "Run at " + row.gravity : null, row.note].filter(Boolean);
@@ -1139,11 +1139,280 @@
     });
   }
 
+  // ---------- the habitat report (items page): what the saved scans say, rolled up ----------
+  // REPORT-PURE-START (these functions read saved scan results and nothing else)
+
+  // The level the report compares against. The server sends the same numbers with
+  // /items/findings (HABITATS and O2_TOLERANCE in scan.rs); these stand in until it replies.
+  var MOON_LEVEL = { name: "Moon Base", o2_pct: 30, psi: 10.2, kpa: 70.3, tolerance: 1 };
+  // A stated pressure below this many kPa counts as reduced pressure.
+  var REDUCED_BELOW_KPA = 101;
+
+  // The oxygen levels of a material's NASA test points, with how each test ended.
+  function reportOxygen(material) {
+    return ((material.chart || {}).points || []).filter(function (p) { return p && typeof p.o2 === "number" && isFinite(p.o2); });
+  }
+
+  // Distinct values, lowest first, as "21%, 30%".
+  function reportLevels(values) {
+    var seen = {}, out = [];
+    values.slice().sort(function (a, b) { return a - b; }).forEach(function (v) {
+      var text = tidy(v) + "%";
+      if (!seen[text]) { seen[text] = true; out.push(text); }
+    });
+    return out.join(", ");
+  }
+
+  // Which group a material is in, decided only from its saved test points.
+  //   burned: a test point recorded as burned at or above the level (less the tolerance)
+  //   below:  it has test points with oxygen levels and every one is below that line
+  //   never:  no NASA microgravity test of it
+  //   other:  tested, but neither of the first two; `detail` says why
+  function reportGroup(material, level) {
+    var floor = level.o2_pct - level.tolerance;
+    if (!material.tested) return { group: "never", detail: "" };
+    if (!material.chart) return { group: "other", detail: "the saved result has no oxygen level per test; use Check again on the item" };
+    var points = reportOxygen(material);
+    var burned = points.filter(function (p) { return p.outcome === "burned" && p.o2 >= floor; });
+    if (burned.length) return { group: "burned", detail: "burned at " + reportLevels(burned.map(function (p) { return p.o2; })) + " O₂" };
+    if (!points.length) return { group: "other", detail: "its tests record no oxygen level" };
+    var max = Math.max.apply(null, points.map(function (p) { return p.o2; }));
+    if (max < floor) return { group: "below", detail: "highest tested: " + tidy(max) + "% O₂" };
+    return { group: "other", detail: "tested up to " + tidy(max) + "% O₂; no test at " + tidy(floor) + "% or above is recorded as burned" };
+  }
+
+  // What the saved data lacks for this material at the level's oxygen and pressure.
+  // Each line names a gap in the data. An empty list means none of these gaps was found.
+  function reportGaps(material, level) {
+    if (!material.tested) return ["no microgravity test"];
+    var gaps = [];
+    var lo = level.o2_pct - level.tolerance, hi = level.o2_pct + level.tolerance;
+    var near = false;
+    if (!material.chart) {
+      gaps.push("the saved result has no oxygen level per test");
+    } else {
+      var values = reportOxygen(material).map(function (p) { return p.o2; });
+      if (!values.length) {
+        gaps.push("no test states an oxygen level");
+      } else if (values.some(function (v) { return v >= lo && v <= hi; })) {
+        near = true;
+      } else {
+        var under = values.filter(function (v) { return v < lo; }), over = values.filter(function (v) { return v > hi; });
+        if (!over.length) gaps.push("no test above " + tidy(Math.max.apply(null, under)) + "% O₂");
+        else if (!under.length) gaps.push("no test below " + tidy(Math.min.apply(null, over)) + "% O₂");
+        else gaps.push("no test between " + tidy(Math.max.apply(null, under)) + "% and " + tidy(Math.min.apply(null, over)) + "% O₂");
+      }
+    }
+    var map = material.map;
+    if (!map) {
+      gaps.push("the saved result has no pressure per test");
+    } else {
+      var placed = (map.points || []).filter(function (p) {
+        return p && Array.isArray(p.kpa) && Array.isArray(p.o2) && typeof p.kpa[0] === "number" && typeof p.o2[0] === "number" && typeof p.o2[1] === "number";
+      });
+      if (!placed.length) {
+        // no_pressure counts tests that state oxygen and no pressure at all.
+        gaps.push(map.tests > 0 && map.no_pressure === map.tests ? "no test states a pressure" : "no test states both an oxygen level and a pressure that could be read");
+      } else {
+        var reduced = placed.filter(function (p) { return p.kpa[0] < REDUCED_BELOW_KPA; });
+        if (!reduced.length) {
+          gaps.push("no test at reduced pressure (lowest stated: " + tidy(Math.min.apply(null, placed.map(function (p) { return p.kpa[0]; }))) + " kPa)");
+        } else if (near && !reduced.some(function (p) { return p.o2[0] - level.tolerance <= level.o2_pct && level.o2_pct <= p.o2[1] + level.tolerance; })) {
+          gaps.push("no single test has both oxygen within " + tidy(level.tolerance) + " point of " + tidy(level.o2_pct) + "% and pressure below " + REDUCED_BELOW_KPA + " kPa");
+        }
+      }
+    }
+    return gaps;
+  }
+
+  // Every material in these items, once each (names compared without case), with the items
+  // that contain it. When two items hold the same material, the most recently checked
+  // item's saved data is the one read.
+  function reportRollup(items, level) {
+    var byName = {}, rows = [];
+    items.forEach(function (item) {
+      var itemName = item.name || "Unnamed item";
+      ((item.result || {}).materials || []).forEach(function (m) {
+        var name = String((m && m.query) || "").trim();
+        if (!name) return;
+        var key = name.toLowerCase();
+        var row = byName[key];
+        if (!row) {
+          row = byName[key] = { name: name, items: [], material: m, when: String(item.when || "") };
+          rows.push(row);
+        } else if (String(item.when || "") > row.when) {
+          row.material = m;
+          row.when = String(item.when || "");
+        }
+        if (row.items.indexOf(itemName) < 0) row.items.push(itemName);
+      });
+    });
+    return rows.map(function (row) {
+      var g = reportGroup(row.material, level);
+      return { name: row.name, items: row.items, group: g.group, detail: g.detail, gaps: reportGaps(row.material, level) };
+    });
+  }
+  // REPORT-PURE-END
+
+  // The level from the server's reply when it is complete, otherwise the stand-in above.
+  function reportLevel(reply) {
+    var l = reply && reply.level;
+    var ok = l && typeof l.o2_pct === "number" && typeof l.psi === "number" && typeof l.kpa === "number" && typeof l.tolerance === "number";
+    return ok ? { name: l.name || MOON_LEVEL.name, o2_pct: l.o2_pct, psi: l.psi, kpa: l.kpa, tolerance: l.tolerance } : MOON_LEVEL;
+  }
+
+  function reportHead(n, text) {
+    return el("div", { class: "mt-8 border-t-2 border-fg pt-2 flex items-baseline gap-3" }, [
+      el("span", { class: "font-mono text-[11px] text-burn", text: n }),
+      el("h3", { class: "text-[17px] leading-6 font-semibold", text: text }),
+    ]);
+  }
+
+  function reportMaterialLine(row, extra) {
+    return el("li", { class: "border-b border-line py-2 text-[13px] leading-5 break-words" }, [
+      el("span", { class: "font-medium", text: row.name }),
+      extra ? el("span", { class: "text-muted", text: " · " + extra }) : null,
+      el("span", { class: "block text-[12px] leading-4 text-dim", text: "In: " + row.items.join(", ") }),
+    ]);
+  }
+
+  // One finding exactly as the database has it, with its experiments and its paper.
+  function reportFinding(f) {
+    var meta = el("p", { class: "mt-1 font-mono text-[11px] leading-5 text-muted break-words" });
+    (f.experiments || []).forEach(function (e) {
+      meta.appendChild(link(e.acronym, e.href));
+      meta.appendChild(document.createTextNode(" · "));
+    });
+    meta.appendChild(link(f.source || "Paper", f.paper_href));
+    if (typeof f.confidence === "number") meta.appendChild(document.createTextNode(" · AI confidence " + Math.round(f.confidence * 100) + "%"));
+    meta.appendChild(document.createTextNode(f.verified ? " · Verified" : " · Unverified"));
+    return el("li", { class: "border-b border-line py-2" }, [el("p", { class: "text-[13px] leading-5 break-words", text: f.text }), meta]);
+  }
+
+  function reportFindings(state, reply) {
+    var box = el("div", {});
+    box.appendChild(reportHead("03", "NASA findings for habitat design"));
+    box.appendChild(el("p", { class: "mt-2 text-[12px] leading-5 text-muted", text: "These are NASA’s findings from the experiments in the database, in the papers’ extracted wording. They are not specific to the items scanned here." }));
+    if (state === "loading") {
+      box.appendChild(el("p", { class: "mt-3 text-[13px] text-muted", role: "status", text: "Loading the findings…" }));
+      return box;
+    }
+    if (state === "failed" || !reply || reply.data !== "ok") {
+      box.appendChild(el("p", { class: "notice mt-3", role: "status", text: (reply && reply.data_message) || "The findings could not be loaded. The rest of the report is from your saved scans." }));
+      return box;
+    }
+    var grid = el("div", { class: "mt-2 grid gap-x-6 sm:grid-cols-3" });
+    (reply.groups || []).forEach(function (g) {
+      var col = el("div", { class: "mt-4" }, [
+        el("p", { class: "eyebrow", text: g.label + " · " + g.total + (g.total === 1 ? " finding" : " findings") }),
+      ]);
+      if (!g.total) col.appendChild(el("p", { class: "mt-2 text-[13px] text-dim", text: "None in the database." }));
+      col.appendChild(el("ul", { class: "mt-1" }, (g.findings || []).map(reportFinding)));
+      if (g.more > 0) col.appendChild(el("p", { class: "mt-2 text-[12px] leading-4 text-dim", text: "+ " + g.more + " more in the database" }));
+      grid.appendChild(col);
+    });
+    box.appendChild(grid);
+    box.appendChild(el("p", { class: "mt-4 text-[12px] leading-5 text-muted" }, [
+      "Shown " + (reply.order || "in database order") + ". Every finding is on its experiment’s page: ",
+      link("Experiments", "/explorer"), " · ", link("Papers", "/papers"),
+    ]));
+    return box;
+  }
+
+  // The whole report for the items in one space. `findings` is { state, reply }.
+  function habitatReport(shown, space, findings) {
+    var level = reportLevel(findings.reply);
+    var floor = level.o2_pct - level.tolerance;
+    var rows = reportRollup(shown, level);
+    var air = level.name + ", " + tidy(level.o2_pct) + "% O₂ at " + tidy(level.psi) + " psi (" + tidy(level.kpa) + " kPa)";
+    var box = el("section", { class: "mt-6", "aria-label": "Habitat report" });
+
+    box.appendChild(el("div", { class: "section-head" }, [el("span", { class: "n", text: "Report" }), el("h2", { text: "Habitat cargo report" })]));
+    box.appendChild(el("p", { class: "eyebrow mt-2", text:
+      (space === "All" ? "All spaces" : space) + " · " + shown.length + (shown.length === 1 ? " item" : " items") + " · " + rows.length + (rows.length === 1 ? " material" : " materials") +
+      " · against " + air + " · " + new Date().toLocaleDateString() }));
+    box.appendChild(el("div", { class: "no-print mt-4" }, [
+      el("button", { type: "button", class: "btn-big-ghost", text: "Print the report", onclick: function () { window.print(); } }),
+    ]));
+
+    if (!shown.length) {
+      box.appendChild(el("p", { class: "mt-6 text-[15px] text-muted" }, [space === "All" ? "Nothing scanned yet, so there are no materials to report. " : "Nothing scanned in " + space + " yet, so there are no materials to report. ", link("Scan an item", "/scan")]));
+    } else {
+      // 01: materials in groups
+      box.appendChild(reportHead("01", "Cargo materials in NASA’s microgravity fire tests"));
+      box.appendChild(el("p", { class: "mt-2 text-[12px] leading-5 text-muted", text:
+        "This oxygen level is " + level.name + ", " + tidy(level.o2_pct) + "% O₂. A test within " + tidy(level.tolerance) + " point of it counts as at that level, so the line is " + tidy(floor) + "%. " +
+        "Each group is decided from the test points saved with the scan. A material in several items is read from the most recently checked one." }));
+      var GROUPS = [
+        { key: "burned", label: "Burned in NASA tests at or above this oxygen level", colour: "text-burn" },
+        { key: "below", label: "Tested only below this level", colour: "text-amber" },
+        { key: "never", label: "Never tested by NASA in microgravity", colour: "text-fg" },
+      ];
+      box.appendChild(el("div", { class: "mt-4 grid gap-x-6 gap-y-6 sm:grid-cols-3" }, GROUPS.map(function (g) {
+        var mine = rows.filter(function (r) { return r.group === g.key; });
+        return el("div", { class: "count-tile" }, [
+          el("p", { class: "v " + g.colour, text: String(mine.length) }),
+          el("p", { class: "mt-1 text-[12px] leading-4 text-muted", text: g.label }),
+          el("ul", { class: "mt-2 border-t border-line" }, mine.map(function (r) { return reportMaterialLine(r, r.detail); })),
+        ]);
+      })));
+      var rest = rows.filter(function (r) { return r.group === "other"; });
+      if (rest.length) {
+        box.appendChild(el("p", { class: "mt-4 text-[13px] leading-5 break-words" }, [
+          el("span", { class: "font-medium", text: "Tested, not in the groups above: " }),
+          rest.map(function (r) { return r.name + " (" + r.detail + "; in " + r.items.join(", ") + ")"; }).join(". ") + ".",
+        ]));
+      }
+
+      // 02: gaps
+      var gapped = rows.filter(function (r) { return r.gaps.length; });
+      var clear2 = rows.filter(function (r) { return !r.gaps.length; });
+      box.appendChild(reportHead("02", "Test next: gaps in the data at Moon habitat conditions"));
+      box.appendChild(el("p", { class: "mt-2 text-[12px] leading-5 text-muted", text:
+        "What the saved test data does not contain for each material, against " + air + ". Each line is a gap in the data. It says nothing about how the item would behave." }));
+      if (gapped.length) {
+        box.appendChild(el("ul", { class: "mt-3 border-t border-line" }, gapped.map(function (r) { return reportMaterialLine(r, r.gaps.join("; ")); })));
+      } else {
+        box.appendChild(el("p", { class: "mt-3 text-[13px] text-muted", text: "None of these gaps was found in the saved data." }));
+      }
+      if (clear2.length) {
+        box.appendChild(el("p", { class: "mt-3 text-[12px] leading-5 text-dim break-words", text:
+          "Not listed, because the saved data has a test within " + tidy(level.tolerance) + " point of " + tidy(level.o2_pct) + "% O₂ at a pressure below " + REDUCED_BELOW_KPA + " kPa: " + clear2.map(function (r) { return r.name; }).join(", ") + "." }));
+      }
+    }
+
+    box.appendChild(reportFindings(findings.state, findings.reply));
+
+    box.appendChild(reportHead("04", "Where the data comes from"));
+    box.appendChild(el("p", { class: "mt-2 text-[13px] leading-6" }, [
+      link("Experiments", "/explorer"), " · ", link("Papers", "/papers"), " · ", link("Atlas of tested materials", "/atlas"), " · ", link("Ask a question", "/ask"),
+    ]));
+    box.appendChild(el("p", { class: "mt-2 text-[12px] leading-5 text-dim", text:
+      "Made from the scans saved in this browser. Test conditions and findings are extracted from NASA papers by AI and are not all reviewed by a person. This is NASA spacecraft research, not a home safety rating." }));
+    return box;
+  }
+
   // ---------- the items page ----------
 
   function itemsPage(root) {
     var current = "All";
     var open = {};
+    var view = "items"; // or "report"
+    var findings = { state: "idle", reply: null }; // NASA's findings, fetched once when the report is first opened
+
+    function loadFindings() {
+      findings.state = "loading";
+      fetch("/items/findings").then(function (r) {
+        if (!r.ok) throw new Error("status " + r.status);
+        return r.json();
+      }).then(function (reply) {
+        findings = { state: "ready", reply: reply };
+      }).catch(function () {
+        findings = { state: "failed", reply: null };
+      }).then(function () {
+        if (view === "report") draw();
+      });
+    }
 
     function draw() {
       var data = loadStore();
@@ -1154,7 +1423,12 @@
         var count = name === "All" ? data.items.length : data.items.filter(function (i) { return i.space === name; }).length;
         tabs.appendChild(el("button", { type: "button", class: "switch-btn", "aria-current": name === current ? "true" : null, text: name + " · " + count, onclick: function () { current = name; draw(); } }));
       });
-      root.appendChild(tabs);
+      var views = el("div", { class: "mt-3 flex flex-wrap gap-2", role: "group", "aria-label": "View" });
+      [["items", "Item list"], ["report", "Habitat report"]].forEach(function (v) {
+        views.appendChild(el("button", { type: "button", class: "switch-btn", "aria-current": v[0] === view ? "true" : null, text: v[1], onclick: function () { view = v[0]; draw(); } }));
+      });
+      var controls = el("div", { class: "no-print" }, [tabs, views]);
+      root.appendChild(controls);
 
       var shown = data.items.filter(function (i) { return current === "All" || i.space === current; });
       function tile(value, label, colour) {
@@ -1163,17 +1437,23 @@
           el("p", { class: "mt-1 text-[12px] leading-4 text-muted", text: label }),
         ]);
       }
-      root.appendChild(el("div", { class: "mt-4 grid grid-cols-3 gap-3" }, [
+      controls.appendChild(el("div", { class: "mt-4 grid grid-cols-3 gap-3" }, [
         tile(shown.length, shown.length === 1 ? "item" : "items", "text-fg"),
         tile(shown.filter(itemBurned).length, "with a material that burned in tests at Moon Base oxygen", "text-burn"),
         tile(shown.filter(itemUntested).length, "with a material NASA hasn’t tested", "text-amber"),
       ]));
 
+      if (view === "report") {
+        if (findings.state === "idle") loadFindings();
+        root.appendChild(habitatReport(shown, current, findings));
+        return;
+      }
+
       if (!shown.length) {
         root.appendChild(el("p", { class: "mt-8 text-[16px] text-muted" }, [current === "All" ? "Nothing saved yet. " : "Nothing in " + current + " yet. ", link("Scan an item", "/scan")]));
       }
 
-      var list = el("ul", { class: "mt-6 space-y-3" });
+      var list = el("ul", { class: "mt-6 space-y-3 no-print" });
       shown.forEach(function (item) {
         var materials = ((item.result || {}).materials || []).map(function (m) { return m.query; }).join(", ");
         var badge = itemBurned(item)

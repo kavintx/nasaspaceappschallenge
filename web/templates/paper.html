@@ -1,87 +1,147 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="wrap pt-12 pb-12">
-  <a href="/papers" class="text-[13px] text-sky hover:underline">← Literature</a>
-  {% if let Some(m) = msg %}<p class="mt-5 px-4 py-3 rounded-md bg-ink-800 text-[14px] text-cyan">{{ m }}</p>{% endif %}
-  {% if let Some(m) = err %}<p class="mt-5 px-4 py-3 rounded-md bg-ink-800 text-[14px] text-amber">{{ m }}</p>{% endif %}
-  <h2 class="mt-5 text-[30px] md:text-[40px] leading-tight font-semibold tracking-tight max-w-5xl">{{ title }}</h2>
-  {% if !authors.is_empty() %}<p class="mt-4 text-[15px] text-muted">{{ authors }}</p>{% endif %}
-  {% if !experiments.is_empty() %}<p class="mt-3 text-[13px] text-muted">Experiments: {% for e in experiments %}<a class="text-sky hover:underline" href="/experiments/{{ e.0 }}">{{ e.1 }}</a>{% if !loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
-  <div class="mt-6 flex gap-3">
-    {% if let Some(u) = ntrs_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-primary">Open on NASA NTRS ↗</a>{% endif %}
-    {% if let Some(u) = pdf_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-ghost">PDF ↗</a>{% endif %}
-    {% if can_edit %}<form method="post" action="/papers/{{ paper_key|urlencode }}/extract" data-slow><button class="btn-ghost">{% if conditions.is_empty() && findings.is_empty() %}Run AI extraction{% else %}Re-run AI extraction{% endif %}</button></form>{% endif %}
-  </div>
-  {% if let Some(a) = abstract_text %}<p class="mt-8 text-[16px] leading-relaxed text-muted max-w-4xl">{{ a }}</p>{% endif %}
-</section>
+<section class="wrap pt-6 pb-12 md:pb-16">
+  <a href="/papers" class="font-mono text-[12px] uppercase tracking-[0.06em] text-sky hover:underline">← Literature</a>
+  {% if let Some(m) = msg %}<p class="mt-4 border border-cyan px-4 py-3 text-[14px] leading-5 text-cyan" role="status">{{ m }}</p>{% endif %}
+  {% if let Some(m) = err %}<p class="notice mt-4" role="alert">{{ m }}</p>{% endif %}
 
-<section class="bg-ink-850">
-  <div class="wrap py-14">
-    <h3 class="text-[28px] font-semibold tracking-tight">Test conditions.</h3>
-    <p class="mt-3 eyebrow">Extracted from the paper by AI · “Verified” means a person checked it</p>
-    {% if conditions.is_empty() %}<p class="mt-6 text-[15px] text-dim">Nothing extracted from this paper yet.</p>
-    {% else %}
-    <div class="mt-5 overflow-x-auto">
-      <table class="w-full text-left text-[13px] min-w-[960px]">
-        <thead class="text-muted"><tr class="border-b border-line"><th class="py-3 pl-3 font-normal">Fuel</th><th class="font-normal">O₂</th><th class="font-normal">Pressure</th><th class="font-normal">Airflow</th><th class="font-normal">Sensors</th><th class="font-normal">Source</th><th class="font-normal">AI conf.</th><th class="font-normal pr-3">Status</th></tr></thead>
-        <tbody>
-          {% for c in conditions %}
-          <tr class="border-b border-line align-top">
-            <td class="py-3.5 pl-3 pr-4 font-medium">{{ c.fuel }}{% if let Some(g) = c.geometry %}<div class="mt-1 font-normal text-dim">{{ g }}</div>{% endif %}</td>
-            <td class="py-3.5 pr-4 text-muted">{{ c.o2 }}</td><td class="py-3.5 pr-4 text-muted">{{ c.pressure }}</td><td class="py-3.5 pr-4 text-muted">{{ c.airflow }}</td><td class="py-3.5 pr-4 text-muted">{{ c.sensors }}</td><td class="py-3.5 pr-4 text-muted whitespace-nowrap">{{ c.source }}</td><td class="py-3.5 pr-4 text-muted">{{ c.confidence }}</td>
-            <td class="py-3.5 pr-3 whitespace-nowrap">{% if c.verified %}<span class="text-cyan">✓ {{ c.status }}</span>{% else %}<span class="text-dim">{{ c.status }}</span>{% endif %}</td>
-          </tr>
-          {% if can_edit && !c.id.is_empty() %}
-          <tr class="border-b border-line"><td colspan="8" class="pb-4 pl-3 pr-3">
-            <div class="flex flex-wrap items-center gap-3">
-              <form method="post" action="/conditions/{{ c.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="verified"><button class="chip text-cyan">✓ Verify</button></form>
-              <form method="post" action="/conditions/{{ c.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="rejected"><button class="chip text-amber">Reject</button></form>
-              <details class="basis-full">
-                <summary class="chip inline-block cursor-pointer text-sky">Edit</summary>
-                <form method="post" action="/conditions/{{ c.id|urlencode }}" class="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl">
-                  <input type="hidden" name="paper" value="{{ paper_key }}">
-                  <label class="block"><span class="eyebrow">Fuel</span><input name="fuel_type" value="{{ c.e_fuel }}" class="field mt-1"></label>
-                  <label class="block"><span class="eyebrow">Sample geometry</span><input name="fuel_geometry" value="{{ c.e_geometry }}" class="field mt-1"></label>
-                  <label class="block"><span class="eyebrow">Oxygen</span><input name="oxygen_concentration" value="{{ c.e_o2 }}" class="field mt-1"></label>
-                  <label class="block"><span class="eyebrow">Pressure</span><input name="pressure" value="{{ c.e_pressure }}" class="field mt-1"></label>
-                  <label class="block"><span class="eyebrow">Airflow</span><input name="airflow" value="{{ c.e_airflow }}" class="field mt-1"></label>
-                  <label class="block"><span class="eyebrow">Sensors (comma-separated)</span><input name="sensors" value="{{ c.e_sensors }}" class="field mt-1"></label>
-                  <label class="block"><span class="eyebrow">Source page</span><input name="source_page" type="number" min="1" value="{{ c.e_page }}" class="field mt-1"></label>
-                  <label class="block"><span class="eyebrow">Status</span><select name="verification_status" class="field mt-1">{% for st in statuses %}<option value="{{ st }}" {% if c.e_status == *st %}selected{% endif %}>{{ st }}</option>{% endfor %}</select></label>
-                  <label class="block sm:col-span-2"><span class="eyebrow">Objective</span><input name="objective" value="{{ c.e_objective }}" class="field mt-1"></label>
-                  <label class="block sm:col-span-2"><span class="eyebrow">Correction note</span><input name="correction_note" value="{{ c.e_note }}" class="field mt-1"></label>
-                  <div><button class="btn-primary">Save</button></div>
-                </form>
-              </details>
-            </div>
-          </td></tr>
-          {% endif %}
-          {% endfor %}
-        </tbody>
-      </table>
+  <div class="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+
+    {# The paper itself: title and abstract. First in the source so a phone shows it first. #}
+    <div class="min-w-0 border-t-2 border-fg pt-4 lg:col-start-2 lg:row-start-1">
+      <h2 class="text-[28px] leading-[1.05] md:text-[40px] md:leading-[1.02] max-w-4xl break-words">{{ title }}</h2>
+      {% if let Some(a) = abstract_text %}
+      <p class="mt-6 eyebrow">Abstract</p>
+      <p class="mt-2 text-[16px] leading-7 text-muted max-w-3xl">{{ a }}</p>
+      {% endif %}
     </div>
-    {% endif %}
+
+    {# Ruled side column: who wrote it, where it is, what was pulled from it. #}
+    <aside class="min-w-0 border-t-2 border-fg lg:col-start-1 lg:row-start-1">
+      <dl>
+        {% if !authors.is_empty() %}
+        <div class="border-b border-line py-3">
+          <dt class="eyebrow">Authors</dt>
+          <dd class="mt-1 text-[14px] leading-5 text-fg break-words">{{ authors }}</dd>
+        </div>
+        {% endif %}
+        {% if !experiments.is_empty() %}
+        <div class="border-b border-line py-3">
+          <dt class="eyebrow">Experiments</dt>
+          <dd class="mt-1 text-[14px] leading-5">{% for e in experiments %}<a class="text-sky hover:underline" href="/experiments/{{ e.0 }}">{{ e.1 }}</a>{% if !loop.last %}, {% endif %}{% endfor %}</dd>
+        </div>
+        {% endif %}
+        <div class="flex items-baseline justify-between gap-4 border-b border-line py-3">
+          <dt class="eyebrow">Test conditions</dt>
+          <dd class="font-mono text-[14px] text-fg">{{ conditions.len() }}</dd>
+        </div>
+        <div class="flex items-baseline justify-between gap-4 border-b border-line py-3">
+          <dt class="eyebrow">Findings</dt>
+          <dd class="font-mono text-[14px] text-fg">{{ findings.len() }}</dd>
+        </div>
+      </dl>
+      <div class="mt-4 flex flex-wrap gap-3 lg:flex-col lg:items-start">
+        {% if let Some(u) = ntrs_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-primary">Open on NASA NTRS ↗</a>{% endif %}
+        {% if let Some(u) = pdf_url %}<a href="{{ u }}" target="_blank" rel="noopener" class="btn-ghost">PDF ↗</a>{% endif %}
+        {% if can_edit %}<form method="post" action="/papers/{{ paper_key|urlencode }}/extract" data-slow><button class="btn-ghost">{% if conditions.is_empty() && findings.is_empty() %}Run AI extraction{% else %}Re-run AI extraction{% endif %}</button></form>{% endif %}
+      </div>
+    </aside>
+
   </div>
 </section>
 
-<section class="wrap py-14">
-  <h3 class="text-[28px] font-semibold tracking-tight">Findings.</h3>
+<section class="wrap pb-12 md:pb-16">
+  <div class="section-head"><span class="n">01</span><h2>Test conditions</h2></div>
+  <p class="mt-3 eyebrow">Extracted from the paper by AI · “Verified” means a person checked it</p>
+  {% if conditions.is_empty() %}<p class="mt-6 text-[15px] text-dim">Nothing extracted from this paper yet.</p>
+  {% else %}
+  <ol class="mt-5 border-t border-line">
+    {% for c in conditions %}
+    <li class="border-b border-line py-5 grid gap-x-4 gap-y-4 grid-cols-[2rem_minmax(0,1fr)] lg:grid-cols-[2rem_minmax(0,1fr)_240px] lg:gap-x-8">
+      <span class="font-mono text-[12px] leading-6 text-burn">{{ "{:02}"|format(loop.index) }}</span>
+
+      <div class="min-w-0">
+        <p class="text-[18px] leading-6 font-medium break-words">{{ c.fuel }}</p>
+        {% if let Some(g) = c.geometry %}<p class="mt-1 text-[14px] leading-5 text-muted break-words">{{ g }}</p>{% endif %}
+        <dl class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-6 border-t border-line">
+          <div class="border-b border-line py-2 min-w-0"><dt class="eyebrow">O₂</dt><dd class="mt-0.5 font-mono text-[13px] leading-5 text-fg break-words">{{ c.o2 }}</dd></div>
+          <div class="border-b border-line py-2 min-w-0"><dt class="eyebrow">Pressure</dt><dd class="mt-0.5 font-mono text-[13px] leading-5 text-fg break-words">{{ c.pressure }}</dd></div>
+          <div class="border-b border-line py-2 min-w-0 col-span-2 sm:col-span-1"><dt class="eyebrow">Airflow</dt><dd class="mt-0.5 font-mono text-[13px] leading-5 text-fg break-words">{{ c.airflow }}</dd></div>
+          <div class="py-2 min-w-0 col-span-2 sm:col-span-3"><dt class="eyebrow">Sensors</dt><dd class="mt-0.5 text-[14px] leading-5 text-muted break-words">{{ c.sensors }}</dd></div>
+        </dl>
+      </div>
+
+      {# Where it came from and whether a person has checked it. #}
+      <dl class="col-start-2 lg:col-start-3 min-w-0 border-l-2 border-fg pl-4 self-start">
+        <div class="flex items-baseline justify-between gap-4 border-b border-line pb-2"><dt class="eyebrow">Source</dt><dd class="font-mono text-[13px] text-fg whitespace-nowrap">{{ c.source }}</dd></div>
+        <div class="flex items-baseline justify-between gap-4 border-b border-line py-2"><dt class="eyebrow">AI conf.</dt><dd class="font-mono text-[13px] text-fg">{{ c.confidence }}</dd></div>
+        <div class="flex items-baseline justify-between gap-4 pt-2"><dt class="eyebrow">Status</dt><dd class="font-mono text-[12px] uppercase tracking-[0.04em] whitespace-nowrap">{% if c.verified %}<span class="text-cyan">✓ {{ c.status }}</span>{% else %}<span class="text-dim">{{ c.status }}</span>{% endif %}</dd></div>
+      </dl>
+
+      {% if can_edit && !c.id.is_empty() %}
+      <div class="col-start-2 lg:col-span-2 min-w-0">
+        <div class="flex flex-wrap items-center gap-3">
+          <form method="post" action="/conditions/{{ c.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="verified"><button class="chip text-cyan">✓ Verify</button></form>
+          <form method="post" action="/conditions/{{ c.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="rejected"><button class="chip text-amber">Reject</button></form>
+          <details class="basis-full">
+            <summary class="chip inline-flex cursor-pointer text-sky">Edit</summary>
+            <form method="post" action="/conditions/{{ c.id|urlencode }}" class="mt-4 border-t border-line pt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl">
+              <input type="hidden" name="paper" value="{{ paper_key }}">
+              <label class="block"><span class="eyebrow">Fuel</span><input name="fuel_type" value="{{ c.e_fuel }}" class="field mt-1"></label>
+              <label class="block"><span class="eyebrow">Sample geometry</span><input name="fuel_geometry" value="{{ c.e_geometry }}" class="field mt-1"></label>
+              <label class="block"><span class="eyebrow">Oxygen</span><input name="oxygen_concentration" value="{{ c.e_o2 }}" class="field mt-1"></label>
+              <label class="block"><span class="eyebrow">Pressure</span><input name="pressure" value="{{ c.e_pressure }}" class="field mt-1"></label>
+              <label class="block"><span class="eyebrow">Airflow</span><input name="airflow" value="{{ c.e_airflow }}" class="field mt-1"></label>
+              <label class="block"><span class="eyebrow">Sensors (comma-separated)</span><input name="sensors" value="{{ c.e_sensors }}" class="field mt-1"></label>
+              <label class="block"><span class="eyebrow">Source page</span><input name="source_page" type="number" min="1" value="{{ c.e_page }}" class="field mt-1"></label>
+              <label class="block"><span class="eyebrow">Status</span><select name="verification_status" class="field mt-1">{% for st in statuses %}<option value="{{ st }}" {% if c.e_status == *st %}selected{% endif %}>{{ st }}</option>{% endfor %}</select></label>
+              <label class="block sm:col-span-2"><span class="eyebrow">Objective</span><input name="objective" value="{{ c.e_objective }}" class="field mt-1"></label>
+              <label class="block sm:col-span-2"><span class="eyebrow">Correction note</span><input name="correction_note" value="{{ c.e_note }}" class="field mt-1"></label>
+              <div><button class="btn-primary">Save</button></div>
+            </form>
+          </details>
+        </div>
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+</section>
+
+<section class="wrap pb-16">
+  <div class="section-head"><span class="n">02</span><h2>Findings</h2></div>
   {% if findings.is_empty() %}<p class="mt-6 text-[15px] text-dim">Nothing extracted from this paper yet.</p>{% endif %}
-  <ol class="mt-4 max-w-5xl">
+  <ol class="mt-5{% if !findings.is_empty() %} border-t border-line{% endif %}">
     {% for x in findings %}
-    <li class="border-b border-line py-6 grid grid-cols-[2rem_1fr] items-baseline">
-      <span class="text-[12px] text-dim">{{ "{:02}"|format(loop.index) }}</span>
-      <div>
-        <p class="text-[17px] leading-relaxed">{{ x.text }}</p>
-        <p class="mt-2 text-[12px] text-muted">{% if let Some(c) = x.cat %}<span class="{{ c.class }}">{{ c.label }}</span> · {% endif %}{% if !x.meta.is_empty() %}{{ x.meta }} · {% endif %}{% if x.verified %}<span class="text-cyan">✓ {{ x.status }}</span>{% else %}{{ x.status }}{% endif %}</p>
-        {% if let Some(q) = x.quote %}<p class="mt-3 pl-4 border-l border-line text-[14px] leading-relaxed text-dim">“{{ q }}”</p>{% endif %}
-        {% if can_edit && !x.id.is_empty() %}
-        <div class="mt-4 flex flex-wrap items-center gap-3">
+    <li class="border-b border-line py-5 grid gap-x-4 gap-y-4 grid-cols-[2rem_minmax(0,1fr)] lg:grid-cols-[2rem_minmax(0,1fr)_240px] lg:gap-x-8">
+      <span class="font-mono text-[12px] leading-7 text-burn">{{ "{:02}"|format(loop.index) }}</span>
+
+      <div class="min-w-0">
+        <p class="text-[17px] leading-7 max-w-3xl break-words">{{ x.text }}</p>
+        {% if let Some(q) = x.quote %}
+        <div class="mt-4 border-l-2 border-fg pl-4 max-w-3xl">
+          <p class="eyebrow">Quoted from the paper</p>
+          <p class="mt-1 text-[14px] leading-6 text-muted break-words">“{{ q }}”</p>
+        </div>
+        {% endif %}
+      </div>
+
+      {# Category, source page and review status, set apart from the finding itself. #}
+      <dl class="col-start-2 lg:col-start-3 min-w-0 border-l-2 border-fg pl-4 self-start">
+        {% if let Some(c) = x.cat %}<div class="flex items-baseline justify-between gap-4 border-b border-line pb-2"><dt class="eyebrow">Category</dt><dd class="font-mono text-[12px] uppercase tracking-[0.04em] text-right"><span class="{{ c.class }}">{{ c.label }}</span></dd></div>{% endif %}
+        {% if !x.meta.is_empty() %}<div class="border-b border-line py-2"><dt class="eyebrow">Source</dt><dd class="mt-0.5 font-mono text-[13px] leading-5 text-fg break-words">{{ x.meta }}</dd></div>{% endif %}
+        <div class="flex items-baseline justify-between gap-4 pt-2"><dt class="eyebrow">Status</dt><dd class="font-mono text-[12px] uppercase tracking-[0.04em] whitespace-nowrap">{% if x.verified %}<span class="text-cyan">✓ {{ x.status }}</span>{% else %}<span class="text-dim">{{ x.status }}</span>{% endif %}</dd></div>
+      </dl>
+
+      {% if can_edit && !x.id.is_empty() %}
+      <div class="col-start-2 lg:col-span-2 min-w-0">
+        <div class="flex flex-wrap items-center gap-3">
           <form method="post" action="/findings/{{ x.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="verified"><button class="chip text-cyan">✓ Verify</button></form>
           <form method="post" action="/findings/{{ x.id|urlencode }}"><input type="hidden" name="paper" value="{{ paper_key }}"><input type="hidden" name="verification_status" value="rejected"><button class="chip text-amber">Reject</button></form>
           <details class="basis-full">
-            <summary class="chip inline-block cursor-pointer text-sky">Edit</summary>
-            <form method="post" action="/findings/{{ x.id|urlencode }}" class="mt-4 grid sm:grid-cols-3 gap-4">
+            <summary class="chip inline-flex cursor-pointer text-sky">Edit</summary>
+            <form method="post" action="/findings/{{ x.id|urlencode }}" class="mt-4 border-t border-line pt-4 grid sm:grid-cols-3 gap-4 max-w-5xl">
               <input type="hidden" name="paper" value="{{ paper_key }}">
               <label class="block sm:col-span-3"><span class="eyebrow">Finding</span><textarea name="text" rows="3" class="field h-auto py-2 mt-1">{{ x.text }}</textarea></label>
               <label class="block"><span class="eyebrow">Category</span><select name="category" class="field mt-1"><option value="">(unchanged)</option>{% for ct in categories %}<option value="{{ ct }}" {% if x.e_category == *ct %}selected{% endif %}>{{ ct }}</option>{% endfor %}</select></label>
@@ -92,8 +152,8 @@
             </form>
           </details>
         </div>
-        {% endif %}
       </div>
+      {% endif %}
     </li>
     {% endfor %}
   </ol>

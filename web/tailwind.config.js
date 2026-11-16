@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-// The palette is paper and ink, like a printed test report. Colour is kept for what a test
+// The palette is a test report printed light on black: ink-black ground, paper-coloured type. Colour is kept for what a test
 // recorded: vermilion for burned, green for did not ignite, ochre for went out. Cobalt is the
 // one interface colour (links, the selected control). Nothing is rounded.
 module.exports = {
@@ -9,21 +9,21 @@ module.exports = {
     extend: {
       colors: {
         // The names are kept from the first design so templates read the same; the numbers
-        // now run from paper (950) to the darkest tint (700).
-        ink: { 950: "#efece3", 900: "#efece3", 850: "#e7e3d7", 800: "#dfdacb", 700: "#d5cfbe" },
-        line: "#b3ad9c",
-        rule: "#14130f",
-        fg: "#14130f",
-        muted: "#4f4c43",
-        dim: "#6f6b61",
-        sky: "#1a35d6",
-        blue: "#1a35d6",
-        amber: "#8f5300",
-        cyan: "#0a6a78",
-        rowhl: "#dbe0fb",
-        burn: "#d9390a",
-        safe: "#0c7a3d",
-        chamber: "#0b0b0d",
+        // run from the page ground (950) to the lightest tint (700).
+        ink: { 950: "#0e0e0c", 900: "#0e0e0c", 850: "#161613", 800: "#1e1e1a", 700: "#272722" },
+        line: "#3b3930",
+        rule: "#ece8dd",
+        fg: "#ece8dd",
+        muted: "#a8a496",
+        dim: "#858174",
+        sky: "#7f93ff",
+        blue: "#7f93ff",
+        amber: "#e0a03c",
+        cyan: "#58b8c6",
+        rowhl: "#1b2150",
+        burn: "#ff5a26",
+        safe: "#4cc27a",
+        chamber: "#000000",
       },
       fontFamily: {
         sans: ["Archivo", "system-ui", "sans-serif"],
