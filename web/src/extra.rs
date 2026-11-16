@@ -61,7 +61,9 @@ mod tests {
         assert!(rows().len() > 50, "data/more_sources.json did not parse");
         assert!(!for_names(&["ABS plastic"]).is_empty());
         // Kevlar and Nomex are both aramids, but a Nomex test is not a Kevlar test.
-        assert!(for_names(&["kevlar", "aramid"]).is_empty());
+        assert!(for_names(&["aramid"]).is_empty());
+        assert!(for_names(&["kevlar"]).iter().all(|row| row["material"] == "kevlar"));
+        assert!(for_names(&["nomex"]).iter().all(|row| row["material"] == "nomex"));
     }
 
     #[test]
