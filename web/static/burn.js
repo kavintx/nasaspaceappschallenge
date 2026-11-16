@@ -213,6 +213,7 @@
     var all = result.materials || [];
     if (all.length < 1 || result.data !== "ok") return null;
     var tested = all.filter(function (m) { return m.tested; }).length;
+    var elsewhere = all.some(function (m) { return !m.tested && (m.other || []).length; });
     var ring = donut([
       { label: "Has NASA tests", value: tested, color: "#2997ff" },
       { label: "No NASA test", value: all.length - tested, color: "#3a4256" },
@@ -223,10 +224,13 @@
       el("div", { class: "min-w-0" }, [
         el("figcaption", { class: "text-[17px] leading-6 font-semibold", text: tested === all.length
           ? (all.length === 1 ? "NASA has tested this material." : "NASA has tested all " + all.length + " of its materials.")
-          : tested === 0 ? "None of its materials are in NASA’s tests."
+          : tested === 0 ? (elsewhere ? "None of its materials are in NASA’s microgravity database. Tests from other sources are below." : "None of its materials are in NASA’s tests.")
           : "NASA has tested " + tested + " of its " + all.length + " materials." }),
         el("ul", { class: "mt-2 space-y-1 text-[13px] text-muted" }, all.map(function (m) {
-          return legendRow(m.tested ? "#2997ff" : "#3a4256", m.query + (m.tested ? "" : " · no test"));
+          // A material missing from the database can still have published tests from other sources.
+          var others = (m.other || []).length;
+          var gap = others ? " · not in the database, " + others + (others === 1 ? " test" : " tests") + " from other sources" : " · no test";
+          return legendRow(m.tested ? "#2997ff" : "#3a4256", m.query + (m.tested ? "" : gap));
         })),
       ]),
     ]);
