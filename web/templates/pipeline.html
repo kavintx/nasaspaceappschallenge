@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="wrap pt-14 pb-10">
-  <h2 class="text-[40px] md:text-[52px] leading-[1.08] font-semibold tracking-tight">Keep the evidence<br>flowing.</h2>
+  <h2 class="text-[26px] md:text-[34px] leading-[1.05] max-w-3xl">How papers get from NASA’s report server into the database.</h2>
   <p class="mt-5 text-[20px] text-muted">{% if connected %}Pull NASA papers in, have the AI read them, and check what it found.{% else %}What has been pulled in from NASA's report server and read so far.{% endif %}</p>
   {% if !connected %}<p class="mt-5 text-[14px] text-muted max-w-2xl">These counts are read straight from the research database. New papers are found and read on the research team's own machine, not from this website.</p>
   {% else if read_only %}<p class="mt-5 text-[14px] text-amber">This copy of the app is read-only. The actions below are turned off.</p>{% endif %}

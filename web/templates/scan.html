@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Burn Scan · Flame in Freefall</title>
   <meta name="description" content="Photograph an item and see how its materials did in NASA's spacecraft fire tests.">
-  <meta name="theme-color" content="#02040d">
+  <meta name="theme-color" content="#efece3">
   <link rel="icon" href="/static/flame.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
   <script>
     // "js" lets CSS hide things that scripts will reveal. Animations are on for everyone;
@@ -17,29 +17,27 @@
     (function (d) { d.classList.add("js"); try { if (localStorage.getItem("motion") === "off") d.classList.add("motion-off"); } catch (e) {} })(document.documentElement);
   </script>
   <script src="/static/motion.js" defer></script>
+  <script src="/static/flame3d.js" defer></script>
 </head>
 <!-- The scan screen. Design: Figma file "Burn Scan – scan screen redesign". Driven by static/burn.js. -->
 <body class="bg-ink-950 text-fg font-sans antialiased min-h-screen">
   <div class="scan2-glow" aria-hidden="true"></div>
 
-  <div class="relative mx-auto w-full max-w-md lg:max-w-6xl min-h-screen flex flex-col pb-[88px] lg:pb-10">
-    <header class="flex items-center justify-between gap-6 px-5 pt-4 pb-2 lg:px-8 lg:pt-6">
-      <a href="/" class="flex items-center gap-2 text-[15px] font-semibold">
-        <img src="/static/flame.svg" alt="" class="w-5 h-5">Flame in Freefall
-      </a>
-      {# On a computer the navigation sits up here; on a phone it is the tab bar at the bottom. #}
-      <nav class="hidden lg:flex flex-1 justify-center gap-9 text-[14px]" aria-label="Main">
-        <a href="/" class="text-muted hover:text-fg transition-colors">Overview</a>
-        <a href="/scan" class="text-fg font-medium" aria-current="page">Scan</a>
-        <a href="/atlas" class="text-muted hover:text-fg transition-colors">Atlas</a>
-        <a href="/items" class="text-muted hover:text-fg transition-colors">My items</a>
-        <a href="/ask" class="text-muted hover:text-fg transition-colors">Ask</a>
+  <header class="masthead no-print">
+    <div class="wrap masthead-row">
+      <a href="/" class="wordmark"><svg class="wordmark-mark" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="9" r="4.2"/><path d="M9 0v4M9 14v4M0 9h4M14 9h4"/></svg>Flame in Freefall</a>
+      <nav class="mainnav mainnav-wide" aria-label="Main">
+        <a href="/"><span class="n">01</span>Overview</a>
+        <a href="/scan" aria-current="page"><span class="n">02</span>Scan</a>
+        <a href="/atlas"><span class="n">03</span>Atlas</a>
+        <a href="/items"><span class="n">04</span>My items</a>
+        <a href="/explorer"><span class="n">05</span>Experiments</a>
+        <a href="/papers"><span class="n">06</span>Papers</a>
+        <a href="/ask"><span class="n">07</span>Ask</a>
       </nav>
-      <span class="inline-flex items-center gap-1.5 rounded-full border border-line bg-ink-800 px-2.5 py-1 text-[11px] font-medium text-muted">
-        <span class="w-1.5 h-1.5 rounded-full bg-safe"></span>NASA test data
-      </span>
-    </header>
-
+    </div>
+  </header>
+  <div class="relative mx-auto w-full max-w-md lg:max-w-6xl flex flex-col pb-[88px] lg:pb-10">
     <main id="burn-scan" data-scanner="{% if scanner_on %}on{% else %}off{% endif %}" class="flex-1 px-5 lg:px-8">
 
       <section id="step-scan" class="scan2-grid">

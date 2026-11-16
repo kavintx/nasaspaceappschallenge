@@ -136,19 +136,19 @@
 
   // How a test ended: one colour and one shape each, so colour is never the only cue.
   var OUTCOMES = [
-    { key: "burned", label: "Burned", color: "#ff6a3d" },
-    { key: "went_out", label: "Went out on its own", color: "#e5b67a" },
-    { key: "no_ignition", label: "Did not ignite", color: "#4fd38a" },
-    { key: "unrecorded", label: "Outcome not recorded", color: "#a5a8b5" },
+    { key: "burned", label: "Burned", color: "#d9390a" },
+    { key: "went_out", label: "Went out on its own", color: "#b47300" },
+    { key: "no_ignition", label: "Did not ignite", color: "#0c7a3d" },
+    { key: "unrecorded", label: "Outcome not recorded", color: "#4f4c43" },
   ];
   function outcomeMark(key, x, y, r) {
     var o = OUTCOMES.filter(function (it) { return it.key === key; })[0] || OUTCOMES[3];
-    var ring = { stroke: "#090d18", "stroke-width": 1.5 };
+    var ring = { stroke: "#efece3", "stroke-width": 1.5 };
     var mark;
     if (key === "burned") mark = svg("circle", { cx: x, cy: y, r: r, fill: o.color });
     else if (key === "went_out") mark = svg("rect", { x: x - r * 0.8, y: y - r * 0.8, width: r * 1.6, height: r * 1.6, fill: o.color, transform: "rotate(45 " + x + " " + y + ")" });
     else if (key === "no_ignition") mark = svg("path", { d: "M" + x + " " + (y - r) + "L" + (x + r) + " " + (y + r * 0.8) + "L" + (x - r) + " " + (y + r * 0.8) + "Z", fill: o.color });
-    else return svg("circle", { cx: x, cy: y, r: r - 1, fill: "#090d18", stroke: o.color, "stroke-width": 2 });
+    else return svg("circle", { cx: x, cy: y, r: r - 1, fill: "#efece3", stroke: o.color, "stroke-width": 2 });
     Object.keys(ring).forEach(function (k) { mark.setAttribute(k, ring[k]); });
     return mark;
   }
@@ -161,7 +161,7 @@
     var total = slices.reduce(function (sum, s) { return sum + s.value; }, 0);
     if (!total) return null;
     var r = 40, width = 13, around = 2 * Math.PI * r, gap = slices.length > 1 ? 2.5 : 0, at = 0;
-    var kids = [svg("circle", { cx: 50, cy: 50, r: r, fill: "none", stroke: "#1a2030", "stroke-width": width })];
+    var kids = [svg("circle", { cx: 50, cy: 50, r: r, fill: "none", stroke: "#d8d3c5", "stroke-width": width })];
     slices.forEach(function (s, i) {
       var length = (s.value / total) * around;
       var arc = svg("circle", {
@@ -176,8 +176,8 @@
       kids.push(arc);
       at += length;
     });
-    kids.push(svgText(String(centre), { x: 50, y: under ? 51 : 56, "text-anchor": "middle", "font-size": 22, "font-weight": 700, fill: "#f5f5f7" }));
-    if (under) kids.push(svgText(under, { x: 50, y: 64, "text-anchor": "middle", "font-size": 9, fill: "#a5a8b5" }));
+    kids.push(svgText(String(centre), { x: 50, y: under ? 51 : 56, "text-anchor": "middle", "font-size": 22, "font-weight": 700, fill: "#14130f" }));
+    if (under) kids.push(svgText(under, { x: 50, y: 64, "text-anchor": "middle", "font-size": 9, fill: "#4f4c43" }));
     return svg("svg", { viewBox: "0 0 100 100", width: size, height: size, class: "donut", role: "img",
       "aria-label": slices.map(function (s) { return s.label + " " + s.value; }).join(", ") + ", of " + total + "." }, kids);
   }
@@ -235,7 +235,7 @@
     var tested = all.filter(function (m) { return m.tested; }).length;
     var elsewhere = all.filter(function (m) { return !m.tested && (m.other || []).length; }).length;
     var none = all.length - tested - elsewhere;
-    var BLUE = "#2997ff", TEAL = "#34c0b8", GREY = "#3a4256";
+    var BLUE = "#1a35d6", TEAL = "#0a6a78", GREY = "#a9a493";
     var ring = donut([
       { label: "In NASA’s microgravity database", value: tested, color: BLUE },
       { label: "Tests from other sources only", value: elsewhere, color: TEAL },
@@ -338,34 +338,34 @@
       return bottom - Math.max(0, Math.min(1, f)) * plotH;
     }
 
-    var kids = [svg("rect", { x: left, y: top, width: W - left - right, height: plotH, fill: "#0c111c", stroke: "#2a3040", "stroke-width": 1 })];
+    var kids = [svg("rect", { x: left, y: top, width: W - left - right, height: plotH, fill: "#f6f4ee", stroke: "#b3ad9c", "stroke-width": 1 })];
     yTicks.forEach(function (v) {
-      kids.push(svg("line", { x1: left, x2: W - right, y1: y(v), y2: y(v), stroke: "#1c2333", "stroke-width": 1 }));
-      kids.push(svgText(tidy(v), { x: left - 5, y: y(v) + 3, "text-anchor": "end", "font-size": 9, fill: "#a5a8b5" }));
+      kids.push(svg("line", { x1: left, x2: W - right, y1: y(v), y2: y(v), stroke: "#d8d3c5", "stroke-width": 1 }));
+      kids.push(svgText(tidy(v), { x: left - 5, y: y(v) + 3, "text-anchor": "end", "font-size": 9, fill: "#4f4c43" }));
     });
     for (var tick = lo; tick <= hi; tick += (hi - lo > 50 ? 20 : hi - lo > 25 ? 10 : 5)) {
-      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: top, y2: bottom, stroke: "#1c2333", "stroke-width": 1 }));
-      kids.push(svgText(tick + "%", { x: x(tick), y: bottom + 13, "text-anchor": "middle", "font-size": 9, fill: "#a5a8b5" }));
+      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: top, y2: bottom, stroke: "#d8d3c5", "stroke-width": 1 }));
+      kids.push(svgText(tick + "%", { x: x(tick), y: bottom + 13, "text-anchor": "middle", "font-size": 9, fill: "#4f4c43" }));
     }
-    kids.push(svgText("oxygen", { x: W - right, y: bottom + 27, "text-anchor": "end", "font-size": 9, fill: "#8b8f9d" }));
-    kids.push(svgText("pressure, kPa" + (log ? " (log scale)" : ""), { x: 2, y: 12, "font-size": 9, fill: "#8b8f9d" }));
+    kids.push(svgText("oxygen", { x: W - right, y: bottom + 27, "text-anchor": "end", "font-size": 9, fill: "#6f6b61" }));
+    kids.push(svgText("pressure, kPa" + (log ? " (log scale)" : ""), { x: 2, y: 12, "font-size": 9, fill: "#6f6b61" }));
 
     // Limits from other sources: dashed lines with a number that the list below explains.
     markers.forEach(function (m, i) {
       m.on = m.limit >= lo && m.limit <= hi;
       if (!m.on) return;
-      kids.push(svg("line", { x1: x(m.limit), x2: x(m.limit), y1: top, y2: bottom, stroke: "#e5b67a", "stroke-width": 1, "stroke-dasharray": "2 3", opacity: 0.9 }));
-      kids.push(svg("rect", { x: x(m.limit) - 6, y: top + 2 + (i % 3) * 13, width: 12, height: 11, rx: 2, fill: "#0c111c", stroke: "#e5b67a", "stroke-width": 1 }));
-      kids.push(svgText(String(i + 1), { x: x(m.limit), y: top + 10.5 + (i % 3) * 13, "text-anchor": "middle", "font-size": 8, "font-weight": 600, fill: "#e5b67a" }));
+      kids.push(svg("line", { x1: x(m.limit), x2: x(m.limit), y1: top, y2: bottom, stroke: "#b47300", "stroke-width": 1, "stroke-dasharray": "2 3", opacity: 0.9 }));
+      kids.push(svg("rect", { x: x(m.limit) - 6, y: top + 2 + (i % 3) * 13, width: 12, height: 11, rx: 2, fill: "#f6f4ee", stroke: "#b47300", "stroke-width": 1 }));
+      kids.push(svgText(String(i + 1), { x: x(m.limit), y: top + 10.5 + (i % 3) * 13, "text-anchor": "middle", "font-size": 8, "font-weight": 600, fill: "#b47300" }));
     });
 
     // The habitats: an open crosshair, so a test point at the same place still shows.
     PINS.forEach(function (h) {
       var px = x(h.o2), py = y(h.kpa);
-      kids.push(svg("circle", { cx: px, cy: py, r: 9, fill: "none", stroke: "#f5f5f7", "stroke-width": 1.2 }));
-      kids.push(svg("path", { d: "M" + (px - 13) + " " + py + "H" + (px - 5) + "M" + (px + 5) + " " + py + "H" + (px + 13) + "M" + px + " " + (py - 13) + "V" + (py - 5) + "M" + px + " " + (py + 5) + "V" + (py + 13), stroke: "#f5f5f7", "stroke-width": 1.2, fill: "none" }));
+      kids.push(svg("circle", { cx: px, cy: py, r: 9, fill: "none", stroke: "#14130f", "stroke-width": 1.2 }));
+      kids.push(svg("path", { d: "M" + (px - 13) + " " + py + "H" + (px - 5) + "M" + (px + 5) + " " + py + "H" + (px + 13) + "M" + px + " " + (py - 13) + "V" + (py - 5) + "M" + px + " " + (py + 5) + "V" + (py + 13), stroke: "#14130f", "stroke-width": 1.2, fill: "none" }));
       var flip = px > W - 80;
-      kids.push(svgText(h.name, { x: flip ? px - 15 : px + 15, y: py - 8, "text-anchor": flip ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#f5f5f7" }));
+      kids.push(svgText(h.name, { x: flip ? px - 15 : px + 15, y: py - 8, "text-anchor": flip ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#14130f" }));
     });
 
     var detail = el("div", { class: "map-detail", "aria-live": "polite" }, [
@@ -432,7 +432,7 @@
         el("span", { text: o.label }),
       ]);
     }).concat([el("li", { class: "flex items-center gap-1.5" }, [
-      svg("svg", { width: 14, height: 14, viewBox: "0 0 14 14", "aria-hidden": "true" }, [svg("circle", { cx: 7, cy: 7, r: 4, fill: "none", stroke: "#f5f5f7", "stroke-width": 1.2 }), svg("path", { d: "M0 7H3M11 7H14M7 0V3M7 11V14", stroke: "#f5f5f7", "stroke-width": 1.2 })]),
+      svg("svg", { width: 14, height: 14, viewBox: "0 0 14 14", "aria-hidden": "true" }, [svg("circle", { cx: 7, cy: 7, r: 4, fill: "none", stroke: "#14130f", "stroke-width": 1.2 }), svg("path", { d: "M0 7H3M11 7H14M7 0V3M7 11V14", stroke: "#14130f", "stroke-width": 1.2 })]),
       el("span", { text: "Habitat air" }),
     ])]));
 
@@ -500,14 +500,14 @@
 
     // The two habitats: a band one point either side, which is what counts as "at that level".
     [{ v: 30, name: "Moon Base 30%" }, { v: 21, name: "ISS 21%" }].forEach(function (h) {
-      kids.push(svg("rect", { x: x(h.v - 1), y: top - 8, width: x(h.v + 1) - x(h.v - 1), height: base - top + 8, rx: 3, fill: "#2997ff", opacity: 0.16 }));
-      kids.push(svg("line", { x1: x(h.v), x2: x(h.v), y1: top - 8, y2: base, stroke: "#2997ff", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.8 }));
-      kids.push(svgText(h.name, { x: x(h.v), y: 11, "text-anchor": "middle", "font-size": 10, "font-weight": 600, fill: "#f5f5f7" }));
+      kids.push(svg("rect", { x: x(h.v - 1), y: top - 8, width: x(h.v + 1) - x(h.v - 1), height: base - top + 8, rx: 3, fill: "#1a35d6", opacity: 0.16 }));
+      kids.push(svg("line", { x1: x(h.v), x2: x(h.v), y1: top - 8, y2: base, stroke: "#1a35d6", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.8 }));
+      kids.push(svgText(h.name, { x: x(h.v), y: 11, "text-anchor": "middle", "font-size": 10, "font-weight": 600, fill: "#14130f" }));
     });
-    kids.push(svg("line", { x1: left, x2: W - right, y1: base, y2: base, stroke: "#2a3040", "stroke-width": 1 }));
+    kids.push(svg("line", { x1: left, x2: W - right, y1: base, y2: base, stroke: "#b3ad9c", "stroke-width": 1 }));
     for (var tick = lo; tick <= hi; tick += (hi - lo > 50 ? 20 : hi - lo > 25 ? 10 : 5)) {
-      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: base, y2: base + 4, stroke: "#2a3040", "stroke-width": 1 }));
-      kids.push(svgText(tick + "%", { x: x(tick), y: base + 16, "text-anchor": "middle", "font-size": 10, fill: "#a5a8b5" }));
+      kids.push(svg("line", { x1: x(tick), x2: x(tick), y1: base, y2: base + 4, stroke: "#b3ad9c", "stroke-width": 1 }));
+      kids.push(svgText(tick + "%", { x: x(tick), y: base + 16, "text-anchor": "middle", "font-size": 10, fill: "#4f4c43" }));
     }
     points.forEach(function (p) {
       if (p.row >= 9) return; // a very tall column is cut; the count below still includes it
@@ -543,7 +543,7 @@
   }
 
   // What the item is made of, part by part. Colour follows the material, in a fixed order.
-  var MATERIAL_COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#9085e9"];
+  var MATERIAL_COLORS = ["#14130f", "#1a35d6", "#d9390a", "#0a6a78", "#8f5300", "#6f6b61"];
   function materialsFigure(rows) {
     rows = (rows || []).filter(function (r) { return (r.material || "").trim(); });
     if (!rows.length) return null;
@@ -554,7 +554,7 @@
     });
     function color(name) {
       var i = order.indexOf(name.trim().toLowerCase());
-      return i < MATERIAL_COLORS.length ? MATERIAL_COLORS[i] : "#8b8f9d";
+      return i < MATERIAL_COLORS.length ? MATERIAL_COLORS[i] : "#6f6b61";
     }
     var parts = [], byPart = {};
     rows.forEach(function (r) {
@@ -614,15 +614,15 @@
     var W = 320, left = 10, right = 10, y = 26, h = 12;
     function x(v) { return left + (Math.max(0, Math.min(100, v)) / 100) * (W - left - right); }
     var kids = [
-      svg("rect", { x: x(0), y: y, width: x(limit) - x(0), height: h, rx: 4, fill: "#4fd38a", opacity: 0.85 }),
-      svg("rect", { x: x(limit) + 2, y: y, width: Math.max(0, x(100) - x(limit) - 2), height: h, rx: 4, fill: "#ff6a3d", opacity: 0.9 }),
+      svg("rect", { x: x(0), y: y, width: x(limit) - x(0), height: h, rx: 4, fill: "#0c7a3d", opacity: 0.85 }),
+      svg("rect", { x: x(limit) + 2, y: y, width: Math.max(0, x(100) - x(limit) - 2), height: h, rx: 4, fill: "#d9390a", opacity: 0.9 }),
     ];
     [{ v: 21, name: "ISS" }, { v: 30, name: "Moon Base" }].forEach(function (hab, i) {
-      kids.push(svg("line", { x1: x(hab.v), x2: x(hab.v), y1: y - 6, y2: y + h + 6, stroke: "#f5f5f7", "stroke-width": 1.5, "stroke-dasharray": "2 2" }));
-      kids.push(svgText(hab.name + " " + hab.v + "%", { x: x(hab.v), y: i === 0 ? 12 : y + h + 18, "text-anchor": i === 0 ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#f5f5f7" }));
+      kids.push(svg("line", { x1: x(hab.v), x2: x(hab.v), y1: y - 6, y2: y + h + 6, stroke: "#14130f", "stroke-width": 1.5, "stroke-dasharray": "2 2" }));
+      kids.push(svgText(hab.name + " " + hab.v + "%", { x: x(hab.v), y: i === 0 ? 12 : y + h + 18, "text-anchor": i === 0 ? "end" : "start", "font-size": 10, "font-weight": 600, fill: "#14130f" }));
     });
-    kids.push(svgText("0%", { x: x(0), y: y + h + 18, "font-size": 9, fill: "#a5a8b5" }));
-    kids.push(svgText("100% oxygen", { x: x(100), y: 12, "text-anchor": "end", "font-size": 9, fill: "#a5a8b5" }));
+    kids.push(svgText("0%", { x: x(0), y: y + h + 18, "font-size": 9, fill: "#4f4c43" }));
+    kids.push(svgText("100% oxygen", { x: x(100), y: 12, "text-anchor": "end", "font-size": 9, fill: "#4f4c43" }));
     return svg("svg", { viewBox: "0 0 " + W + " 60", class: "mt-2 w-full h-auto", role: "img",
       "aria-label": "Oxygen scale from 0 to 100 percent. Goes out below " + limit + " percent, keeps burning above. ISS air is 21 percent, Moon Base 30 percent." }, kids);
   }
@@ -642,7 +642,7 @@
       kids.push(el("p", { class: "mt-1 text-[13px] leading-5 text-muted", text: "In this test it stopped burning on its own at about " + limit + "% oxygen and below." }));
       kids.push(oxygenLimitBar(limit));
       kids.push(el("ul", { class: "mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted" }, [
-        legendRow("#4fd38a", "Went out"), legendRow("#ff6a3d", "Kept burning"),
+        legendRow("#0c7a3d", "Went out"), legendRow("#d9390a", "Kept burning"),
       ]));
     }
     var facts = [row.conditions, row.gravity === "microgravity" ? "Run in weightlessness" : row.gravity === "Earth" ? "Run on Earth" : row.gravity ? "Run at " + row.gravity : null, row.note].filter(Boolean);
@@ -759,7 +759,7 @@
       }
       var near = material.closest;
       if (near) {
-        var box = el("div", { class: "mt-4 rounded-xl border border-dashed border-line p-4" }, [
+        var box = el("div", { class: "mt-4 border border-dashed border-fg p-4" }, [
           el("p", { class: "text-[14px] leading-5" }, [
             el("span", { class: "text-muted", text: "Closest tested: " }),
             el("span", { class: "font-semibold", text: near.fuel }),
@@ -779,22 +779,22 @@
     return section;
   }
 
+  // Two flames in freefall, drawn live by flame3d.js: the same sphere at each habitat's oxygen.
+  // An illustration of "more oxygen, bigger and brighter", not a picture of any test.
   function flameFigure() {
-    // A short silent loop. It plays by itself, except for people who ask their device for
-    // reduced motion: they get the still frame and a play button.
-    var still = document.documentElement.classList.contains("motion-off");
-    function stage(name, caption) {
-      var picture = el("video", {
-        src: "/static/img/" + name + ".mp4", poster: "/static/img/" + name + ".webp",
-        autoplay: !still, controls: still, loop: true, muted: true, playsinline: true, preload: "metadata",
-        class: "w-full aspect-[4/3] object-cover rounded-xl bg-black",
-      });
-      picture.muted = true; // the attribute alone doesn't mute a video made in script
-      return el("div", {}, [picture, el("p", { class: "mt-2 text-[12px] text-muted text-center", text: caption })]);
+    function stage(oxygen, caption) {
+      var canvas = el("canvas", {});
+      var view = el("div", { class: "chamber", style: "aspect-ratio: 4 / 3" }, [canvas, el("div", { class: "chamber-frame", "aria-hidden": "true" })]);
+      // Mounted once the canvas is in the page and has a size.
+      setTimeout(function () {
+        var flame = window.Flame3D && window.Flame3D.mount(canvas, { gravity: 0, oxygen: oxygen });
+        if (!flame) view.appendChild(el("p", { class: "chamber-fallback", text: "A round blue flame." }));
+      }, 0);
+      return el("div", {}, [view, el("p", { class: "mt-2 eyebrow text-center", text: caption })]);
     }
-    return el("figure", { class: "mt-5", role: "img", "aria-label": "Two clips of a round blue flame on a wick. The one at 30% oxygen is larger and brighter than the one at 21%." }, [
-      el("div", { class: "grid grid-cols-2 gap-3" }, [stage("flame-o2-30", "Moon Base · 30% O₂"), stage("flame-o2-21", "ISS · 21% O₂")]),
-      el("figcaption", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Illustration, made with AI. Not NASA footage and not a measurement. Flames in weightlessness are round and blue; more oxygen makes them bigger and brighter." }),
+    return el("figure", { class: "mt-5", role: "img", "aria-label": "Two round blue flames on a wick, drawn in three dimensions. The one at 30% oxygen is larger and brighter than the one at 21%." }, [
+      el("div", { class: "grid grid-cols-2 gap-3" }, [stage(1, "Moon Base · 30% O₂"), stage(0, "ISS · 21% O₂")]),
+      el("figcaption", { class: "mt-2 text-[12px] leading-4 text-dim", text: "Drawn in your browser. Not NASA footage and not a measurement. Flames in freefall are round and blue; more oxygen makes them bigger and brighter." }),
     ]);
   }
 
@@ -817,8 +817,8 @@
   // What the vision model said it saw. It describes the photo only; it knows nothing about the tests.
   function summaryBlock(text) {
     if (!text) return document.createTextNode(""); // nothing to show, but safe to append
-    return el("div", { class: "mt-4 rounded-xl bg-ink-800 border border-line p-4" }, [
-      el("p", { class: "text-[12px] font-medium text-sky", text: "AI summary of the photo" }),
+    return el("div", { class: "mt-4 border-l-[3px] border-fg pl-4 py-1" }, [
+      el("p", { class: "eyebrow", text: "AI summary of the photo" }),
       el("p", { class: "mt-1 text-[15px] leading-6", text: text }),
     ]);
   }
@@ -1010,7 +1010,7 @@
             if (!kind) return;
             pick.appendChild(el("p", { class: "text-[12px] leading-4 text-muted", text: kind.word + " covers materials that burn differently. Pick the exact one if you know it:" }));
             pick.appendChild(el("div", { class: "mt-1.5 flex flex-wrap gap-2" }, kind.options.map(function (option) {
-              return el("button", { type: "button", class: "rounded-full border border-line px-3 h-9 text-[13px] text-fg", text: option, onclick: function () {
+              return el("button", { type: "button", class: "switch-btn", text: option, onclick: function () {
                 material.value = option;
                 row.material = option;
                 row.confidence = null;
@@ -1027,7 +1027,7 @@
             el("div", { class: "flex items-center gap-2" }, [
               material,
               shareBox,
-              el("button", { type: "button", class: "w-11 h-11 shrink-0 rounded-md border border-line text-muted text-[20px] leading-none", "aria-label": "Remove " + (row.material || "material"), text: "×", onclick: function () { state.rows.splice(i, 1); drawRows(); } }),
+              el("button", { type: "button", class: "w-10 h-10 shrink-0 border border-fg text-fg text-[20px] leading-none hover:bg-fg hover:text-ink-950", "aria-label": "Remove " + (row.material || "material"), text: "×", onclick: function () { state.rows.splice(i, 1); drawRows(); } }),
             ]),
             unsure ? flag : null,
             pick,
@@ -1158,8 +1158,8 @@
 
       var shown = data.items.filter(function (i) { return current === "All" || i.space === current; });
       function tile(value, label, colour) {
-        return el("div", { class: "rounded-xl bg-ink-800 border border-line p-3" }, [
-          el("p", { class: "text-[30px] leading-9 font-semibold " + colour, text: String(value) }),
+        return el("div", { class: "count-tile" }, [
+          el("p", { class: "v " + colour, text: String(value) }),
           el("p", { class: "mt-1 text-[12px] leading-4 text-muted", text: label }),
         ]);
       }
@@ -1204,7 +1204,7 @@
           });
         });
 
-        list.appendChild(el("li", { class: "rounded-xl bg-ink-850 border border-line p-4" }, [
+        list.appendChild(el("li", { class: "border-t border-fg pt-4" }, [
           el("div", { class: "flex items-start gap-3" }, [
             item.thumb ? el("img", { src: item.thumb, alt: "", class: "w-14 h-14 rounded-lg object-cover bg-ink-800 shrink-0" }) : null,
             el("div", { class: "min-w-0 flex-1" }, [
@@ -1309,8 +1309,8 @@
         return;
       }
       function tile(value, text) {
-        return el("div", { class: "rounded-xl bg-ink-800 border border-line p-3" }, [
-          el("p", { class: "text-[30px] leading-9 font-semibold", text: String(value) }),
+        return el("div", { class: "count-tile" }, [
+          el("p", { class: "v", text: String(value) }),
           el("p", { class: "mt-1 text-[12px] leading-4 text-muted", text: text }),
         ]);
       }

@@ -1,109 +1,101 @@
 {% extends "base.html" %}
-{# The intro is the page title here, so the usual title strip is left out. #}
+{# The lead line is the page title here, so the usual title strip is left out. #}
 {% block titlebar %}{% endblock %}
 {% block content %}
 
-{# Intro: a tilted screen that lies flat as you scroll, playing a clip of a candle flame
-   losing gravity. static/motion.js drives it; without scripts the screen is simply flat. #}
-<section class="cscroll" id="intro" aria-label="Introduction">
-  <div class="cscroll-inner">
-    <div class="cscroll-head">
-      <h2>
-        <span class="cscroll-kicker">How things burn in a spacecraft</span>
-        <span class="cscroll-title">Flame in Freefall</span>
-      </h2>
-    </div>
-    <div class="cscroll-card">
-      <div class="cscroll-screen">
-        <video id="intro-video" src="/static/img/intro.mp4" poster="/static/img/intro-start.webp" data-end-poster="/static/img/intro-end.webp"
-               muted playsinline preload="auto" disablepictureinpicture tabindex="-1" aria-hidden="true"></video>
-        <p class="cscroll-caption">
-          <span class="cap-a">On Earth, hot gas rises and pulls a flame into a teardrop.</span>
-          <span class="cap-b">In freefall nothing rises, so the flame becomes a sphere.</span>
-        </p>
-        <p class="intro-credit">Illustration, made with AI. Not NASA footage.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-{# This block slides up over the end of the pinned intro, through a fade, so there is no hard edge. #}
-<div class="after-intro">
-<section class="wrap py-12 md:py-20 grid gap-10 lg:grid-cols-[1fr_520px] items-center">
-  <div class="min-w-0" data-reveal>
-    <p class="text-[12px] font-semibold tracking-[0.12em] text-sky">WHY IT MATTERS</p>
-    <h3 class="mt-3 text-[28px] leading-[34px] md:text-[38px] md:leading-[44px] font-semibold tracking-[-0.02em] max-w-xl">More oxygen, bigger flame.</h3>
-    <p class="mt-4 text-[17px] leading-7 text-muted max-w-xl">A Moon base will run at 30% oxygen instead of Earth’s 21%. This site gathers NASA’s microgravity fire experiments and lets you check any everyday item against them.</p>
-    <div class="mt-7 flex flex-wrap gap-3">
+{# The opening: the lead line beside the chamber. The flame in the chamber is drawn live by
+   static/flame3d.js: it starts as it burns on Earth and is then let go into freefall. #}
+<section class="wrap home-hero" aria-label="Introduction">
+  <div class="home-hero-words">
+    <p class="eyebrow">Fire safety for the first Moon base</p>
+    <h1 class="home-lead mt-3">Scan what’s going to the <em>Moon.</em></h1>
+    <p class="mt-5 text-[19px] leading-7 md:text-[22px] md:leading-8 max-w-xl">See where it sits in everything NASA has burned in space.</p>
+    <p class="mt-3 text-[15px] leading-6 text-muted max-w-xl">A Moon base will run at 30% oxygen instead of Earth’s 21%. Photograph an item going into the habitat, and each of its materials is placed among NASA’s microgravity fire tests, with the paper and page behind every point.</p>
+    <div class="mt-6 flex flex-wrap gap-3">
       <a href="/scan" class="btn-big">Scan an item</a>
-      <a href="/explorer" class="btn-big-ghost">Browse the experiments</a>
+      <a href="/atlas" class="btn-big-ghost">Open the atlas</a>
     </div>
   </div>
 
-  <figure class="min-w-0" data-reveal style="--reveal-delay: 120ms">
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <video src="/static/img/flame-o2-30.mp4" poster="/static/img/flame-o2-30.webp" loop muted playsinline preload="none" data-autoplay class="w-full aspect-[4/3] object-cover rounded-xl bg-black"></video>
-        <p class="mt-2 text-[12px] text-muted text-center">Moon Base · 30% O₂</p>
+  <div class="home-hero-view" data-chamber>
+    <figure>
+      <div class="chamber" role="img" aria-label="A flame drawn in three dimensions. With gravity it is a flickering orange teardrop. In freefall it becomes a steady blue sphere, larger at 30 percent oxygen than at 21.">
+        <canvas></canvas>
+        <div class="chamber-frame" aria-hidden="true"></div>
+        <p class="chamber-label" aria-hidden="true">Illustration · drag to turn</p>
+        <p class="chamber-readout" aria-hidden="true">Gravity <b data-read-gravity>1.00 g</b><br>Oxygen <b data-read-oxygen>21% · ISS</b></p>
       </div>
-      <div>
-        <video src="/static/img/flame-o2-21.mp4" poster="/static/img/flame-o2-21.webp" loop muted playsinline preload="none" data-autoplay class="w-full aspect-[4/3] object-cover rounded-xl bg-black"></video>
-        <p class="mt-2 text-[12px] text-muted text-center">ISS · 21% O₂</p>
+      <div class="chamber-controls">
+        <label class="block">
+          <span class="eyebrow flex justify-between"><span>Gravity</span><span>0 g ← → 1 g</span></span>
+          <input type="range" min="0" max="100" value="100" class="gravity-slider" data-gravity aria-label="Gravity, from freefall to Earth">
+        </label>
+        <div>
+          <span class="eyebrow block">Oxygen</span>
+          <span class="seg mt-1.5" role="group" aria-label="Oxygen level">
+            <button type="button" data-oxygen="0" data-label="21% · ISS" aria-pressed="true">21% ISS</button>
+            <button type="button" data-oxygen="1" data-label="30% · Moon Base" aria-pressed="false">30% Moon</button>
+          </span>
+        </div>
+        <div class="flex items-center"><button type="button" class="btn-ghost" data-drop>Drop it again</button></div>
       </div>
-    </div>
-    <figcaption class="mt-2 text-[12px] leading-4 text-dim">Illustration, made with AI. Not NASA footage and not a measurement. Flames in weightlessness are round and blue; more oxygen makes them bigger and brighter.</figcaption>
-  </figure>
+      <figcaption class="mt-3 text-[14px] leading-5">
+        <span data-caption>On Earth, hot gas rises and pulls a flame into a teardrop.</span>
+        <span class="block mt-1 text-[12px] leading-4 text-dim">Drawn in your browser from the two controls. Not NASA footage and not a measurement. Flames in freefall are round and blue; more oxygen makes them bigger and brighter.</span>
+      </figcaption>
+    </figure>
+  </div>
 </section>
 
-</div>
-
-<section class="bg-ink-850 border-y border-line/60">
-  <div class="wrap py-12">
-    <h3 class="text-[22px] leading-7 font-semibold" data-reveal>What’s in the database right now</h3>
-    {% if let Some(e) = data_error %}
-    <p class="notice mt-4" role="status">{{ e }}</p>
-    {% else %}
-    <div class="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3" data-reveal-group>
-      {% for s in stats %}
-      <a href="{{ s.href }}" class="lift rounded-xl bg-ink-800 border border-line p-4">
-        <p class="text-[32px] leading-9 font-semibold tabular-nums" data-count>{{ s.value }}</p>
-        <p class="mt-1 text-[13px] leading-5 text-muted">{{ s.label }}</p>
-      </a>
-      {% endfor %}
-    </div>
-    <p class="mt-3 text-[12px] text-dim">Counted live from the research database. Test conditions are extracted from the papers by AI and are not all reviewed by a person.</p>
-    {% endif %}
+<section class="wrap py-12 md:py-16">
+  <div class="section-head" data-reveal><span class="n">01</span><h2>In the database now</h2></div>
+  {% if let Some(e) = data_error %}
+  <p class="notice mt-4" role="status">{{ e }}</p>
+  {% else %}
+  <div class="mt-6 ledger" data-reveal-group>
+    {% for s in stats %}
+    <a href="{{ s.href }}" class="ledger-row">
+      <span class="ledger-num tabular-nums" data-count>{{ s.value }}</span>
+      <span class="text-[17px] leading-6">{{ s.label }}</span>
+      <span class="eyebrow">Open →</span>
+    </a>
+    {% endfor %}
   </div>
+  <p class="mt-3 eyebrow">Counted live from the research database. Test conditions are extracted from the papers by AI and are not all reviewed by a person.</p>
+  {% endif %}
 </section>
 
 {% if !materials.is_empty() %}
-<section class="wrap py-12">
-  <h3 class="text-[22px] leading-7 font-semibold" data-reveal>Most-tested materials</h3>
-  <p class="mt-1 text-[14px] text-muted" data-reveal>By number of test conditions in the database. Names are as the papers write them.</p>
-  <ul class="mt-4 flex flex-wrap gap-2" data-reveal-group>
+<section class="wrap pb-12 md:pb-16">
+  <div class="section-head" data-reveal><span class="n">02</span><h2>Most-tested materials</h2></div>
+  <p class="mt-3 text-[14px] text-muted" data-reveal>By number of test conditions. Names are as the papers write them. <a href="/atlas" class="underline text-sky">See every one on the atlas.</a></p>
+  <ul class="mt-4 index-list" data-reveal-group>
     {% for m in materials %}
-    <li><a href="{{ m.2 }}" class="lift inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[14px]">{{ m.0 }}<span class="text-dim text-[12px]">{{ m.1 }}</span></a></li>
+    <li><a href="{{ m.2 }}"><span>{{ m.0 }}</span><span class="font-mono text-[12px] text-dim">{{ m.1 }}</span></a></li>
     {% endfor %}
   </ul>
 </section>
 {% endif %}
 
 <section class="wrap pb-16">
-  <h3 class="text-[22px] leading-7 font-semibold" data-reveal>Where to go</h3>
-  <div class="mt-4 grid gap-3 md:grid-cols-3" data-reveal-group>
-    <a href="/scan" class="lift rounded-xl bg-ink-850 border border-line p-5">
-      <p class="text-[17px] font-semibold">Scan</p>
-      <p class="mt-1 text-[14px] leading-5 text-muted">Photograph an item, confirm what it’s made of, and see how those materials did in the tests.</p>
+  <div class="section-head" data-reveal><span class="n">03</span><h2>What you can do here</h2></div>
+  <div class="mt-6 grid md:grid-cols-2 lg:grid-cols-4 border-l border-line" data-reveal-group>
+    <a href="/scan" class="lift border-r border-b border-t border-line p-5">
+      <p class="eyebrow">Scan</p>
+      <p class="mt-2 text-[16px] leading-6">Photograph an item, confirm what it’s made of, and see each material’s tests by oxygen and pressure.</p>
     </a>
-    <a href="/items" class="lift rounded-xl bg-ink-850 border border-line p-5">
-      <p class="text-[17px] font-semibold">My items</p>
-      <p class="mt-1 text-[14px] leading-5 text-muted">Everything you’ve scanned, grouped into spaces, saved on your device.</p>
+    <a href="/atlas" class="lift border-r border-b border-t border-line p-5">
+      <p class="eyebrow">Atlas</p>
+      <p class="mt-2 text-[16px] leading-6">Every material NASA has burned in microgravity, one small map each, with the Moon Base marked.</p>
     </a>
-    <a href="/ask" class="lift rounded-xl bg-ink-850 border border-line p-5">
-      <p class="text-[17px] font-semibold">Ask</p>
-      <p class="mt-1 text-[14px] leading-5 text-muted">Ask a question and get an answer that cites the NASA papers.</p>
+    <a href="/items" class="lift border-r border-b border-t border-line p-5">
+      <p class="eyebrow">My items</p>
+      <p class="mt-2 text-[16px] leading-6">Everything you’ve scanned, grouped into spaces, saved on your device.</p>
+    </a>
+    <a href="/ask" class="lift border-r border-b border-t border-line p-5">
+      <p class="eyebrow">Ask</p>
+      <p class="mt-2 text-[16px] leading-6">Ask a question and get an answer that cites the NASA papers.</p>
     </a>
   </div>
-  <p class="mt-6 text-[13px] leading-5 text-muted">This is NASA spacecraft research, not a home safety rating.</p>
 </section>
 {% endblock %}

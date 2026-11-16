@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="wrap pt-14 pb-8">
-  <h2 class="text-[40px] md:text-[52px] leading-[1.08] font-semibold tracking-tight">The papers behind<br>the findings.</h2>
+  <h2 class="text-[26px] md:text-[34px] leading-[1.05] max-w-3xl">The papers behind the findings.</h2>
   <p class="mt-5 text-[20px] text-muted">NASA technical reports, with the test conditions and findings an AI pulled from each.</p>
   {% if !counts.is_empty() %}<p class="mt-5 text-[14px] text-muted">{% for c in counts %}<span class="text-fg font-medium">{{ c.1 }}</span> {{ c.0 }}{% if !loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
 </section>
