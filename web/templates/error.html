@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="wrap py-24">
-  <h2 class="text-[40px] font-semibold tracking-tight">{{ page_title }}</h2>
-  <p class="mt-4 text-[18px] text-muted max-w-2xl">{{ message }}</p>
-  <a href="/" class="btn-primary mt-8">Back to the overview</a>
+{# The title strip above already shows the page title; this sheet holds the message only. #}
+<section class="wrap pt-8 pb-20 md:pt-10">
+  <div class="border-t-2 border-fg pt-3 grid gap-x-12 gap-y-3 lg:grid-cols-12">
+    <p class="eyebrow lg:col-span-3">Message</p>
+    <div class="lg:col-span-9 min-w-0">
+      <p class="text-[19px] leading-7 md:text-[22px] md:leading-8 max-w-2xl break-words">{{ message }}</p>
+      <p class="mt-8 pt-4 border-t border-line"><a href="/" class="btn-primary">Back to the overview</a></p>
+    </div>
+  </div>
 </section>
 {% endblock %}

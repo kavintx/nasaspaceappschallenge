@@ -11,7 +11,7 @@
 use crate::admin::same_origin;
 use crate::air;
 use crate::backend::{f, flag, s, Fail};
-use crate::catalog::{Catalog, Outcome, Test};
+use crate::catalog::{Catalog, Exp, Finding, Outcome, Test};
 use crate::views::{load_catalog, num, render, HABITATS};
 use crate::vision::VisionError;
 use crate::AppState;
@@ -41,10 +41,11 @@ const O2_TOLERANCE: f64 = 1.0;
 /// Result cards compare these two habitats, in this order.
 const SHOWN: [&str; 2] = ["moon_base", "iss"];
 
-/// The same message on the public website, where there is no box to paste a key into.
+/// The public website's message, which says nothing about how the scanner is set up.
 const NOT_CONNECTED_HOSTED: &str = "The photo scanner isn’t available right now. You can still type the materials in.";
 
-const NOT_CONNECTED: &str = "Scanner not connected. Paste your Anthropic or OpenAI key in the box above, or run Ollama — you can still type the materials in.";
+/// A copy on someone's own computer: the key goes in web/.env (or `main.py --configure`), never in the page.
+const NOT_CONNECTED: &str = "The photo scanner isn’t set up on this copy. You can still type the materials in.";
 
 // ---------- pages ----------
 
@@ -97,22 +98,15 @@ pub async fn overview(State(app): AppRef) -> Response {
 #[template(path = "scan.html")]
 pub struct ScanPage {
     pub scanner_on: bool,
-    /// True when no Anthropic/OpenAI key is stored — the page shows its
-    /// one-box unlock, which arms the scanner without a restart.
-    pub needs_key: bool,
 }
 
 pub async fn scan_page(State(app): AppRef) -> Response {
     let v = app.vision.read().await;
-    let (mut scanner_on, mut needs_key) = (v.may_work(), !v.has_own_key());
+    // The public website has no local Ollama: the scanner is on only with a key set.
+    // The page never asks a visitor for a key; keys are set by whoever runs the site.
+    let scanner_on = if crate::hosted() { v.has_own_key() } else { v.may_work() };
     drop(v);
-    // The public website never asks visitors for a key (that box is for people running
-    // their own copy), and it has no local Ollama: the scanner is on only with a key set.
-    if crate::hosted() {
-        scanner_on = !needs_key;
-        needs_key = false;
-    }
-    render(ScanPage { scanner_on, needs_key })
+    render(ScanPage { scanner_on })
 }
 
 #[derive(Template)]
@@ -125,6 +119,176 @@ pub struct ItemsPage {
 
 pub async fn items() -> Response {
     render(ItemsPage { active: "items", page_title: "My items".into(), context_line: "Saved on this device only".into() })
+}
+
+// ---------- habitat report: NASA's findings, grouped ----------
+
+/// The habitat report on the items page shows this many findings per group and counts the rest.
+const FINDINGS_PER_GROUP: usize = 4;
+/// The groups the report shows, in this order. Findings in any other category are counted, not shown.
+const FINDING_GROUPS: [(&str, &str); 3] = [("prevention", "Prevention"), ("detection", "Detection"), ("suppression", "Suppression")];
+
+/// Every extracted finding in the three groups, as the database has it: the finding's own text,
+/// the experiments it belongs to and its paper. One finding tied to several experiments is one
+/// entry that names them all. Order: verified first, then the extraction's confidence, then
+/// experiment name. Nothing is reworded and nothing is matched to a material.
+fn group_findings(exps: &[Exp], limit: usize) -> Value {
+    struct Row<'a> {
+        finding: &'a Finding,
+        experiments: Vec<&'a Exp>,
+    }
+    let mut other = 0usize;
+    let mut groups: Vec<Vec<Row>> = FINDING_GROUPS.iter().map(|_| vec![]).collect();
+    for e in exps {
+        for x in &e.findings {
+            let Some(g) = FINDING_GROUPS.iter().position(|(key, _)| *key == x.category) else {
+                other += 1;
+                continue;
+            };
+            match groups[g].iter_mut().find(|r| r.finding.text == x.text && r.finding.paper_href == x.paper_href) {
+                Some(row) => row.experiments.push(e),
+                None => groups[g].push(Row { finding: x, experiments: vec![e] }),
+            }
+        }
+    }
+    let list: Vec<Value> = FINDING_GROUPS
+        .iter()
+        .zip(groups.iter_mut())
+        .map(|((key, label), rows)| {
+            // A stable sort: findings that tie stay in experiment order.
+            rows.sort_by(|a, b| {
+                b.finding.verified.cmp(&a.finding.verified).then(b.finding.confidence.partial_cmp(&a.finding.confidence).unwrap_or(Ordering::Equal))
+            });
+            let findings: Vec<Value> = rows
+                .iter()
+                .take(limit)
+                .map(|r| {
+                    json!({
+                        "text": r.finding.text,
+                        "experiments": r.experiments.iter().map(|e| json!({ "acronym": e.acronym, "href": format!("/experiments/{}", urlencoding::encode(&e.id)) })).collect::<Vec<_>>(),
+                        "paper_href": r.finding.paper_href,
+                        "source": r.finding.source,
+                        "confidence": r.finding.confidence,
+                        "verified": r.finding.verified,
+                    })
+                })
+                .collect();
+            json!({ "key": key, "label": label, "total": rows.len(), "more": rows.len().saturating_sub(limit), "findings": findings })
+        })
+        .collect();
+    json!({ "groups": list, "other": other })
+}
+
+/// GET /items/findings: NASA's findings by group for the habitat report, plus the oxygen level
+/// and pressure the report compares against. Read-only: it reads the cached catalog and writes nothing.
+pub async fn items_findings(State(app): AppRef) -> Response {
+    let moon = HABITATS.iter().find(|h| h.key == "moon_base");
+    let level = json!({
+        "name": moon.map(|h| h.name),
+        "o2_pct": moon.and_then(|h| h.o2_pct),
+        "psi": moon.and_then(|h| h.psi),
+        // 1 psi = 6.894757 kPa, the same factor units.rs reads pressures with.
+        "kpa": moon.and_then(|h| h.psi).map(|p| (p * 6.894_757 * 10.0).round() / 10.0),
+        "tolerance": O2_TOLERANCE,
+    });
+    match load_catalog(&app, false).await {
+        Ok(cat) => {
+            let grouped = group_findings(&cat.exps, FINDINGS_PER_GROUP);
+            Json(json!({
+                "data": "ok",
+                "data_message": Value::Null,
+                "level": level,
+                "experiments": cat.exps.len(),
+                "order": "verified first, then by AI confidence",
+                "groups": grouped["groups"],
+                "other": grouped["other"],
+            }))
+            .into_response()
+        }
+        Err(e) => {
+            eprintln!("items findings: {e}");
+            Json(json!({
+                "data": "error",
+                "data_message": "NASA’s findings could not be read just now. Try again in a moment.",
+                "level": level,
+                "groups": [],
+            }))
+            .into_response()
+        }
+    }
+}
+
+// ---------- atlas: every tested material ----------
+
+#[derive(Template)]
+#[template(path = "atlas.html")]
+pub struct AtlasPage {
+    pub active: &'static str,
+    pub page_title: String,
+    pub context_line: String,
+}
+
+pub async fn atlas() -> Response {
+    render(AtlasPage { active: "atlas", page_title: "Atlas".into(), context_line: "Every material NASA has burned in microgravity, by oxygen and pressure".into() })
+}
+
+/// Every fuel named in the extracted test conditions, each in the same shape as a scan
+/// result's material, so the atlas draws them with the same charts. Names are the papers'
+/// own: two spellings of one material stay two entries, because nothing here merges them.
+pub async fn atlas_data(State(app): AppRef) -> Response {
+    let cat = match load_catalog(&app, false).await {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("atlas: {e}");
+            return Json(json!({ "data": "error", "data_message": "NASA’s test data could not be read just now. Try again in a moment.", "materials": [] })).into_response();
+        }
+    };
+    let moon = HABITATS.iter().find(|h| h.key == "moon_base").and_then(|h| h.o2_pct).unwrap_or(30.0);
+    let floor = moon - O2_TOLERANCE;
+    let (mut plotted, mut no_moon) = (0u64, 0usize);
+    let materials: Vec<Value> = cat
+        .materials
+        .iter()
+        .map(|m| {
+            let tests: Vec<&Test> = m.tests.iter().collect();
+            let levels: Vec<f64> = tests.iter().flat_map(|t| t.o2.iter().copied()).collect();
+            let at_moon = tests.iter().any(|t| at_level(t, moon).is_some());
+            let placed = map(&tests);
+            plotted += placed["placed"].as_u64().unwrap_or(0);
+            if !at_moon {
+                no_moon += 1;
+            }
+            json!({
+                "query": m.name,
+                "tested": true,
+                "fuels": [m.name],
+                "tests": tests.len(),
+                // Tests that burned at Moon Base oxygen or above (within the same one-point band the verdicts use).
+                "burned_moon": tests.iter().filter(|t| t.outcome == Outcome::Burned && t.o2.iter().any(|v| *v >= floor)).count(),
+                "only_below": !levels.is_empty() && levels.iter().all(|v| *v < floor),
+                "no_outcome": tests.iter().all(|t| t.outcome == Outcome::Unknown),
+                "at_moon": at_moon,
+                "habitats": verdicts(&tests),
+                "evidence": evidence(&tests),
+                "chart": chart(&tests),
+                "map": placed,
+                "other": if app.more_sources { crate::extra::for_names(&[m.name.as_str()]) } else { vec![] },
+                "closest": Value::Null,
+                "gases": gases(&[m.name.as_str()]),
+            })
+        })
+        .collect();
+    Json(json!({
+        "data": "ok",
+        "data_message": Value::Null,
+        "lookup": "ok",
+        "lookup_message": Value::Null,
+        "moon_o2": moon,
+        "counts": { "materials": materials.len(), "plotted": plotted, "no_moon": no_moon },
+        "materials": materials,
+        "sources": { "analyzer": air::ANALYZER_URL, "limits": air::LIMITS_URL, "table_page": air::TABLE_PAGE },
+    }))
+    .into_response()
 }
 
 // ---------- identify: photo -> parts and materials ----------
@@ -277,6 +441,96 @@ fn chart(tests: &[&Test]) -> Value {
         }
     }
     json!({ "points": points, "no_level": no_level, "outcomes": outcomes, "tests": tests.len() })
+}
+
+/// The oxygen-pressure map: every test that states both, as a point or (for a stated range) a bar.
+/// Tests that can't be placed are counted or listed with the reason; none is given a number it didn't state.
+fn map(tests: &[&Test]) -> Value {
+    let code = |o: Outcome| match o {
+        Outcome::Burned => "burned",
+        Outcome::WentOut => "went_out",
+        Outcome::NoIgnition => "no_ignition",
+        Outcome::Unknown => "unrecorded",
+    };
+    let pair = |s: &crate::units::Span| json!([s.min, s.max]);
+    let mut points: Vec<Value> = vec![];
+    let mut unplottable: Vec<Value> = vec![];
+    let (mut placed, mut no_pressure, mut no_oxygen) = (0usize, 0usize, 0usize);
+    let mut counts = [0usize; 4];
+    let (mut o2_lo, mut o2_hi, mut kpa_lo, mut kpa_hi) = (f64::MAX, f64::MIN, f64::MAX, f64::MIN);
+    for (index, t) in tests.iter().enumerate() {
+        let href = t.paper_url.clone().unwrap_or_else(|| t.paper_href.clone());
+        if t.plottable() {
+            placed += 1;
+            counts[severity(t.outcome) as usize] += 1;
+            for o in &t.o2_spans {
+                for p in &t.kpa_spans {
+                    o2_lo = o2_lo.min(o.min);
+                    o2_hi = o2_hi.max(o.max);
+                    kpa_lo = kpa_lo.min(p.min);
+                    kpa_hi = kpa_hi.max(p.max);
+                    points.push(json!({
+                        "test": index,
+                        "o2": pair(o),
+                        "kpa": pair(p),
+                        "outcome": code(t.outcome),
+                        "paper": t.paper_title,
+                        "href": href,
+                        "page": t.source_page,
+                        "quote": t.source_quote,
+                        "note": t.outcome_note,
+                        "o2_text": t.o2_raw,
+                        "pressure_text": t.pressure,
+                        "experiments": t.experiments,
+                    }));
+                }
+            }
+            continue;
+        }
+        // Why this test is not on the map, in the paper's own words where it gave any.
+        let mut why: Vec<String> = vec![];
+        match (&t.o2_raw, t.o2_spans.is_empty()) {
+            (Some(text), true) => why.push(format!("oxygen given as “{text}”")),
+            (None, true) => no_oxygen += 1,
+            _ => {}
+        }
+        match (&t.pressure, t.kpa_spans.is_empty()) {
+            (Some(text), true) => why.push(format!("pressure given as “{text}”")),
+            (None, true) if !t.o2_spans.is_empty() => no_pressure += 1,
+            _ => {}
+        }
+        if t.o2_spans.len() > 1 && t.kpa_spans.len() > 1 {
+            why.push("several oxygen levels and several pressures, with no record of which went together".to_string());
+        }
+        if !why.is_empty() {
+            unplottable.push(json!({ "why": why.join("; "), "paper": t.paper_title, "href": href, "outcome": code(t.outcome) }));
+        }
+    }
+    // One sentence that states only what the placed tests show.
+    let sentence = if placed == 0 {
+        Value::Null
+    } else {
+        let labels = [(3, "burned"), (2, "went out"), (1, "did not ignite"), (0, "outcome not recorded")];
+        let outcomes: Vec<String> = labels.iter().filter(|(k, _)| counts[*k] > 0).map(|(k, label)| format!("{} {label}", counts[*k])).collect();
+        let span = |lo: f64, hi: f64| if hi > lo { format!("{} to {}", num(lo), num(hi)) } else { num(lo) };
+        json!(format!(
+            "{}{placed} test{} with both oxygen and pressure recorded: {}, at {}% oxygen and {} kPa.",
+            if placed < 3 { "Only " } else { "" },
+            if placed == 1 { "" } else { "s" },
+            outcomes.join(", "),
+            span(o2_lo, o2_hi),
+            span(kpa_lo, kpa_hi),
+        ))
+    };
+    json!({
+        "points": points,
+        "placed": placed,
+        "no_pressure": no_pressure,
+        "no_oxygen": no_oxygen,
+        "unplottable": unplottable,
+        "sentence": sentence,
+        "tests": tests.len(),
+    })
 }
 
 fn severity(o: Outcome) -> u8 {
@@ -468,6 +722,7 @@ pub async fn result(State(app): AppRef, headers: HeaderMap, Json(req): Json<Resu
                 "habitats": verdicts(&tests),
                 "evidence": evidence(&tests),
                 "chart": chart(&tests),
+                "map": map(&tests),
                 "other": if app.more_sources { crate::extra::for_names(&gas_names) } else { vec![] },
                 "closest": closest,
                 "gases": gases(&gas_names),
@@ -488,4 +743,66 @@ pub async fn result(State(app): AppRef, headers: HeaderMap, Json(req): Json<Resu
         },
     }))
     .into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn finding(text: &str, category: &str, paper: &str, confidence: Option<f64>, verified: bool) -> Finding {
+        Finding { text: text.into(), category: category.into(), paper_href: paper.into(), source: "p. 1".into(), confidence, verified }
+    }
+
+    fn exp(acronym: &str, findings: Vec<Finding>) -> Exp {
+        Exp { id: acronym.to_lowercase().replace(' ', "-"), acronym: acronym.into(), findings, ..Exp::default() }
+    }
+
+    #[test]
+    fn findings_are_grouped_counted_and_limited() {
+        let exps = vec![
+            exp(
+                "BASS II",
+                vec![
+                    finding("low confidence", "prevention", "/papers/a", Some(0.4), false),
+                    finding("shared", "prevention", "/papers/b", Some(0.9), false),
+                    finding("a detection one", "detection", "/papers/a", None, false),
+                    finding("uncategorised", "", "/papers/a", Some(0.9), false),
+                ],
+            ),
+            exp(
+                "SAFFIRE I",
+                vec![
+                    finding("shared", "prevention", "/papers/b", Some(0.9), false),
+                    finding("verified", "prevention", "/papers/c", Some(0.1), true),
+                    finding("something else", "other", "/papers/c", Some(0.9), false),
+                ],
+            ),
+        ];
+        let out = group_findings(&exps, 2);
+        let groups = out["groups"].as_array().unwrap();
+        assert_eq!(groups.iter().map(|g| g["label"].as_str().unwrap()).collect::<Vec<_>>(), ["Prevention", "Detection", "Suppression"]);
+
+        // Prevention: three different findings (the shared one counted once), two shown, one more.
+        let prevention = &groups[0];
+        assert_eq!(prevention["total"], 3);
+        assert_eq!(prevention["more"], 1);
+        let shown = prevention["findings"].as_array().unwrap();
+        assert_eq!(shown.len(), 2);
+        // Verified first, then the higher confidence. Text is passed through unchanged.
+        assert_eq!(shown[0]["text"], "verified");
+        assert_eq!(shown[0]["paper_href"], "/papers/c");
+        assert_eq!(shown[1]["text"], "shared");
+        let names: Vec<&str> = shown[1]["experiments"].as_array().unwrap().iter().map(|e| e["acronym"].as_str().unwrap()).collect();
+        assert_eq!(names, ["BASS II", "SAFFIRE I"]);
+        assert_eq!(shown[1]["experiments"][1]["href"], "/experiments/saffire-i");
+
+        assert_eq!(groups[1]["total"], 1);
+        assert_eq!(groups[1]["more"], 0);
+        assert!(groups[1]["findings"][0]["confidence"].is_null());
+        // A group with nothing in it is still there, empty.
+        assert_eq!(groups[2]["total"], 0);
+        assert!(groups[2]["findings"].as_array().unwrap().is_empty());
+        // "other" and uncategorised findings are counted and never shown.
+        assert_eq!(out["other"], 2);
+    }
 }

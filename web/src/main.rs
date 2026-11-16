@@ -12,8 +12,8 @@ mod config;
 mod extra;
 mod lambda;
 mod scan;
-mod setup;
 mod store;
+mod units;
 mod views;
 mod vision;
 
@@ -84,8 +84,10 @@ async fn main() {
     let app = Router::new()
         .route("/", get(scan::overview))
         .route("/scan", get(scan::scan_page))
-        .route("/setup", post(setup::unlock))
         .route("/items", get(scan::items))
+        .route("/items/findings", get(scan::items_findings))
+        .route("/atlas", get(scan::atlas))
+        .route("/atlas/data", get(scan::atlas_data))
         .route("/scan/identify", post(scan::identify).layer(DefaultBodyLimit::max(scan::MAX_IMAGE_BYTES + 1024)))
         .route("/scan/result", post(scan::result))
         .route("/habitat", get(views::habitat))

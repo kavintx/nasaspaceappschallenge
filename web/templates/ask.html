@@ -1,36 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="wrap pt-12 pb-6">
-  <div class="flex flex-wrap items-end justify-between gap-4">
-    <div>
-      <h2 class="text-[36px] md:text-[44px] leading-[1.08] font-semibold tracking-tight">Ask the research.</h2>
-      <p class="mt-3 text-[18px] text-muted">A conversation grounded in indexed NASA papers, with page-level citations.</p>
-    </div>
-    <div class="flex items-end gap-4">
-      <label class="block"><span class="eyebrow block">Limit to one experiment</span>
-        <select id="scope" class="field mt-2 w-52"><option value="">All experiments</option>{% for e in experiments %}<option value="{{ e }}">{{ e }}</option>{% endfor %}</select></label>
-      <button id="new-chat" type="button" class="btn-ghost">New conversation</button>
-    </div>
-  </div>
-</section>
+<section class="wrap pt-8 pb-16 md:pt-10 grid gap-x-12 gap-y-8 lg:grid-cols-12">
 
-<section class="wrap pb-6">
-  <div id="thread" class="max-w-4xl" aria-live="polite"></div>
-  <div id="starters" class="max-w-4xl">
-    <div class="eyebrow">Try</div>
-    <ul class="mt-3 space-y-2">
-      {% for s in suggestions %}<li><button type="button" class="starter text-left text-[16px] text-sky hover:underline">{{ s }}</button></li>{% endfor %}
-    </ul>
-  </div>
-</section>
+  {# Narrow column: what the answers are drawn from, and the two controls for the conversation. #}
+  <aside class="lg:col-span-3 min-w-0">
+    <div class="border-t-2 border-fg pt-3">
+      <p class="text-[15px] leading-6 text-muted">A conversation grounded in indexed NASA papers, with page-level citations.</p>
+      <label class="block mt-6"><span class="eyebrow block">Limit to one experiment</span>
+        <select id="scope" class="field mt-2"><option value="">All experiments</option>{% for e in experiments %}<option value="{{ e }}">{{ e }}</option>{% endfor %}</select></label>
+      <button id="new-chat" type="button" class="btn-ghost mt-4">New conversation</button>
+      <p class="mt-6 pt-3 border-t border-line eyebrow leading-5">AI can miss context. Always verify critical safety decisions against the original NASA research.</p>
+    </div>
+  </aside>
 
-<section class="wrap pb-16">
-  <form id="chat-form" class="max-w-4xl flex gap-4 items-start">
-    <label for="chat-input" class="sr-only">Your question</label>
-    <textarea id="chat-input" rows="2" maxlength="4000" required placeholder="Ask about materials, conditions or findings…" class="field h-auto py-3 text-[15px] placeholder:text-dim">{{ question }}</textarea>
-    <button id="chat-send" class="btn-primary shrink-0">Ask ↑</button>
-  </form>
-  <p class="mt-4 eyebrow">AI can miss context. Always verify critical safety decisions against the original NASA research.</p>
+  {# Wide column: the transcript, the suggested questions, and the field. #}
+  <div class="lg:col-span-9 min-w-0">
+    <div id="thread" aria-live="polite"></div>
+
+    <div id="starters">
+      <div class="section-head"><span class="n">Try</span><h2>Suggested questions</h2></div>
+      <ul class="mt-4 border-t border-line">
+        {% for s in suggestions %}<li class="grid grid-cols-[2rem_minmax(0,1fr)] items-baseline border-b border-line"><span class="font-mono text-[11px] text-dim" aria-hidden="true">{{ loop.index }}</span><button type="button" class="starter min-w-0 py-3 text-left text-[16px] leading-6 hover:text-sky hover:underline">{{ s }}</button></li>{% endfor %}
+      </ul>
+    </div>
+
+    <form id="chat-form" class="mt-10 border-t-2 border-fg pt-3">
+      <label for="chat-input" class="eyebrow block">Your question</label>
+      <div class="mt-2 flex items-stretch">
+        <textarea id="chat-input" rows="2" maxlength="4000" required placeholder="Ask about materials, conditions or findings…" class="field h-auto min-w-0 py-3 text-[16px] leading-6 placeholder:text-dim">{{ question }}</textarea>
+        <button id="chat-send" class="btn-primary h-auto shrink-0">Ask ↑</button>
+      </div>
+    </form>
+  </div>
 </section>
 <script src="/static/chat.js"></script>
 {% endblock %}

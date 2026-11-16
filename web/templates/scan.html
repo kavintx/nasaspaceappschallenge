@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Burn Scan · Flame in Freefall</title>
   <meta name="description" content="Photograph an item and see how its materials did in NASA's spacecraft fire tests.">
-  <meta name="theme-color" content="#02040d">
+  <meta name="theme-color" content="#efece3">
   <link rel="icon" href="/static/flame.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
   <script>
     // "js" lets CSS hide things that scripts will reveal. Animations are on for everyone;
@@ -17,28 +17,27 @@
     (function (d) { d.classList.add("js"); try { if (localStorage.getItem("motion") === "off") d.classList.add("motion-off"); } catch (e) {} })(document.documentElement);
   </script>
   <script src="/static/motion.js" defer></script>
+  <script src="/static/flame3d.js" defer></script>
 </head>
 <!-- The scan screen. Design: Figma file "Burn Scan – scan screen redesign". Driven by static/burn.js. -->
 <body class="bg-ink-950 text-fg font-sans antialiased min-h-screen">
   <div class="scan2-glow" aria-hidden="true"></div>
 
-  <div class="relative mx-auto w-full max-w-md lg:max-w-6xl min-h-screen flex flex-col pb-[88px] lg:pb-10">
-    <header class="flex items-center justify-between gap-6 px-5 pt-4 pb-2 lg:px-8 lg:pt-6">
-      <a href="/" class="flex items-center gap-2 text-[15px] font-semibold">
-        <img src="/static/flame.svg" alt="" class="w-5 h-5">Flame in Freefall
-      </a>
-      {# On a computer the navigation sits up here; on a phone it is the tab bar at the bottom. #}
-      <nav class="hidden lg:flex flex-1 justify-center gap-9 text-[14px]" aria-label="Main">
-        <a href="/" class="text-muted hover:text-fg transition-colors">Overview</a>
-        <a href="/scan" class="text-fg font-medium" aria-current="page">Scan</a>
-        <a href="/items" class="text-muted hover:text-fg transition-colors">My items</a>
-        <a href="/ask" class="text-muted hover:text-fg transition-colors">Ask</a>
+  <header class="masthead no-print">
+    <div class="wrap masthead-row">
+      <a href="/" class="wordmark"><svg class="wordmark-mark" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="9" r="4.2"/><path d="M9 0v4M9 14v4M0 9h4M14 9h4"/></svg>Flame in Freefall</a>
+      <nav class="mainnav mainnav-wide" aria-label="Main">
+        <a href="/"><span class="n">01</span>Overview</a>
+        <a href="/scan" aria-current="page"><span class="n">02</span>Scan</a>
+        <a href="/atlas"><span class="n">03</span>Atlas</a>
+        <a href="/items"><span class="n">04</span>My items</a>
+        <a href="/explorer"><span class="n">05</span>Experiments</a>
+        <a href="/papers"><span class="n">06</span>Papers</a>
+        <a href="/ask"><span class="n">07</span>Ask</a>
       </nav>
-      <span class="inline-flex items-center gap-1.5 rounded-full border border-line bg-ink-800 px-2.5 py-1 text-[11px] font-medium text-muted">
-        <span class="w-1.5 h-1.5 rounded-full bg-safe"></span>NASA test data
-      </span>
-    </header>
-
+    </div>
+  </header>
+  <div class="relative mx-auto w-full max-w-md lg:max-w-6xl flex flex-col pb-[88px] lg:pb-10">
     <main id="burn-scan" data-scanner="{% if scanner_on %}on{% else %}off{% endif %}" class="flex-1 px-5 lg:px-8">
 
       <section id="step-scan" class="scan2-grid">
@@ -46,20 +45,7 @@
           <p class="text-[11px] font-semibold tracking-[0.12em] text-sky">BURN SCAN</p>
           <h1 class="mt-2 text-[32px] leading-[38px] lg:mt-4 lg:text-[64px] lg:leading-[66px] font-semibold tracking-[-0.02em]">Will it burn in space?</h1>
           <p class="mt-2 text-[15px] leading-[22px] lg:mt-5 lg:text-[19px] lg:leading-8 lg:max-w-md text-muted">Photograph anything. See how its materials did in NASA’s spacecraft fire tests.</p>
-          {% if needs_key %}
-          <form method="post" action="/setup" class="mt-5 rounded-xl border border-sky/40 bg-ink-850 p-4 max-w-md" aria-label="Unlock scanning">
-            <p class="text-[14px] font-semibold">Run scanning on your own AI key</p>
-            <p class="mt-1 text-[12.5px] leading-5 text-muted">Paste an Anthropic key to start scanning in seconds. It is saved on this machine only, never shown back and never sent anywhere else. Running Ollama? Ignore this box.</p>
-            <div class="mt-3 grid gap-2 sm:grid-cols-2">
-              <input type="password" name="anthropic_key" class="field" autocomplete="new-password" placeholder="Anthropic key (sk-ant-…)" maxlength="300">
-              <input type="password" name="openai_key" class="field" autocomplete="new-password" placeholder="OpenAI key — optional (sk-…)" maxlength="300">
-            </div>
-            <div class="mt-3 flex items-center gap-3">
-              <button type="submit" class="btn-primary">Unlock scanning</button>
-              <span class="text-[12px] text-dim">Takes effect immediately.</span>
-            </div>
-          </form>
-          {% else if !scanner_on %}
+          {% if !scanner_on %}
           <p class="notice mt-4" role="status">Scanner not connected. You can still type the materials in.</p>
           {% endif %}
         </div>
@@ -118,12 +104,15 @@
   </div>
 
   <nav class="scan2-tabs lg:hidden" aria-label="Main">
-    <div class="mx-auto max-w-md grid grid-cols-4">
+    <div class="mx-auto max-w-md grid grid-cols-5">
       <a href="/" class="scan2-tab">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>Overview
       </a>
       <a href="/scan" class="scan2-tab" aria-current="page">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.5"/></svg>Scan
+      </a>
+      <a href="/atlas" class="scan2-tab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>Atlas
       </a>
       <a href="/items" class="scan2-tab">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg>My items

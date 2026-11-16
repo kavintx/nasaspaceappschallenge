@@ -1,86 +1,135 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="wrap pt-14 pb-10">
-  <h2 class="text-[40px] md:text-[52px] leading-[1.08] font-semibold tracking-tight">Keep the evidence<br>flowing.</h2>
-  <p class="mt-5 text-[20px] text-muted">Pull NASA papers in, have the AI read them, and check what it found.</p>
-  {% if read_only %}<p class="mt-5 text-[14px] text-amber">This copy of the app is read-only. The actions below are turned off.</p>{% endif %}
+<section class="wrap pt-8 pb-10 md:pt-10">
+  <div class="border-t-2 border-fg pt-3 grid gap-x-12 gap-y-3 lg:grid-cols-12">
+    <p class="eyebrow lg:col-span-3">How papers get from NASA’s report server into the database</p>
+    <div class="lg:col-span-9 min-w-0">
+      <p class="text-[19px] leading-7 md:text-[22px] md:leading-8 max-w-3xl">{% if connected %}Pull NASA papers in, have the AI read them, and check what it found.{% else %}What has been pulled in from NASA's report server and read so far.{% endif %}</p>
+      {% if !connected %}<p class="mt-4 text-[14px] leading-6 text-muted max-w-2xl">These counts are read straight from the research database. New papers are found and read on the research team's own machine, not from this website.</p>
+      {% else if read_only %}<p class="notice mt-4 max-w-2xl">This copy of the app is read-only. The actions below are turned off.</p>{% endif %}
+    </div>
+  </div>
 </section>
 
 {% if let Some(r) = result %}
-<section class="wrap pb-10" id="result">
-  <div class="rounded-xl bg-ink-800 px-6 py-5">
-    <div class="eyebrow">Result</div>
-    <h3 class="mt-2 text-[19px] font-semibold">{{ r.title }}</h3>
-    {% if let Some(e) = r.error %}<p class="mt-3 text-[14px] text-amber">{{ e }}</p>{% endif %}
-    {% if !r.pairs.is_empty() %}
-    <dl class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4">
-      {% for p in r.pairs %}<div><dt class="eyebrow">{{ p.0 }}</dt><dd class="mt-1 text-[16px] font-medium break-words">{{ p.1 }}</dd></div>{% endfor %}
-    </dl>
-    {% endif %}
-    {% if let Some(t) = r.text %}<p class="mt-4 text-[15px] leading-relaxed text-muted whitespace-pre-wrap">{{ t }}</p>{% endif %}
-    {% for l in r.lines %}<p class="mt-2 text-[13px] text-muted">{{ l }}</p>{% endfor %}
+<section class="wrap pb-12" id="result">
+  <div class="section-head"><span class="n">Result</span><h2 class="min-w-0 break-words">{{ r.title }}</h2></div>
+  <div class="mt-5 grid gap-x-12 lg:grid-cols-12">
+    <div class="lg:col-start-4 lg:col-span-9 min-w-0">
+      {% if let Some(e) = r.error %}<p class="notice">{{ e }}</p>{% endif %}
+      {% if !r.pairs.is_empty() %}
+      <dl class="mt-4 border-t border-line">
+        {% for p in r.pairs %}<div class="grid grid-cols-1 sm:grid-cols-[14rem_minmax(0,1fr)] gap-x-6 gap-y-1 items-baseline py-2.5 border-b border-line"><dt class="eyebrow">{{ p.0 }}</dt><dd class="font-mono text-[14px] leading-5 break-words min-w-0">{{ p.1 }}</dd></div>{% endfor %}
+      </dl>
+      {% endif %}
+      {% if let Some(t) = r.text %}<p class="mt-4 text-[15px] leading-6 text-muted whitespace-pre-wrap break-words max-w-3xl">{{ t }}</p>{% endif %}
+      {% for l in r.lines %}<p class="mt-2 font-mono text-[12px] leading-5 text-muted break-words">{{ l }}</p>{% endfor %}
+    </div>
   </div>
 </section>
 {% endif %}
 
-<section class="bg-ink-850">
-  <div class="wrap py-12 grid lg:grid-cols-12 gap-12">
-    <div class="lg:col-span-5">
-      <div class="eyebrow">AI model</div>
-      <div class="mt-3 text-[28px] font-semibold tracking-tight {% if health_ok %}text-cyan{% else %}text-amber{% endif %}">{% if health_ok %}Connected{% else %}Not responding{% endif %}</div>
-      <p class="mt-2 text-[14px] text-muted break-words">{{ health_line }}</p>
-      <form method="post" action="/pipeline/test#result" data-slow class="mt-6 flex gap-3">
-        <input name="prompt" placeholder="Test prompt (optional)" class="field placeholder:text-dim">
+<section class="wrap pb-12 md:pb-16">
+  <div class="section-head"><span class="n">01</span><h2>In the database</h2></div>
+
+  <div class="mt-6 grid gap-x-12 gap-y-2 lg:grid-cols-12 border-t border-fg pt-3">
+    <p class="eyebrow lg:col-span-3">Experiments</p>
+    <div class="lg:col-span-9 min-w-0 border-b border-line pb-4">
+      <span class="ledger-num tabular-nums">{{ experiments_count }}</span>
+    </div>
+  </div>
+
+  <div class="mt-6 grid gap-x-12 gap-y-2 lg:grid-cols-12 border-t border-fg pt-3">
+    <p class="eyebrow lg:col-span-3">Papers by status</p>
+    <div class="lg:col-span-9 min-w-0">
+      {% if paper_counts.is_empty() %}<p class="pb-3 border-b border-line font-mono text-[13px] text-dim">None yet</p>{% endif %}
+      {% for c in paper_counts %}<p class="grid grid-cols-[minmax(5.5rem,auto)_minmax(0,1fr)] items-baseline gap-x-5 py-3 border-b border-line"><span class="display tabular-nums text-[40px] md:text-[52px]">{{ c.1 }}</span> <span class="text-[16px] leading-6 text-muted break-words min-w-0">{{ c.0 }}</span></p>{% endfor %}
+    </div>
+  </div>
+
+  <div class="mt-6 grid gap-x-12 gap-y-2 lg:grid-cols-12 border-t border-fg pt-3">
+    <p class="eyebrow lg:col-span-3">{{ job_title }}</p>
+    <div class="lg:col-span-9 min-w-0">
+      {% if job_counts.is_empty() %}<p class="pb-3 border-b border-line font-mono text-[13px] text-dim">None yet</p>{% endif %}
+      {% for c in job_counts %}<p class="grid grid-cols-[minmax(5.5rem,auto)_minmax(0,1fr)] items-baseline gap-x-5 py-3 border-b border-line"><span class="display tabular-nums text-[40px] md:text-[52px]">{{ c.1 }}</span> <span class="text-[16px] leading-6 text-muted break-words min-w-0">{{ c.0 }}</span></p>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="wrap pb-12 md:pb-16">
+  <div class="section-head"><span class="n">02</span><h2>{% if connected %}AI model{% else %}Research database{% endif %}</h2></div>
+  <div class="mt-5 grid gap-x-12 gap-y-4 lg:grid-cols-12">
+    {% if connected %}
+    <div class="lg:col-span-3">
+      <p class="eyebrow">Status</p>
+      <p class="display mt-2 text-[40px] md:text-[52px] {% if health_ok %}text-cyan{% else %}text-amber{% endif %}">{% if health_ok %}Connected{% else %}Not responding{% endif %}</p>
+    </div>
+    <div class="lg:col-span-9 min-w-0">
+      <p class="font-mono text-[13px] leading-5 text-muted break-words">{{ health_line }}</p>
+      <form method="post" action="/pipeline/test#result" data-slow class="mt-5 pt-4 border-t border-line flex flex-wrap gap-3 max-w-2xl">
+        <input name="prompt" placeholder="Test prompt (optional)" class="field flex-1 min-w-[12rem] placeholder:text-dim">
         <button class="btn-ghost shrink-0">Test model</button>
       </form>
     </div>
-    <div class="lg:col-span-7 grid sm:grid-cols-3 gap-8">
-      <div><div class="eyebrow">Experiments</div><div class="mt-3 text-[40px] leading-none font-semibold">{{ experiments_count }}</div></div>
-      <div><div class="eyebrow">Papers by status</div>
-        {% if paper_counts.is_empty() %}<p class="mt-3 text-[14px] text-dim">None yet</p>{% endif %}
-        {% for c in paper_counts %}<p class="mt-3 text-[15px]"><span class="font-semibold">{{ c.1 }}</span> <span class="text-muted">{{ c.0 }}</span></p>{% endfor %}</div>
-      <div><div class="eyebrow">Jobs</div>
-        {% if job_counts.is_empty() %}<p class="mt-3 text-[14px] text-dim">None yet</p>{% endif %}
-        {% for c in job_counts %}<p class="mt-3 text-[15px]"><span class="font-semibold">{{ c.1 }}</span> <span class="text-muted">{{ c.0 }}</span></p>{% endfor %}</div>
+    {% else %}
+    <div class="lg:col-span-3">
+      <p class="eyebrow">Status</p>
+      <p class="display mt-2 text-[40px] md:text-[52px] text-cyan">Live</p>
     </div>
+    <div class="lg:col-span-9 min-w-0">
+      <p class="text-[15px] leading-6 text-muted max-w-2xl">Every page on this site reads from it. Open <a class="text-sky underline" href="/papers">Literature</a> to see each paper and what was extracted from it, or <a class="text-sky underline" href="/explorer">Explorer</a> for the experiments.</p>
+    </div>
+    {% endif %}
   </div>
 </section>
 
 {% if !read_only %}
-<section class="wrap py-14 grid lg:grid-cols-3 gap-12">
-  <form method="post" action="/pipeline/ingest#result" data-slow>
-    <h3 class="text-[22px] font-semibold tracking-tight">1. Find NASA papers</h3>
-    <p class="mt-2 text-[14px] leading-relaxed text-muted">Searches NASA's report server (NTRS) for papers on an experiment and adds them.</p>
-    <label class="block mt-5"><span class="eyebrow">Experiment</span>
-      <select name="program" class="field mt-2"><option value="">All experiments</option>{% for p in programs %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></label>
-    <div class="mt-4 grid grid-cols-2 gap-4">
-      <label class="block"><span class="eyebrow">Papers per experiment</span><input name="limit_per_program" type="number" min="1" max="50" value="5" class="field mt-2"></label>
-      <label class="block"><span class="eyebrow">Extract right away</span><input name="process_jobs" type="number" min="0" max="50" value="5" class="field mt-2"></label>
+<section class="wrap pb-16">
+  <form method="post" action="/pipeline/ingest#result" data-slow class="pb-10">
+    <div class="section-head"><span class="n">Step 1</span><h3>Find NASA papers</h3></div>
+    <div class="mt-5 grid gap-x-12 gap-y-5 lg:grid-cols-12">
+      <p class="lg:col-span-4 text-[15px] leading-6 text-muted">Searches NASA's report server (NTRS) for papers on an experiment and adds them.</p>
+      <div class="lg:col-span-8 min-w-0 max-w-2xl">
+        <label class="block"><span class="eyebrow">Experiment</span>
+          <select name="program" class="field mt-2"><option value="">All experiments</option>{% for p in programs %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></label>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="block"><span class="eyebrow">Papers per experiment</span><input name="limit_per_program" type="number" min="1" max="50" value="5" class="field mt-2 font-mono"></label>
+          <label class="block"><span class="eyebrow">Extract right away</span><input name="process_jobs" type="number" min="0" max="50" value="5" class="field mt-2 font-mono"></label>
+        </div>
+        <button class="btn-primary mt-5">Find papers</button>
+      </div>
     </div>
-    <button class="btn-primary mt-5">Find papers</button>
   </form>
 
-  <form method="post" action="/pipeline/extract-batch#result" data-slow>
-    <h3 class="text-[22px] font-semibold tracking-tight">2. Have the AI read them</h3>
-    <p class="mt-2 text-[14px] leading-relaxed text-muted">Pulls test conditions and findings out of papers that are still waiting. Each paper takes 5–30 seconds.</p>
-    <label class="block mt-5"><span class="eyebrow">How many papers (up to 25)</span><input name="limit" type="number" min="1" max="25" value="5" class="field mt-2"></label>
-    <button class="btn-primary mt-5">Extract waiting papers</button>
-    <p class="mt-4 eyebrow">To extract one paper, open it in <a class="text-sky hover:underline" href="/papers">Literature</a>.</p>
+  <form method="post" action="/pipeline/extract-batch#result" data-slow class="pb-10">
+    <div class="section-head"><span class="n">Step 2</span><h3>Have the AI read them</h3></div>
+    <div class="mt-5 grid gap-x-12 gap-y-5 lg:grid-cols-12">
+      <p class="lg:col-span-4 text-[15px] leading-6 text-muted">Pulls test conditions and findings out of papers that are still waiting. Each paper takes 5–30 seconds.</p>
+      <div class="lg:col-span-8 min-w-0 max-w-2xl">
+        <label class="block"><span class="eyebrow">How many papers (up to 25)</span><input name="limit" type="number" min="1" max="25" value="5" class="field mt-2 font-mono sm:max-w-[12rem]"></label>
+        <button class="btn-primary mt-5">Extract waiting papers</button>
+        <p class="mt-4 eyebrow">To extract one paper, open it in <a class="text-sky underline" href="/papers">Literature</a>.</p>
+      </div>
+    </div>
   </form>
+
+  <div class="pb-10">
+    <div class="section-head"><span class="n">Step 3</span><h3>Check the AI's work</h3></div>
+    <div class="mt-5 grid gap-x-12 gap-y-5 lg:grid-cols-12">
+      <p class="lg:col-start-5 lg:col-span-8 text-[15px] leading-6 text-muted max-w-2xl">Open any paper in <a class="text-sky underline" href="/papers">Literature</a> to verify, reject or correct each extracted condition and finding. Rejected rows drop out of the Explorer and Compare totals.</p>
+    </div>
+  </div>
 
   <form method="post" action="/pipeline/sheet#result" data-slow>
-    <h3 class="text-[22px] font-semibold tracking-tight">Import a Google Sheet</h3>
-    <p class="mt-2 text-[14px] leading-relaxed text-muted">Adds experiments and NTRS citations from a shared sheet. The sheet must be viewable by link.</p>
-    <label class="block mt-5"><span class="eyebrow">Sheet link</span><input name="url" type="url" required placeholder="https://docs.google.com/spreadsheets/d/…" class="field mt-2 placeholder:text-dim"></label>
-    <button class="btn-primary mt-5">Import sheet</button>
+    <div class="section-head"><span class="n">Also</span><h3>Import a Google Sheet</h3></div>
+    <div class="mt-5 grid gap-x-12 gap-y-5 lg:grid-cols-12">
+      <p class="lg:col-span-4 text-[15px] leading-6 text-muted">Adds experiments and NTRS citations from a shared sheet. The sheet must be viewable by link.</p>
+      <div class="lg:col-span-8 min-w-0 max-w-2xl">
+        <label class="block"><span class="eyebrow">Sheet link</span><input name="url" type="url" required placeholder="https://docs.google.com/spreadsheets/d/…" class="field mt-2 placeholder:text-dim"></label>
+        <button class="btn-primary mt-5">Import sheet</button>
+      </div>
+    </div>
   </form>
-</section>
-
-<section class="bg-ink-850">
-  <div class="wrap py-10">
-    <h3 class="text-[19px] font-semibold">3. Check the AI's work</h3>
-    <p class="mt-2 text-[15px] text-muted max-w-3xl">Open any paper in <a class="text-sky hover:underline" href="/papers">Literature</a> to verify, reject or correct each extracted condition and finding. Rejected rows drop out of the Explorer and Compare totals.</p>
-  </div>
 </section>
 {% endif %}
 {% endblock %}

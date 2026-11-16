@@ -5,8 +5,8 @@ Builds and runs the site in Docker, so nothing Rust needs to be installed
 (Windows machines with Smart App Control can't run cargo natively at all).
 
     python main.py                    # build and start everything in one go,
-                                      # no questions — then open the site and paste
-                                      # your AI key on the Scan page to start scanning
+                                      # no questions. Run --configure once first
+                                      # to give the photo scanner its AI key
     python main.py --stop             # stop what this script started
     python main.py --logs             # follow the dashboard's log
     python main.py --configure        # set the scanner from the terminal instead
@@ -367,8 +367,8 @@ def main() -> None:
         print(f"\n  Flame in Freefall:  http://localhost:{port}")
         if fireset:
             print(f"  research backend:   http://localhost:{args.backend_port}")
-        print(f"\n  Open http://localhost:{port}/scan and paste your AI key to")
-        print("  unlock photo scanning. No restart needed — it starts working right away.")
+        print(f"\n  Open http://localhost:{port}/scan to scan an item. If the photo scanner")
+        print("  is off, run this script with --configure once to set its AI key.")
         lan_hint(port)
 
 

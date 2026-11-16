@@ -359,7 +359,7 @@ pub async fn habitat(State(app): AppRef, Query(q): Query<HabitatQuery>) -> Respo
 
     render(HabitatPage {
         active: "habitat",
-        page_title: "Habitat Risk".into(),
+        page_title: "Habitat".into(),
         context_line: context_for(sel.key),
         cards,
         sel_name: sel.name,
@@ -480,7 +480,7 @@ pub async fn explorer(State(app): AppRef, Query(q): Query<ExplorerQuery>) -> Res
 
     render(ExplorerPage {
         active: "explorer",
-        page_title: "Explorer".into(),
+        page_title: "Experiments".into(),
         context_line: context_for("moon_base"),
         rows,
         total: cat.exps.len(),
@@ -752,7 +752,7 @@ pub async fn ask(State(app): AppRef, Query(q): Query<AskQuery>) -> Response {
         .unwrap_or_default();
     render(AskPage {
         active: "ask",
-        page_title: "Ask the Data".into(),
+        page_title: "Ask".into(),
         context_line: "Answers cite NASA NTRS papers".into(),
         question: q.q.unwrap_or_default().trim().to_string(),
         experiments,
@@ -791,7 +791,7 @@ pub async fn papers(State(app): AppRef, Query(q): Query<PapersQuery>) -> Respons
     let f_q = q.q.unwrap_or_default();
     let mut page = PapersPage {
         active: "papers",
-        page_title: "Literature".into(),
+        page_title: "Papers".into(),
         context_line: "NASA NTRS papers · AI-extracted".into(),
         error: None,
         rows: vec![],

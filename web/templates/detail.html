@@ -1,89 +1,95 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="wrap pt-12 pb-14 text-center">
-  <h2 class="text-[48px] md:text-[60px] leading-none font-semibold tracking-tight">{{ acronym }}</h2>
-  <p class="mt-5 text-[22px] text-muted">{{ name }}</p>
-  <p class="mt-3 text-[12px]"><span class="{{ cat.class }}">{{ cat.label }}</span> <span class="text-muted">· {{ hardware }}</span></p>
-  <div class="mt-6 flex justify-center gap-3">
-    <a href="/compare?a={{ id }}" class="btn-primary">Add to compare</a>
-    <a href="#papers" class="btn-ghost">{{ papers.len() }} NASA papers</a>
-  </div>
-</section>
-
-<section class="bg-ink-850">
-  <div class="wrap py-10 grid grid-cols-2 lg:grid-cols-4 gap-8">
-    {% for t in tiles %}
-    <div>
-      <div class="eyebrow">{{ t.label }}</div>
-      <div class="mt-4 text-[32px] md:text-[40px] leading-none font-semibold tracking-tight">{{ t.value }}</div>
-      <div class="mt-4 eyebrow">{{ t.caption }}</div>
+{# The title strip already shows the acronym. This sheet opens with the full name, then splits
+   into a narrow facts column and a wide column for the brief, the findings and the papers. #}
+<section class="wrap pt-6 md:pt-8">
+  <div class="grid gap-x-10 gap-y-4 lg:grid-cols-12 lg:items-end">
+    <div class="lg:col-span-8 min-w-0">
+      <p class="eyebrow">{{ acronym }} · <span class="{{ cat.class }}">{{ cat.label }}</span> · {{ hardware }}</p>
+      <p class="mt-2 text-[19px] leading-7 md:text-[22px] md:leading-8 max-w-3xl">{{ name }}</p>
     </div>
-    {% endfor %}
-  </div>
-</section>
-
-<section class="wrap py-14 grid md:grid-cols-12 gap-8">
-  <div class="md:col-span-3">
-    <h3 class="text-[28px] font-semibold tracking-tight">Research brief.</h3>
-    <p class="mt-3 eyebrow">{{ brief_source }}</p>
-  </div>
-  <div class="md:col-span-9">
-    {% if let Some(b) = brief %}<p class="text-[20px] leading-relaxed text-muted">{{ b }}</p>
-    {% else %}<p class="text-[18px] text-dim">No description stored for this experiment yet.</p>{% endif %}
-    {% if !objectives.is_empty() %}
-    <div class="mt-8 eyebrow">Objectives stated in the papers</div>
-    {% for o in objectives %}<p class="mt-3 text-[15px] leading-relaxed text-muted">{{ o }}</p>{% endfor %}
-    {% endif %}
-  </div>
-</section>
-
-<section class="border-t border-line/60" id="summary">
-  <div class="wrap py-14 grid md:grid-cols-12 gap-8">
-    <div class="md:col-span-3">
-      <h3 class="text-[28px] font-semibold tracking-tight">AI synthesis.</h3>
-      <p class="mt-3 eyebrow">Across every indexed paper for {{ acronym }}</p>
-      {% if ai_on %}<form method="get" action="#summary" data-slow class="mt-5"><input type="hidden" name="summarize" value="1"><button class="btn-ghost">{% if ai.is_some() %}Regenerate{% else %}Generate summary{% endif %}</button></form>{% endif %}
-    </div>
-    <div class="md:col-span-9">
-      {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else if ai_on %}<p class="text-[15px] text-dim">Not generated yet. Takes 5–30 seconds.</p>{% else %}<p class="text-[14px] text-amber">The AI backend isn't connected, so summaries can't be generated right now.</p>{% endif %}
+    <div class="lg:col-span-4 flex flex-wrap gap-3 lg:justify-end">
+      <a href="/compare?a={{ id }}" class="btn-primary">Add to compare</a>
+      <a href="#papers" class="btn-ghost">{{ papers.len() }} NASA papers</a>
     </div>
   </div>
 </section>
 
-<section class="bg-ink-850">
-  <div class="wrap py-14 grid lg:grid-cols-12 gap-12">
-    <div class="lg:col-span-8">
-      <h3 class="text-[28px] font-semibold tracking-tight">What the experiments revealed.</h3>
-      {% if findings.is_empty() %}<p class="mt-6 text-[16px] text-dim">No findings have been extracted for this experiment yet.</p>
-      {% else %}<p class="mt-3 eyebrow">{{ findings.len() }} of {{ findings_total }} extracted findings · verified first, then by AI confidence</p>{% endif %}
-      <ol class="mt-4">
+<div class="wrap pt-8 pb-16 grid gap-x-12 gap-y-12 lg:grid-cols-12">
+
+  {# Facts: test conditions and sensors. #}
+  <aside class="lg:col-span-4 min-w-0">
+    <dl class="border-t-2 border-fg grid grid-cols-2 gap-x-6 lg:grid-cols-1">
+      {% for t in tiles %}
+      <div class="py-3 border-b border-line min-w-0">
+        <dt class="eyebrow">{{ t.label }}</dt>
+        <dd class="mt-2 text-[26px] md:text-[32px] leading-[0.95] font-extrabold uppercase [font-stretch:62%] break-words">{{ t.value }}</dd>
+        <dd class="mt-2 eyebrow break-words">{{ t.caption }}</dd>
+      </div>
+      {% endfor %}
+    </dl>
+
+    <div class="mt-8 border-t-2 border-fg pt-2">
+      <p class="eyebrow">Sensors &amp; diagnostics</p>
+      {% if sensor_list.is_empty() %}<p class="mt-3 text-[14px] text-dim">None extracted yet.</p>{% endif %}
+      <div class="mt-2">
+        {% for s in sensor_list %}<div class="py-2 border-b border-line text-[14px] leading-5 break-words">{{ s }}</div>{% endfor %}
+      </div>
+    </div>
+  </aside>
+
+  <div class="lg:col-span-8 min-w-0">
+
+    <section>
+      <div class="section-head"><span class="n">01</span><h2>Research brief</h2></div>
+      <p class="mt-3 eyebrow">{{ brief_source }}</p>
+      {% if let Some(b) = brief %}<p class="mt-4 text-[17px] leading-7 max-w-3xl">{{ b }}</p>
+      {% else %}<p class="mt-4 text-[15px] text-dim">No description stored for this experiment yet.</p>{% endif %}
+      {% if !objectives.is_empty() %}
+      <div class="mt-8 eyebrow border-b border-line pb-2">Objectives stated in the papers</div>
+      {% for o in objectives %}<p class="py-3 border-b border-line text-[15px] leading-6 text-muted">{{ o }}</p>{% endfor %}
+      {% endif %}
+    </section>
+
+    <section class="mt-12 md:mt-14" id="summary">
+      <div class="section-head"><span class="n">02</span><h2>AI synthesis</h2></div>
+      <div class="mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <p class="eyebrow">Across every indexed paper for {{ acronym }}</p>
+        {% if ai_on %}<form method="get" action="#summary" data-slow><input type="hidden" name="summarize" value="1"><button class="btn-ghost">{% if ai.is_some() %}Regenerate{% else %}Generate summary{% endif %}</button></form>{% endif %}
+      </div>
+      <div class="mt-2 max-w-3xl">
+        {% if let Some(ai) = ai %}{% include "_ai.html" %}{% else if ai_on %}<p class="mt-4 text-[15px] text-dim">Not generated yet. Takes 5–30 seconds.</p>{% else %}<p class="mt-4 text-[14px] text-amber">The AI backend isn't connected, so summaries can't be generated right now.</p>{% endif %}
+      </div>
+    </section>
+
+    <section class="mt-12 md:mt-14">
+      <div class="section-head"><span class="n">03</span><h2>What the experiments revealed</h2></div>
+      {% if findings.is_empty() %}<p class="mt-4 text-[15px] text-dim">No findings have been extracted for this experiment yet.</p>
+      {% else %}<p class="mt-3 eyebrow border-b border-line pb-3">{{ findings.len() }} of {{ findings_total }} extracted findings · verified first, then by AI confidence</p>{% endif %}
+      <ol>
         {% for x in findings %}
-        <li class="border-b border-line py-5 grid grid-cols-[2rem_1fr] items-baseline">
-          <span class="text-[12px] text-dim">{{ "{:02}"|format(loop.index) }}</span>
-          <div>
-            <p class="text-[16px] leading-relaxed">{{ x.text }}</p>
-            <p class="mt-2 text-[12px] text-muted">{% if let Some(c) = x.cat %}<span class="{{ c.class }}">{{ c.label }}</span> · {% endif %}<a class="text-sky hover:underline" href="{{ x.paper_href }}">{{ x.source }}</a>{% if let Some(c) = x.confidence %} · AI confidence {{ c }}{% endif %} · {% if x.verified %}<span class="text-cyan">✓ Verified</span>{% else %}Unverified{% endif %}</p>
+        <li class="border-b border-line py-4 grid grid-cols-[2.25rem_minmax(0,1fr)] items-baseline">
+          <span class="font-mono text-[11px] text-dim">{{ "{:02}"|format(loop.index) }}</span>
+          <div class="min-w-0">
+            <p class="text-[16px] leading-6">{{ x.text }}</p>
+            <p class="mt-2 font-mono text-[11px] leading-5 text-muted break-words">{% if let Some(c) = x.cat %}<span class="{{ c.class }}">{{ c.label }}</span> · {% endif %}<a class="text-sky hover:underline" href="{{ x.paper_href }}">{{ x.source }}</a>{% if let Some(c) = x.confidence %} · AI confidence {{ c }}{% endif %} · {% if x.verified %}<span class="text-cyan">✓ Verified</span>{% else %}Unverified{% endif %}</p>
           </div>
         </li>
         {% endfor %}
       </ol>
-    </div>
-    <aside class="lg:col-span-4">
-      <h3 class="text-[19px] font-semibold">Sensors &amp; diagnostics</h3>
-      {% if sensor_list.is_empty() %}<p class="mt-5 text-[14px] text-dim">None extracted yet.</p>{% endif %}
-      {% for s in sensor_list %}<div class="mt-4 text-[15px]">{{ s }}</div>{% endfor %}
-    </aside>
-  </div>
-</section>
+    </section>
 
-<section class="wrap py-14" id="papers">
-  <h3 class="text-[28px] font-semibold tracking-tight">Read the original research.</h3>
-  {% if papers.is_empty() %}<p class="mt-6 text-[16px] text-dim">No NASA papers are linked to this experiment yet.</p>{% endif %}
-  {% for p in papers %}
-  <div class="mt-6 max-w-4xl">
-    <a href="{{ p.href }}" class="text-[18px] text-sky hover:underline">{{ p.title }}</a>
-    <div class="mt-2 eyebrow">{{ p.year }} · {{ p.kind }} · {{ p.status }}</div>
+    <section class="mt-12 md:mt-14" id="papers">
+      <div class="section-head"><span class="n">04</span><h2>Read the original research</h2></div>
+      {% if papers.is_empty() %}<p class="mt-4 text-[15px] text-dim">No NASA papers are linked to this experiment yet.</p>{% endif %}
+      {% for p in papers %}
+      <div class="py-4 border-b border-line">
+        <a href="{{ p.href }}" class="text-[17px] leading-6 text-sky hover:underline">{{ p.title }}</a>
+        <div class="mt-1.5 eyebrow">{{ p.year }} · {{ p.kind }} · {{ p.status }}</div>
+      </div>
+      {% endfor %}
+    </section>
+
   </div>
-  {% endfor %}
-</section>
+</div>
 {% endblock %}
